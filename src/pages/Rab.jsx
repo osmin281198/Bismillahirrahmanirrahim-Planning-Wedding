@@ -2,16 +2,17 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import Sidebar from "../components/Sidebar";
 
-const CATEGORIES = ["Venue", "Catering", "Dekorasi", "Fotografer", "Busana", "Undangan", "Hiburan", "Transportasi", "Lainnya"];
+const CATEGORIES = ["Venue", "Catering", "Dekorasi", "Fotografer", "Busana & Seserahan", "Undangan", "Rukun Nikah", "KUA", "Transportasi", "Lainnya"];
 
 export default function Rab() {
-  const [item, setItem]         = useState("");
-  const [category, setCategory] = useState("");
-  const [budget, setBudget]     = useState("");
-  const [spent, setSpent]       = useState("");
-  const [data, setData]         = useState([]);
-  const [loading, setLoading]   = useState(false);
+  const [item, setItem]           = useState("");
+  const [category, setCategory]   = useState("");
+  const [budget, setBudget]       = useState("");
+  const [spent, setSpent]         = useState("");
+  const [data, setData]           = useState([]);
+  const [loading, setLoading]     = useState(false);
   const [filterCat, setFilterCat] = useState("Semua");
+  const [errMsg, setErrMsg]       = useState("");
 
   useEffect(() => { fetchRab(); }, []);
 
@@ -23,10 +24,29 @@ export default function Rab() {
   };
 
   const addData = async () => {
-    if (!item) return;
-    const newRow = { id: Date.now(), item, category, budget, spent };
+    setErrMsg("");
+    if (!item.trim()) { setErrMsg("Nama item wajib diisi."); return; }
+
+    const isDuplicate = data.some(
+      (r) => r.item.trim().toLowerCase() === item.trim().toLowerCase()
+    );
+    if (isDuplicate) {
+      setErrMsg(`Item "${item}" sudah ada.`);
+      return;
+    }
+
+    const newRow = { id: Date.now(), item: item.trim(), category, budget, spent };
     const { error } = await supabase.from("rab").insert(newRow);
-    if (!error) { setData([...data, newRow]); setItem(""); setCategory(""); setBudget(""); setSpent(""); }
+    if (error) { setErrMsg("Gagal menyimpan: " + error.message); return; }
+
+    setData([...data, newRow]);
+    setItem(""); setCategory(""); setBudget(""); setSpent("");
+  };
+
+  // Update field apapun langsung ke Supabase
+  const updateRow = async (id, field, value) => {
+    const { error } = await supabase.from("rab").update({ [field]: value }).eq("id", id);
+    if (!error) setData(data.map((r) => r.id === id ? { ...r, [field]: value } : r));
   };
 
   const deleteData = async (id) => {
@@ -37,7 +57,6 @@ export default function Rab() {
   const totalBudget = data.reduce((s, r) => s + (parseFloat(r.budget) || 0), 0);
   const totalSpent  = data.reduce((s, r) => s + (parseFloat(r.spent)  || 0), 0);
 
-  // Realisasi per kategori
   const categoryStats = CATEGORIES.map((cat) => {
     const items = data.filter((r) => r.category === cat);
     const b = items.reduce((s, r) => s + (parseFloat(r.budget) || 0), 0);
@@ -54,15 +73,16 @@ export default function Rab() {
       <main className="flex-1 pt-16 md:pt-0 p-4 md:p-8 overflow-x-hidden">
         <div className="mb-5">
           <p className="text-sky-500 text-xs uppercase tracking-widest mb-1">Keuangan</p>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-3xl md:text-4xl font-semibold text-sky-900">RAB Pernikahan</h1>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            className="text-3xl md:text-4xl font-semibold text-sky-900">RAB Pernikahan</h1>
         </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4">
           {[
-            { label: "Item", val: data.length, color: "#0284C7" },
-            { label: "Budget", val: `Rp ${totalBudget.toLocaleString("id-ID")}`, color: "#0284C7" },
-            { label: "Terpakai", val: `Rp ${totalSpent.toLocaleString("id-ID")}`, color: totalSpent > totalBudget ? "#EF4444" : "#0EA5E9" },
+            { label: "Item",     val: data.length,                                 color: "#0284C7" },
+            { label: "Budget",   val: `Rp ${totalBudget.toLocaleString("id-ID")}`, color: "#0284C7" },
+            { label: "Terpakai", val: `Rp ${totalSpent.toLocaleString("id-ID")}`,  color: totalSpent > totalBudget ? "#EF4444" : "#0EA5E9" },
           ].map((c) => (
             <div key={c.label} className="bg-white rounded-2xl p-3 md:p-5 shadow-sm border border-sky-100">
               <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">{c.label}</p>
@@ -81,8 +101,12 @@ export default function Rab() {
                   <div className="flex justify-between text-xs text-slate-600 mb-1">
                     <span className="font-medium">{c.cat}</span>
                     <span>
-                      <span className="text-sky-600 font-semibold">{c.persen}%</span>
-                      <span className="text-slate-400 ml-2">Rp {c.spent.toLocaleString("id-ID")} / Rp {c.budget.toLocaleString("id-ID")}</span>
+                      <span className={`font-semibold ${c.persen > 100 ? "text-red-500" : c.persen > 80 ? "text-amber-500" : "text-sky-600"}`}>
+                        {c.persen}%
+                      </span>
+                      <span className="text-slate-400 ml-2 hidden md:inline">
+                        Rp {c.spent.toLocaleString("id-ID")} / Rp {c.budget.toLocaleString("id-ID")}
+                      </span>
                     </span>
                   </div>
                   <div className="w-full bg-sky-100 rounded-full h-2">
@@ -103,21 +127,32 @@ export default function Rab() {
         {/* Form Tambah */}
         <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-sky-100 mb-4">
           <h2 className="font-semibold text-sky-900 mb-3 text-sm">Tambah Item</h2>
+          {errMsg && (
+            <div className="mb-3 bg-red-50 border border-red-200 text-red-600 text-xs px-4 py-2.5 rounded-xl">
+              ⚠ {errMsg}
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-            <input placeholder="Nama item" value={item} onChange={(e) => setItem(e.target.value)}
+            <input placeholder="Nama item" value={item}
+              onChange={(e) => { setItem(e.target.value); setErrMsg(""); }}
               className="border border-slate-200 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" />
             <select value={category} onChange={(e) => setCategory(e.target.value)}
               className="border border-slate-200 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-400">
               <option value="">Pilih Kategori</option>
               {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
-            <input placeholder="Budget (Rp)" type="number" value={budget} onChange={(e) => setBudget(e.target.value)}
+            <input placeholder="Budget (Rp)" type="number" value={budget}
+              onChange={(e) => setBudget(e.target.value)}
               className="border border-slate-200 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" />
-            <input placeholder="Terpakai (Rp)" type="number" value={spent} onChange={(e) => setSpent(e.target.value)}
+            <input placeholder="Terpakai (Rp)" type="number" value={spent}
+              onChange={(e) => setSpent(e.target.value)}
               className="border border-slate-200 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" />
           </div>
-          <button onClick={addData} className="w-full md:w-auto px-6 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90"
-            style={{ background: "linear-gradient(90deg, #0284C7, #38BDF8)" }}>+ Tambah</button>
+          <button onClick={addData}
+            className="w-full md:w-auto px-6 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90"
+            style={{ background: "linear-gradient(90deg, #0284C7, #38BDF8)" }}>
+            + Tambah
+          </button>
         </div>
 
         {/* Filter Kategori */}
@@ -128,47 +163,92 @@ export default function Rab() {
               style={{
                 background: filterCat === c ? "linear-gradient(90deg,#0284C7,#38BDF8)" : "#E0F2FE",
                 color: filterCat === c ? "white" : "#0284C7"
-              }}>{c}</button>
+              }}>
+              {c}
+            </button>
           ))}
         </div>
 
         {/* Tabel */}
         <div className="bg-white rounded-2xl shadow-sm border border-sky-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[500px]">
+            <table className="w-full text-sm min-w-[560px]">
               <thead>
                 <tr style={{ background: "linear-gradient(90deg, #0C4A6E, #0284C7)" }}>
-                  {["Item", "Kategori", "Budget", "Terpakai", "%", "Aksi"].map((h) => (
+                  {["Item", "Kategori", "Budget (Rp)", "Terpakai (Rp)", "%", "Aksi"].map((h) => (
                     <th key={h} className="p-3 text-left text-white font-medium text-xs uppercase tracking-widest">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {loading ? <tr><td colSpan={6} className="p-6 text-center text-slate-400">Memuat...</td></tr>
-                : filtered.length === 0 ? <tr><td colSpan={6} className="p-6 text-center text-slate-400">Belum ada item.</td></tr>
-                : filtered.map((row, i) => {
-                  const b = parseFloat(row.budget || 0);
-                  const s = parseFloat(row.spent || 0);
-                  const p = b > 0 ? Math.round((s / b) * 100) : 0;
-                  return (
-                    <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-sky-50"}>
-                      <td className="p-3 font-medium text-slate-700">{row.item}</td>
-                      <td className="p-3">{row.category && <span className="bg-sky-100 text-sky-700 text-xs px-2 py-0.5 rounded-full">{row.category}</span>}</td>
-                      <td className="p-3 text-sky-700 text-xs">Rp {b.toLocaleString("id-ID")}</td>
-                      <td className="p-3 text-sky-600 text-xs">Rp {s.toLocaleString("id-ID")}</td>
-                      <td className="p-3">
-                        <span className={`text-xs font-semibold ${p > 100 ? "text-red-500" : p > 80 ? "text-amber-500" : "text-sky-600"}`}>{p}%</span>
-                      </td>
-                      <td className="p-3">
-                        <button onClick={() => deleteData(row.id)} className="text-xs px-2 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100">Hapus</button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {loading ? (
+                  <tr><td colSpan={6} className="p-6 text-center text-slate-400">Memuat...</td></tr>
+                ) : filtered.length === 0 ? (
+                  <tr><td colSpan={6} className="p-6 text-center text-slate-400">Belum ada item.</td></tr>
+                ) : (
+                  filtered.map((row, i) => {
+                    const b = parseFloat(row.budget || 0);
+                    const s = parseFloat(row.spent  || 0);
+                    const p = b > 0 ? Math.round((s / b) * 100) : 0;
+                    return (
+                      <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-sky-50"}>
+                        <td className="p-3 font-medium text-slate-700">{row.item}</td>
+
+                        {/* ✅ Kategori bisa diganti via dropdown */}
+                        <td className="p-3">
+                          <select
+                            value={row.category || ""}
+                            onChange={(e) => updateRow(row.id, "category", e.target.value)}
+                            className="border border-slate-200 p-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white"
+                          >
+                            <option value="">— Pilih —</option>
+                            {CATEGORIES.map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                        </td>
+
+                        {/* Budget edit inline */}
+                        <td className="p-3">
+                          <input
+                            type="number"
+                            defaultValue={row.budget}
+                            onBlur={(e) => updateRow(row.id, "budget", e.target.value)}
+                            className="w-28 border border-slate-200 p-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-400"
+                          />
+                        </td>
+
+                        {/* Terpakai edit inline */}
+                        <td className="p-3">
+                          <input
+                            type="number"
+                            defaultValue={row.spent}
+                            onBlur={(e) => updateRow(row.id, "spent", e.target.value)}
+                            className="w-28 border border-slate-200 p-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-400"
+                          />
+                        </td>
+
+                        <td className="p-3">
+                          <span className={`text-xs font-semibold ${p > 100 ? "text-red-500" : p > 80 ? "text-amber-500" : "text-sky-600"}`}>
+                            {p}%
+                          </span>
+                        </td>
+
+                        <td className="p-3">
+                          <button onClick={() => deleteData(row.id)}
+                            className="text-xs px-2 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100">
+                            Hapus
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
         </div>
+        <p className="mt-2 text-xs text-slate-400">Total: {data.length} item</p>
       </main>
     </div>
   );
