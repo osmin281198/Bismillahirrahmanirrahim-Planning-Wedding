@@ -2,17 +2,19 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import Sidebar from "../components/Sidebar";
 
-const CATEGORIES = ["Venue", "Catering", "Dekorasi", "Fotografer", "Busana & Seserahan", "Undangan", "Rukun Nikah", "KUA", "Transportasi", "Lainnya"];
+const CATEGORIES = ["Venue", "Catering", "Dekorasi", "Fotografer", "Busana", "Undangan", "Rukun Nikah", "Transportasi", "Lainnya"];
+const STATUS_DANA = ["Sudah Dipakai", "Dana di Bank BSI"];
 
 export default function Rab() {
-  const [item, setItem]           = useState("");
-  const [category, setCategory]   = useState("");
-  const [budget, setBudget]       = useState("");
-  const [spent, setSpent]         = useState("");
-  const [data, setData]           = useState([]);
-  const [loading, setLoading]     = useState(false);
-  const [filterCat, setFilterCat] = useState("Semua");
-  const [errMsg, setErrMsg]       = useState("");
+  const [item, setItem]             = useState("");
+  const [category, setCategory]     = useState("");
+  const [budget, setBudget]         = useState("");
+  const [spent, setSpent]           = useState("");
+  const [statusDana, setStatusDana] = useState("Sudah Dipakai");
+  const [data, setData]             = useState([]);
+  const [loading, setLoading]       = useState(false);
+  const [filterCat, setFilterCat]   = useState("Semua");
+  const [errMsg, setErrMsg]         = useState("");
 
   useEffect(() => { fetchRab(); }, []);
 
@@ -26,24 +28,17 @@ export default function Rab() {
   const addData = async () => {
     setErrMsg("");
     if (!item.trim()) { setErrMsg("Nama item wajib diisi."); return; }
+    const isDuplicate = data.some((r) => r.item.trim().toLowerCase() === item.trim().toLowerCase());
+    if (isDuplicate) { setErrMsg(`Item "${item}" sudah ada.`); return; }
 
-    const isDuplicate = data.some(
-      (r) => r.item.trim().toLowerCase() === item.trim().toLowerCase()
-    );
-    if (isDuplicate) {
-      setErrMsg(`Item "${item}" sudah ada.`);
-      return;
-    }
-
-    const newRow = { id: Date.now(), item: item.trim(), category, budget, spent };
+    const newRow = { id: Date.now(), item: item.trim(), category, budget, spent, status_dana: statusDana };
     const { error } = await supabase.from("rab").insert(newRow);
     if (error) { setErrMsg("Gagal menyimpan: " + error.message); return; }
 
     setData([...data, newRow]);
-    setItem(""); setCategory(""); setBudget(""); setSpent("");
+    setItem(""); setCategory(""); setBudget(""); setSpent(""); setStatusDana("Sudah Dipakai");
   };
 
-  // Update field apapun langsung ke Supabase
   const updateRow = async (id, field, value) => {
     const { error } = await supabase.from("rab").update({ [field]: value }).eq("id", id);
     if (!error) setData(data.map((r) => r.id === id ? { ...r, [field]: value } : r));
@@ -56,6 +51,14 @@ export default function Rab() {
 
   const totalBudget = data.reduce((s, r) => s + (parseFloat(r.budget) || 0), 0);
   const totalSpent  = data.reduce((s, r) => s + (parseFloat(r.spent)  || 0), 0);
+
+  // Total per status dana
+  const totalSudahDipakai = data
+    .filter((r) => !r.status_dana || r.status_dana === "Sudah Dipakai")
+    .reduce((s, r) => s + (parseFloat(r.spent) || 0), 0);
+  const totalBankBSI = data
+    .filter((r) => r.status_dana === "Dana di Bank BSI")
+    .reduce((s, r) => s + (parseFloat(r.spent) || 0), 0);
 
   const categoryStats = CATEGORIES.map((cat) => {
     const items = data.filter((r) => r.category === cat);
@@ -89,6 +92,28 @@ export default function Rab() {
               <p className="text-xs md:text-xl font-bold truncate" style={{ color: c.color }}>{c.val}</p>
             </div>
           ))}
+        </div>
+
+        {/* Status Dana Summary */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-sky-100">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-3 h-3 rounded-full bg-red-400" />
+              <p className="text-xs text-slate-400 uppercase tracking-widest">Sudah Dipakai</p>
+            </div>
+            <p className="text-base md:text-xl font-bold text-red-500">
+              Rp {totalSudahDipakai.toLocaleString("id-ID")}
+            </p>
+          </div>
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-sky-100">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-3 h-3 rounded-full bg-green-400" />
+              <p className="text-xs text-slate-400 uppercase tracking-widest">Dana di Bank BSI</p>
+            </div>
+            <p className="text-base md:text-xl font-bold text-green-600">
+              Rp {totalBankBSI.toLocaleString("id-ID")}
+            </p>
+          </div>
         </div>
 
         {/* Realisasi per Kategori */}
@@ -148,6 +173,27 @@ export default function Rab() {
               onChange={(e) => setSpent(e.target.value)}
               className="border border-slate-200 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" />
           </div>
+
+          {/* Status Dana */}
+          <div className="mb-3">
+            <p className="text-xs text-slate-400 uppercase tracking-widest mb-2">Status Dana</p>
+            <div className="flex gap-4">
+              {STATUS_DANA.map((s) => (
+                <label key={s} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="statusDana"
+                    value={s}
+                    checked={statusDana === s}
+                    onChange={() => setStatusDana(s)}
+                    className="accent-sky-500 w-4 h-4"
+                  />
+                  <span className="text-sm text-slate-600">{s}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <button onClick={addData}
             className="w-full md:w-auto px-6 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90"
             style={{ background: "linear-gradient(90deg, #0284C7, #38BDF8)" }}>
@@ -172,68 +218,61 @@ export default function Rab() {
         {/* Tabel */}
         <div className="bg-white rounded-2xl shadow-sm border border-sky-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[560px]">
+            <table className="w-full text-sm min-w-[600px]">
               <thead>
                 <tr style={{ background: "linear-gradient(90deg, #0C4A6E, #0284C7)" }}>
-                  {["Item", "Kategori", "Budget (Rp)", "Terpakai (Rp)", "%", "Aksi"].map((h) => (
+                  {["Item", "Kategori", "Budget (Rp)", "Terpakai (Rp)", "%", "Status Dana", "Aksi"].map((h) => (
                     <th key={h} className="p-3 text-left text-white font-medium text-xs uppercase tracking-widest">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={6} className="p-6 text-center text-slate-400">Memuat...</td></tr>
+                  <tr><td colSpan={7} className="p-6 text-center text-slate-400">Memuat...</td></tr>
                 ) : filtered.length === 0 ? (
-                  <tr><td colSpan={6} className="p-6 text-center text-slate-400">Belum ada item.</td></tr>
+                  <tr><td colSpan={7} className="p-6 text-center text-slate-400">Belum ada item.</td></tr>
                 ) : (
                   filtered.map((row, i) => {
                     const b = parseFloat(row.budget || 0);
                     const s = parseFloat(row.spent  || 0);
                     const p = b > 0 ? Math.round((s / b) * 100) : 0;
+                    const isBSI = row.status_dana === "Dana di Bank BSI";
                     return (
                       <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-sky-50"}>
                         <td className="p-3 font-medium text-slate-700">{row.item}</td>
-
-                        {/* ✅ Kategori bisa diganti via dropdown */}
                         <td className="p-3">
-                          <select
-                            value={row.category || ""}
-                            onChange={(e) => updateRow(row.id, "category", e.target.value)}
-                            className="border border-slate-200 p-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white"
-                          >
-                            <option value="">— Pilih —</option>
-                            {CATEGORIES.map((c) => (
-                              <option key={c} value={c}>{c}</option>
-                            ))}
-                          </select>
+                          {row.category && (
+                            <span className="bg-sky-100 text-sky-700 text-xs px-2 py-0.5 rounded-full">{row.category}</span>
+                          )}
                         </td>
-
-                        {/* Budget edit inline */}
                         <td className="p-3">
-                          <input
-                            type="number"
-                            defaultValue={row.budget}
+                          <input type="number" defaultValue={row.budget}
                             onBlur={(e) => updateRow(row.id, "budget", e.target.value)}
-                            className="w-28 border border-slate-200 p-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-400"
-                          />
+                            className="w-28 border border-slate-200 p-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-400" />
                         </td>
-
-                        {/* Terpakai edit inline */}
                         <td className="p-3">
-                          <input
-                            type="number"
-                            defaultValue={row.spent}
+                          <input type="number" defaultValue={row.spent}
                             onBlur={(e) => updateRow(row.id, "spent", e.target.value)}
-                            className="w-28 border border-slate-200 p-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-400"
-                          />
+                            className="w-28 border border-slate-200 p-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-400" />
                         </td>
-
                         <td className="p-3">
                           <span className={`text-xs font-semibold ${p > 100 ? "text-red-500" : p > 80 ? "text-amber-500" : "text-sky-600"}`}>
                             {p}%
                           </span>
                         </td>
-
+                        {/* Status Dana bisa diganti */}
+                        <td className="p-3">
+                          <select
+                            value={row.status_dana || "Sudah Dipakai"}
+                            onChange={(e) => updateRow(row.id, "status_dana", e.target.value)}
+                            className={`text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-400 ${
+                              isBSI
+                                ? "bg-green-50 text-green-700 border-green-200"
+                                : "bg-red-50 text-red-600 border-red-200"
+                            }`}>
+                            {STATUS_DANA.map((s) => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </td>
                         <td className="p-3">
                           <button onClick={() => deleteData(row.id)}
                             className="text-xs px-2 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100">
