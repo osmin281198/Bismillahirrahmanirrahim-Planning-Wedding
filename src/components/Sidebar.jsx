@@ -1,21 +1,36 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { getRole } from "../lib/roles";
 
-const navItems = [
-  { to: "/dashboard", icon: "🏠", label: "Dashboard" },
-  { to: "/rab",       icon: "💰", label: "Anggaran" },
-  { to: "/planning",  icon: "📋", label: "Planning" },
-  { to: "/guests",    icon: "👥", label: "Tamu" },
-  { to: "/wishes",    icon: "💌", label: "RSVP" },
-  { to: "/settings",  icon: "⚙️",  label: "Pengaturan" },
+const ALL_NAV = [
+  { to: "/dashboard", icon: "🏠", label: "Dashboard",  roles: ["admin"] },
+  { to: "/rab",       icon: "💰", label: "Anggaran",   roles: ["admin"] },
+  { to: "/planning",  icon: "📋", label: "Planning",   roles: ["admin"] },
+  { to: "/guests",    icon: "👥", label: "Tamu",       roles: ["admin", "family"] },
+  { to: "/wishes",    icon: "💌", label: "RSVP",       roles: ["admin", "family"] },
+  { to: "/settings",  icon: "⚙️",  label: "Pengaturan", roles: ["admin"] },
 ];
 
 export default function Sidebar() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [open, setOpen]         = useState(false);
+  const location  = useLocation();
+  const navigate  = useNavigate();
+  const [open, setOpen]           = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [role, setRole]           = useState(null);
+  const [userEmail, setUserEmail] = useState("");
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        const email = session.user.email;
+        setUserEmail(email);
+        setRole(getRole(email));
+      }
+    });
+  }, []);
+
+  const navItems = ALL_NAV.filter((item) => role && item.roles.includes(role));
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -42,6 +57,15 @@ export default function Sidebar() {
         );
       })}
     </nav>
+  );
+
+  const UserInfo = () => (
+    <div className="px-4 py-2 mb-2 rounded-xl" style={{ background: "rgba(255,255,255,0.08)" }}>
+      <p className="text-sky-300 text-xs truncate">{userEmail}</p>
+      <p className="text-sky-400 text-xs mt-0.5">
+        {role === "admin" ? "👑 Admin" : "👨‍👩‍👧 Keluarga"}
+      </p>
+    </div>
   );
 
   const LogoutButton = () => (
@@ -73,12 +97,13 @@ export default function Sidebar() {
           style={{ background: "rgba(0,0,0,0.5)" }}>
           <div className="w-64 h-full p-6 flex flex-col shadow-xl" onClick={(e) => e.stopPropagation()}
             style={{ background: "linear-gradient(180deg, #0C4A6E 0%, #0284C7 100%)" }}>
-            <div className="mb-8">
+            <div className="mb-6">
               <p className="text-sky-300 text-xs uppercase tracking-widest mb-1">Wedding Planner</p>
               <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }}
                 className="text-white text-3xl font-semibold">Our Big Day</h2>
               <div className="mt-3 h-px bg-sky-500 opacity-40" />
             </div>
+            <UserInfo />
             <NavLinks />
             <div className="mt-6 pt-4 border-t border-sky-700 space-y-2">
               <LogoutButton />
@@ -91,12 +116,13 @@ export default function Sidebar() {
       {/* DESKTOP: Sidebar */}
       <aside className="hidden md:flex w-64 min-h-screen p-6 flex-col shadow-xl flex-shrink-0"
         style={{ background: "linear-gradient(180deg, #0C4A6E 0%, #0284C7 100%)", fontFamily: "'Inter', sans-serif" }}>
-        <div className="mb-10">
+        <div className="mb-6">
           <p className="text-sky-300 text-xs uppercase tracking-widest mb-1">Wedding Planner</p>
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }}
             className="text-white text-3xl font-semibold leading-tight">Our Big Day</h2>
           <div className="mt-3 h-px bg-sky-500 opacity-40" />
         </div>
+        <UserInfo />
         <NavLinks />
         <div className="mt-6 pt-4 border-t border-sky-700 space-y-2">
           <LogoutButton />

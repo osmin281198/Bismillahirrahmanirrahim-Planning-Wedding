@@ -1,16 +1,47 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { getRole } from "../lib/roles";
+
+// Halaman yang boleh diakses role "family"
+const FAMILY_ALLOWED = ["/guests", "/wishes"];
 
 export default function ProtectedRoute({ children }) {
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
   const [checking, setChecking] = useState(true);
+  const [allowed, setAllowed]   = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate("/");
-      else setChecking(false);
-    });
+    const check = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        navigate("/");
+        return;
+      }
+
+      const email    = session.user.email;
+      const role     = getRole(email);
+      const pathname = window.location.pathname;
+
+      // Tidak ada role → tidak diizinkan
+      if (!role) {
+        await supabase.auth.signOut();
+        navigate("/");
+        return;
+      }
+
+      // Family hanya boleh akses halaman tertentu
+      if (role === "family" && !FAMILY_ALLOWED.some((p) => pathname.startsWith(p))) {
+        navigate("/guests");
+        return;
+      }
+
+      setAllowed(true);
+      setChecking(false);
+    };
+
+    check();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) navigate("/");
@@ -30,5 +61,5 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  return children;
+  return allowed ? children : null;
 }
