@@ -63,7 +63,7 @@ export default function Sidebar() {
     <div className="px-4 py-2 mb-2 rounded-xl" style={{ background: "rgba(255,255,255,0.08)" }}>
       <p className="text-sky-300 text-xs truncate">{userEmail}</p>
       <p className="text-sky-400 text-xs mt-0.5">
-        {role === "admin" ? "👑 Admin" : "👨‍👩‍👧 Keluarga"}
+        {role === "admin" ? "💍 Pengantin" : "👨‍👩‍👧 Keluarga"}
       </p>
     </div>
   );
