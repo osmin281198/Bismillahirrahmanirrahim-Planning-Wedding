@@ -3,30 +3,36 @@ import Sidebar from "../components/Sidebar";
 import { supabase } from "../lib/supabase";
 
 const CAT_COLORS = {
-  "Venue":        { bar: "#0284C7", light: "#DBEAFE" },
-  "Catering":     { bar: "#0EA5E9", light: "#E0F2FE" },
-  "Dekorasi":     { bar: "#38BDF8", light: "#F0F9FF" },
-  "Fotografer":   { bar: "#7C3AED", light: "#EDE9FE" },
-  "Busana":       { bar: "#EC4899", light: "#FCE7F3" },
-  "Undangan":     { bar: "#0369A1", light: "#DBEAFE" },
-  "Rukun Nikah":  { bar: "#D97706", light: "#FEF3C7" },
-  "Transportasi": { bar: "#059669", light: "#D1FAE5" },
-  "Lainnya":      { bar: "#94A3B8", light: "#F1F5F9" },
+  "Venue":              { bar: "#0284C7", light: "#DBEAFE" },
+  "Catering":           { bar: "#0EA5E9", light: "#E0F2FE" },
+  "Dekorasi":           { bar: "#38BDF8", light: "#F0F9FF" },
+  "Fotografer":         { bar: "#7C3AED", light: "#EDE9FE" },
+  "Busana & Seserahan": { bar: "#EC4899", light: "#FCE7F3" },
+  "Undangan":           { bar: "#0369A1", light: "#DBEAFE" },
+  "Rukun Nikah":        { bar: "#D97706", light: "#FEF3C7" },
+  "Transportasi":       { bar: "#059669", light: "#D1FAE5" },
+  "KUA":                { bar: "#6366F1", light: "#EEF2FF" },
+  "Lainnya":            { bar: "#94A3B8", light: "#F1F5F9" },
 };
 
 const getColor = (cat) => CAT_COLORS[cat] || { bar: "#0284C7", light: "#E0F2FE" };
 
-function StatCard({ label, value, sub, color }) {
+// Format angka dengan hide
+const fmt = (num, hide) => hide ? "Rp ••••••" : `Rp ${num.toLocaleString("id-ID")}`;
+
+function StatCard({ label, value, sub, color, hide }) {
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm border border-sky-100">
       <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-lg md:text-xl font-bold truncate" style={{ color }}>{value}</p>
-      {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
+      <p className="text-lg md:text-xl font-bold truncate" style={{ color }}>
+        {hide ? "Rp ••••••" : value}
+      </p>
+      {sub && <p className="text-xs text-slate-400 mt-1">{hide ? "•••" : sub}</p>}
     </div>
   );
 }
 
-function DonutChart({ stats, totalBudget }) {
+function DonutChart({ stats, totalBudget, hide }) {
   const [hovered, setHovered] = useState(null);
   if (!stats.length || totalBudget === 0) return null;
 
@@ -93,7 +99,7 @@ function DonutChart({ stats, totalBudget }) {
   );
 }
 
-function CategoryChart({ stats, totalBudget }) {
+function CategoryChart({ stats, totalBudget, hide }) {
   const [tooltip, setTooltip] = useState(null);
   if (!stats.length) return <div className="text-center py-8 text-slate-400 text-sm">Belum ada data</div>;
   return (
@@ -117,7 +123,9 @@ function CategoryChart({ stats, totalBudget }) {
               </div>
               <div className="relative h-6 rounded-lg overflow-hidden" style={{ background: col.light }}>
                 <div className="absolute inset-0 flex items-center px-2">
-                  <span className="text-xs text-slate-400 z-10 relative">Rp {c.budget.toLocaleString("id-ID")}</span>
+                  <span className="text-xs text-slate-400 z-10 relative">
+                    {hide ? "••••••" : `Rp ${c.budget.toLocaleString("id-ID")}`}
+                  </span>
                 </div>
                 <div className="absolute top-0 left-0 h-full rounded-lg flex items-center px-2 transition-all duration-700"
                   style={{
@@ -127,10 +135,14 @@ function CategoryChart({ stats, totalBudget }) {
                       : `linear-gradient(90deg, ${col.bar}, ${col.bar}cc)`,
                     minWidth: c.spent > 0 ? "2px" : "0",
                   }}>
-                  {spentPct > 25 && <span className="text-xs text-white font-medium truncate">Rp {c.spent.toLocaleString("id-ID")}</span>}
+                  {spentPct > 25 && (
+                    <span className="text-xs text-white font-medium truncate">
+                      {hide ? "••••••" : `Rp ${c.spent.toLocaleString("id-ID")}`}
+                    </span>
+                  )}
                 </div>
               </div>
-              {tooltip === c.cat && (
+              {tooltip === c.cat && !hide && (
                 <div className="absolute right-0 top-full mt-1 z-20 bg-white rounded-xl shadow-xl border border-sky-100 p-3 min-w-[220px]">
                   <p className="font-semibold text-sky-900 text-sm mb-2">{c.cat}</p>
                   <div className="space-y-1 text-xs">
@@ -174,6 +186,9 @@ export default function Dashboard() {
   const [showSudahDipakai, setShowSudahDipakai]   = useState(true);
   const [showBankBSI, setShowBankBSI]             = useState(true);
 
+  // ✅ State hide/show angka
+  const [hideBalance, setHideBalance] = useState(false);
+
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
@@ -199,7 +214,6 @@ export default function Dashboard() {
       setTotalSudahDipakai(rows.filter((r) => !r.status_dana || r.status_dana === "Sudah Dipakai").reduce((s, r) => s + (parseFloat(r.spent) || 0), 0));
       setTotalBankBSI(rows.filter((r) => r.status_dana === "Dana di Bank BSI").reduce((s, r) => s + (parseFloat(r.spent) || 0), 0));
 
-      // ✅ Group per kategori + pisah sudah dipakai vs bank BSI
       const catMap = {};
       rows.forEach((r) => {
         const cat = r.category || "Lainnya";
@@ -236,7 +250,6 @@ export default function Dashboard() {
     return new Date(d).toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   };
 
-  // Total per kolom tabel
   const grandSudahDipakai = categoryStats.reduce((s, c) => s + c.sudahDipakai, 0);
   const grandBankBSI      = categoryStats.reduce((s, c) => s + c.bankBSI, 0);
   const grandSpent        = categoryStats.reduce((s, c) => s + c.spent, 0);
@@ -273,9 +286,17 @@ export default function Dashboard() {
                 {formatDate(weddingDate)}{weddingTime ? ` • ${weddingTime}` : ""}{weddingLocation ? ` • ${weddingLocation}` : ""}
               </p>
             </div>
-            <div className="text-center flex-shrink-0">
-              <p className="text-2xl md:text-5xl font-bold text-white">{hariLagi}</p>
-              <p className="text-sky-200 text-xs uppercase tracking-widest mt-0.5">Hari Lagi</p>
+            <div className="flex flex-col items-center gap-2 flex-shrink-0">
+              <div className="text-center">
+                <p className="text-2xl md:text-5xl font-bold text-white">{hariLagi}</p>
+                <p className="text-sky-200 text-xs uppercase tracking-widest mt-0.5">Hari Lagi</p>
+              </div>
+              {/* ✅ Tombol Hide/Show */}
+              <button onClick={() => setHideBalance(!hideBalance)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition"
+                style={{ background: "rgba(255,255,255,0.15)", color: "#BAE6FD" }}>
+                {hideBalance ? "👁 Tampilkan" : "🙈 Sembunyikan"}
+              </button>
             </div>
           </div>
         </div>
@@ -289,10 +310,10 @@ export default function Dashboard() {
           <>
             {/* Stat Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-              <StatCard label="Total Budget" value={`Rp ${totalBudget.toLocaleString("id-ID")}`} color="#0284C7" />
-              <StatCard label="Terpakai"     value={`Rp ${totalSpent.toLocaleString("id-ID")}`}  color="#0EA5E9" />
-              <StatCard label="Sisa Dana"    value={`Rp ${(totalBudget - totalSpent).toLocaleString("id-ID")}`} color="#0C4A6E" />
-              <StatCard label="Total Tamu"   value={totalGuests} sub={`${hadir} hadir`} color="#0284C7" />
+              <StatCard label="Total Budget" value={`Rp ${totalBudget.toLocaleString("id-ID")}`} color="#0284C7" hide={hideBalance} />
+              <StatCard label="Terpakai"     value={`Rp ${totalSpent.toLocaleString("id-ID")}`}  color="#0EA5E9" hide={hideBalance} />
+              <StatCard label="Sisa Dana"    value={`Rp ${(totalBudget - totalSpent).toLocaleString("id-ID")}`} color="#0C4A6E" hide={hideBalance} />
+              <StatCard label="Total Tamu"   value={totalGuests} sub={`${hadir} hadir`} color="#0284C7" hide={false} />
             </div>
 
             {/* Monitoring Status Dana */}
@@ -304,7 +325,7 @@ export default function Dashboard() {
                   <input type="checkbox" checked={showSudahDipakai} onChange={() => setShowSudahDipakai(!showSudahDipakai)} className="w-4 h-4 accent-red-500" />
                   <div>
                     <p className="text-sm font-medium text-red-600">Sudah Dipakai</p>
-                    <p className="text-xs font-bold text-red-500">Rp {totalSudahDipakai.toLocaleString("id-ID")}</p>
+                    <p className="text-xs font-bold text-red-500">{hideBalance ? "Rp ••••••" : `Rp ${totalSudahDipakai.toLocaleString("id-ID")}`}</p>
                   </div>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl border transition flex-1"
@@ -312,7 +333,7 @@ export default function Dashboard() {
                   <input type="checkbox" checked={showBankBSI} onChange={() => setShowBankBSI(!showBankBSI)} className="w-4 h-4 accent-green-600" />
                   <div>
                     <p className="text-sm font-medium text-green-700">Dana di Bank BSI</p>
-                    <p className="text-xs font-bold text-green-600">Rp {totalBankBSI.toLocaleString("id-ID")}</p>
+                    <p className="text-xs font-bold text-green-600">{hideBalance ? "Rp ••••••" : `Rp ${totalBankBSI.toLocaleString("id-ID")}`}</p>
                   </div>
                 </label>
               </div>
@@ -341,7 +362,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-slate-400">Total Monitoring</p>
-                  <p className="text-lg font-bold text-sky-900">Rp {monitoringTotal.toLocaleString("id-ID")}</p>
+                  <p className="text-lg font-bold text-sky-900">{hideBalance ? "Rp ••••••" : `Rp ${monitoringTotal.toLocaleString("id-ID")}`}</p>
                 </div>
               </div>
             </div>
@@ -361,7 +382,8 @@ export default function Dashboard() {
                 <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Keuangan</p>
                 <h2 className="font-semibold text-sky-900 mb-3 text-sm">Total Realisasi Budget</h2>
                 <div className="flex justify-between text-xs text-slate-500 mb-2">
-                  <span>Rp {totalSpent.toLocaleString("id-ID")}</span><span>Rp {totalBudget.toLocaleString("id-ID")}</span>
+                  <span>{hideBalance ? "••••••" : `Rp ${totalSpent.toLocaleString("id-ID")}`}</span>
+                  <span>{hideBalance ? "••••••" : `Rp ${totalBudget.toLocaleString("id-ID")}`}</span>
                 </div>
                 <div className="w-full bg-sky-100 rounded-full h-2.5">
                   <div className="h-2.5 rounded-full" style={{ width: `${Math.min(persen,100)}%`, background: persen > 90 ? "linear-gradient(90deg,#EF4444,#F87171)" : "linear-gradient(90deg,#0284C7,#38BDF8)" }} />
@@ -370,32 +392,30 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Chart + Tabel Kategori */}
+            {/* Chart + Tabel */}
             {categoryStats.length > 0 && (
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-sky-100">
                 <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Analisis Anggaran</p>
                 <h2 className="font-semibold text-sky-900 mb-5 text-sm">Budget vs Realisasi per Kategori</h2>
 
-                {/* Donut + Bar */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                   <div className="md:col-span-1 flex flex-col items-center">
                     <p className="text-xs text-slate-400 mb-3 uppercase tracking-widest">Proporsi Budget</p>
-                    <DonutChart stats={categoryStats} totalBudget={totalBudget} />
+                    <DonutChart stats={categoryStats} totalBudget={totalBudget} hide={hideBalance} />
                   </div>
                   <div className="md:col-span-2">
-                    <p className="text-xs text-slate-400 mb-3 uppercase tracking-widest">Realisasi (hover untuk detail)</p>
-                    <CategoryChart stats={categoryStats} totalBudget={totalBudget} />
+                    <p className="text-xs text-slate-400 mb-3 uppercase tracking-widest">Realisasi</p>
+                    <CategoryChart stats={categoryStats} totalBudget={totalBudget} hide={hideBalance} />
                   </div>
                 </div>
 
-                {/* ✅ Tabel dengan kolom terpakai dipecah 2 */}
+                {/* Tabel */}
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs min-w-[560px]">
                     <thead>
                       <tr>
                         <th rowSpan={2} className="text-left pb-2 font-medium text-slate-400 uppercase tracking-widest border-b border-sky-100 pr-3">Kategori</th>
                         <th rowSpan={2} className="text-right pb-2 font-medium text-slate-400 uppercase tracking-widest border-b border-sky-100 px-3">Budget</th>
-                        {/* ✅ Header terpakai dipecah 2 */}
                         <th colSpan={2} className="text-center pb-1 font-medium text-slate-400 uppercase tracking-widest px-3">Terpakai</th>
                         <th rowSpan={2} className="text-right pb-2 font-medium text-slate-400 uppercase tracking-widest border-b border-sky-100 px-3">Total</th>
                         <th rowSpan={2} className="text-right pb-2 font-medium text-slate-400 uppercase tracking-widest border-b border-sky-100 px-3">Sisa</th>
@@ -415,38 +435,34 @@ export default function Dashboard() {
                               {c.cat}
                             </div>
                           </td>
-                          <td className="py-2 text-right text-slate-500 px-3">Rp {c.budget.toLocaleString("id-ID")}</td>
-                          {/* ✅ Kolom Sudah Dipakai */}
+                          <td className="py-2 text-right text-slate-500 px-3">{hideBalance ? "••••••" : `Rp ${c.budget.toLocaleString("id-ID")}`}</td>
                           <td className="py-2 text-right px-3">
                             <span className={c.sudahDipakai > 0 ? "text-red-500 font-medium" : "text-slate-300"}>
-                              Rp {c.sudahDipakai.toLocaleString("id-ID")}
+                              {hideBalance ? "••••••" : `Rp ${c.sudahDipakai.toLocaleString("id-ID")}`}
                             </span>
                           </td>
-                          {/* ✅ Kolom Bank BSI */}
                           <td className="py-2 text-right px-3">
                             <span className={c.bankBSI > 0 ? "text-green-600 font-medium" : "text-slate-300"}>
-                              Rp {c.bankBSI.toLocaleString("id-ID")}
+                              {hideBalance ? "••••••" : `Rp ${c.bankBSI.toLocaleString("id-ID")}`}
                             </span>
                           </td>
-                          <td className="py-2 text-right text-sky-600 font-medium px-3">Rp {c.spent.toLocaleString("id-ID")}</td>
+                          <td className="py-2 text-right text-sky-600 font-medium px-3">{hideBalance ? "••••••" : `Rp ${c.spent.toLocaleString("id-ID")}`}</td>
                           <td className={`py-2 text-right font-medium px-3 ${c.budget - c.spent < 0 ? "text-red-500" : "text-green-600"}`}>
-                            Rp {(c.budget - c.spent).toLocaleString("id-ID")}
+                            {hideBalance ? "••••••" : `Rp ${(c.budget - c.spent).toLocaleString("id-ID")}`}
                           </td>
                           <td className={`py-2 text-right font-bold pl-3 ${c.realisasi > 100 ? "text-red-500" : c.realisasi > 80 ? "text-amber-500" : "text-sky-600"}`}>
                             {c.realisasi}%
                           </td>
                         </tr>
                       ))}
-
-                      {/* ✅ Baris total */}
                       <tr className="font-semibold text-sky-900 border-t-2 border-sky-200 bg-sky-50">
                         <td className="pt-3 pb-2 pr-3">Total</td>
-                        <td className="pt-3 pb-2 text-right px-3">Rp {grandBudget.toLocaleString("id-ID")}</td>
-                        <td className="pt-3 pb-2 text-right px-3 text-red-500">Rp {grandSudahDipakai.toLocaleString("id-ID")}</td>
-                        <td className="pt-3 pb-2 text-right px-3 text-green-600">Rp {grandBankBSI.toLocaleString("id-ID")}</td>
-                        <td className="pt-3 pb-2 text-right px-3 text-sky-600">Rp {grandSpent.toLocaleString("id-ID")}</td>
+                        <td className="pt-3 pb-2 text-right px-3">{hideBalance ? "••••••" : `Rp ${grandBudget.toLocaleString("id-ID")}`}</td>
+                        <td className="pt-3 pb-2 text-right px-3 text-red-500">{hideBalance ? "••••••" : `Rp ${grandSudahDipakai.toLocaleString("id-ID")}`}</td>
+                        <td className="pt-3 pb-2 text-right px-3 text-green-600">{hideBalance ? "••••••" : `Rp ${grandBankBSI.toLocaleString("id-ID")}`}</td>
+                        <td className="pt-3 pb-2 text-right px-3 text-sky-600">{hideBalance ? "••••••" : `Rp ${grandSpent.toLocaleString("id-ID")}`}</td>
                         <td className={`pt-3 pb-2 text-right px-3 ${grandBudget - grandSpent < 0 ? "text-red-500" : "text-green-600"}`}>
-                          Rp {(grandBudget - grandSpent).toLocaleString("id-ID")}
+                          {hideBalance ? "••••••" : `Rp ${(grandBudget - grandSpent).toLocaleString("id-ID")}`}
                         </td>
                         <td className={`pt-3 pb-2 text-right pl-3 ${persen > 100 ? "text-red-500" : persen > 80 ? "text-amber-500" : "text-sky-600"}`}>
                           {persen}%
@@ -456,7 +472,6 @@ export default function Dashboard() {
                   </table>
                 </div>
 
-                {/* Legend warna */}
                 <div className="flex flex-wrap gap-4 mt-4 pt-3 border-t border-sky-50 text-xs text-slate-500">
                   <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-red-400" />Sudah Dipakai</div>
                   <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-green-500" />Dana di Bank BSI</div>
