@@ -42,7 +42,6 @@ export default function InvitationView() {
   const [copied, setCopied]       = useState("");
 
   const countdown = useCountdown(settings.wedding_date);
-
   const guestName = slug?.replace(/-/g, " ")?.replace(/\b\w/g, (l) => l.toUpperCase()) || "Tamu Undangan";
 
   useEffect(() => {
@@ -57,7 +56,6 @@ export default function InvitationView() {
     fetchData();
   }, []);
 
-  // ✅ Format tanggal dari Settings
   const formatDate = (dateStr) => {
     if (!dateStr) return "Segera";
     return new Date(dateStr).toLocaleDateString("id-ID", {
@@ -77,10 +75,26 @@ export default function InvitationView() {
     }
   };
 
+  // ✅ FIX: fallback untuk HTTP
   const copyText = (text, key) => {
-    navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(""), 2000);
+    const tryClipboard = async () => {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const el = document.createElement("textarea");
+        el.value = text;
+        el.style.position = "fixed";
+        el.style.opacity = "0";
+        document.body.appendChild(el);
+        el.focus();
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+      }
+      setCopied(key);
+      setTimeout(() => setCopied(""), 2000);
+    };
+    tryClipboard();
   };
 
   const scrollTo = (id) => {
@@ -92,7 +106,6 @@ export default function InvitationView() {
   const gradMain  = `linear-gradient(160deg, ${C.deepBlue} 0%, ${C.midBlue} 60%, ${C.skyBlue} 100%)`;
   const gradLight = `linear-gradient(135deg, ${C.skyBlue} 0%, ${C.midBlue} 100%)`;
 
-  // ── COVER ──────────────────────────────────────────────────
   if (!opened) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-between py-12 px-6 text-center relative overflow-hidden"
@@ -132,7 +145,6 @@ export default function InvitationView() {
           </button>
         </div>
         <div>
-          {/* ✅ Tanggal dari Settings */}
           <p className="text-sky-300 text-sm">{formatDate(settings.wedding_date)}</p>
           {settings.wedding_location && <p className="text-sky-400 text-xs mt-1">{settings.wedding_location}</p>}
         </div>
@@ -140,11 +152,8 @@ export default function InvitationView() {
     );
   }
 
-  // ── MAIN INVITATION ────────────────────────────────────────
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", background: C.cloudBlue }} className="pb-20">
-
-      {/* Hero */}
       <section id="hero" className="min-h-screen flex flex-col items-center justify-center text-center px-6 relative overflow-hidden"
         style={{ background: gradMain }}>
         <div className="absolute inset-0 opacity-5"
@@ -157,10 +166,7 @@ export default function InvitationView() {
         <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-7xl font-semibold text-white relative z-10 drop-shadow-lg">
           {settings.bride?.split(" ")[0]}
         </h1>
-        {/* ✅ Tanggal dari Settings */}
         <p className="text-sky-200 text-sm mt-6 relative z-10">{formatDate(settings.wedding_date)}</p>
-
-        {/* Countdown */}
         <div className="grid grid-cols-4 gap-3 mt-10 relative z-10">
           {[
             { val: countdown.days,    label: "Hari" },
@@ -180,7 +186,6 @@ export default function InvitationView() {
         <div className="absolute bottom-8 flex flex-col items-center gap-2 text-sky-300 text-xs animate-bounce"><span>↓</span></div>
       </section>
 
-      {/* Opening */}
       <section className="py-16 px-8 text-center bg-white">
         <p className="text-sky-500 text-xs uppercase tracking-widest mb-4">Bismillahirrahmanirrahim</p>
         <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-3xl font-semibold text-sky-900 mb-6">Assalamu'alaikum Wr. Wb.</h2>
@@ -189,14 +194,11 @@ export default function InvitationView() {
         </p>
       </section>
 
-      {/* Mempelai */}
       <section id="mempelai" className="py-16 px-6" style={{ background: C.cloudBlue }}>
         <div className="text-center mb-10">
           <p className="text-sky-500 text-xs uppercase tracking-widest mb-2">Mempelai</p>
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-3xl font-semibold text-sky-900">Kedua Mempelai</h2>
         </div>
-
-        {/* Wanita */}
         <div className="max-w-sm mx-auto bg-white rounded-3xl p-8 shadow-sm border border-sky-100 text-center mb-6">
           {settings.photo_url ? (
             <img src={settings.photo_url} alt="Foto" className="w-24 h-24 object-cover rounded-full mx-auto mb-4 border-4 border-sky-100 shadow" />
@@ -218,12 +220,9 @@ export default function InvitationView() {
             </>
           )}
         </div>
-
         <div className="text-center my-2">
           <p style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-4xl text-sky-400">&amp;</p>
         </div>
-
-        {/* Pria */}
         <div className="max-w-sm mx-auto bg-white rounded-3xl p-8 shadow-sm border border-sky-100 text-center">
           <div className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-5xl"
             style={{ background: `linear-gradient(135deg, ${C.lightBlue}, ${C.skyBlue})` }}>🤵</div>
@@ -243,7 +242,6 @@ export default function InvitationView() {
         </div>
       </section>
 
-      {/* Acara */}
       <section id="acara" className="py-16 px-6 bg-white">
         <div className="text-center mb-10">
           <p className="text-sky-500 text-xs uppercase tracking-widest mb-2">Tanggal & Waktu</p>
@@ -256,7 +254,6 @@ export default function InvitationView() {
                 {label}
               </div>
               <div className="bg-white px-6 py-6 text-center">
-                {/* ✅ Tanggal dari Settings */}
                 {settings.wedding_date ? (
                   <>
                     <p className="text-xs text-slate-400 uppercase tracking-widest mb-2">
@@ -283,7 +280,6 @@ export default function InvitationView() {
         </div>
       </section>
 
-      {/* Lokasi */}
       <section id="lokasi" className="py-16 px-6" style={{ background: C.cloudBlue }}>
         <div className="text-center mb-8">
           <p className="text-sky-500 text-xs uppercase tracking-widest mb-2">Lokasi</p>
@@ -308,7 +304,6 @@ export default function InvitationView() {
         </div>
       </section>
 
-      {/* Wedding Gift */}
       <section className="py-16 px-6 bg-white">
         <div className="text-center mb-8">
           <p className="text-sky-500 text-xs uppercase tracking-widest mb-2">Hadiah</p>
@@ -335,7 +330,6 @@ export default function InvitationView() {
         </div>
       </section>
 
-      {/* RSVP & Ucapan */}
       <section id="ucapan" className="py-16 px-6" style={{ background: C.cloudBlue }}>
         <div className="text-center mb-8">
           <p className="text-sky-500 text-xs uppercase tracking-widest mb-2">Konfirmasi</p>
@@ -384,7 +378,6 @@ export default function InvitationView() {
         </div>
       </section>
 
-      {/* Penutup */}
       <section className="py-20 px-8 text-center" style={{ background: gradMain }}>
         <p style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-white text-xl leading-relaxed italic max-w-sm mx-auto">
           "Semoga Allah menghimpun yang terserak dari keduanya, memberkati mereka berdua, dan meningkatkan kualitas keturunannya sebagai pembuka pintu rahmat."
@@ -397,7 +390,6 @@ export default function InvitationView() {
         <p className="text-sky-400 text-xs mt-8">Wassalamu'alaikum Wr. Wb.</p>
       </section>
 
-      {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-sky-100 shadow-xl"
         style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)" }}>
         <div className="flex justify-around items-center py-2 max-w-sm mx-auto">
