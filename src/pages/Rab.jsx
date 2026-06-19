@@ -10,7 +10,7 @@ const CATEGORIES = [
 
 const STATUS_DANA = ["Sudah Dipakai", "Dana di Bank BSI"];
 
-const MUSIC_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Govinda, Ernie Zakri - Hal Hebat Official Music Video.mp3";
+const MUSIC_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Govinda%2C%20Ernie%20Zakri%20-%20Hal%20Hebat%20Official%20Music%20Video.mp3";
 
 function MusicPlayer() {
   const audioRef              = useRef(null);
@@ -18,25 +18,36 @@ function MusicPlayer() {
   const [volume, setVolume]   = useState(0.5);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration]       = useState(0);
+  const [started, setStarted]         = useState(false);
 
-  // ✅ Auto play saat komponen dimuat
+  // ✅ Play saat user pertama kali sentuh layar
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-      audioRef.current.play()
-        .then(() => setPlaying(true))
-        .catch(() => {}); // browser block autoplay = diam saja
-    }
-  }, []);
+    const tryPlay = () => {
+      if (audioRef.current && !started) {
+        audioRef.current.volume = volume;
+        audioRef.current.play()
+          .then(() => { setPlaying(true); setStarted(true); })
+          .catch(() => {});
+      }
+    };
+
+    document.addEventListener("touchstart", tryPlay, { once: true });
+    document.addEventListener("click", tryPlay, { once: true });
+
+    return () => {
+      document.removeEventListener("touchstart", tryPlay);
+      document.removeEventListener("click", tryPlay);
+    };
+  }, [started]);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (playing) {
       audioRef.current.pause();
+      setPlaying(false);
     } else {
-      audioRef.current.play();
+      audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
     }
-    setPlaying(!playing);
   };
 
   const handleVolume = (e) => {
@@ -61,9 +72,6 @@ function MusicPlayer() {
   };
 
   const handleEnded = () => {
-    setPlaying(false);
-    setCurrentTime(0);
-    // ✅ Loop otomatis
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
       audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
@@ -85,7 +93,15 @@ function MusicPlayer() {
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
+        preload="auto"
       />
+
+      {/* Hint jika belum play */}
+      {!started && (
+        <p className="text-xs text-sky-400 text-center mb-2 animate-pulse">
+          🎵 Tap layar untuk memulai musik
+        </p>
+      )}
 
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
