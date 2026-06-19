@@ -12,14 +12,22 @@ const STATUS_DANA = ["Sudah Dipakai", "Dana di Bank BSI"];
 
 const MUSIC_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Govinda, Ernie Zakri - Hal Hebat Official Music Video.mp3";
 
-// ── Komponen Music Player ────────────────────────────────────
 function MusicPlayer() {
-  const audioRef            = useRef(null);
-  const [playing, setPlaying]   = useState(false);
-  const [volume, setVolume]     = useState(0.5);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const audioRef              = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const [volume, setVolume]   = useState(0.5);
   const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration]       = useState(0);
+
+  // ✅ Auto play saat komponen dimuat
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+      audioRef.current.play()
+        .then(() => setPlaying(true))
+        .catch(() => {}); // browser block autoplay = diam saja
+    }
+  }, []);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
@@ -46,7 +54,6 @@ function MusicPlayer() {
   const handleTimeUpdate = () => {
     if (!audioRef.current) return;
     setCurrentTime(audioRef.current.currentTime);
-    setProgress((audioRef.current.currentTime / audioRef.current.duration) * 100 || 0);
   };
 
   const handleLoadedMetadata = () => {
@@ -55,8 +62,12 @@ function MusicPlayer() {
 
   const handleEnded = () => {
     setPlaying(false);
-    setProgress(0);
     setCurrentTime(0);
+    // ✅ Loop otomatis
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
+    }
   };
 
   const formatTime = (sec) => {
@@ -74,64 +85,44 @@ function MusicPlayer() {
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
-        loop={false}
       />
 
       <div className="flex items-center gap-4">
-        {/* Album art / icon */}
         <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: "linear-gradient(135deg, #0284C7, #38BDF8)" }}>
           <span className="text-2xl">{playing ? "🎵" : "🎶"}</span>
         </div>
 
-        {/* Info & controls */}
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold text-sky-900 truncate">Hal Hebat</p>
           <p className="text-xs text-slate-400 truncate">Govinda ft. Ernie Zakri</p>
-
-          {/* Progress bar */}
           <div className="flex items-center gap-2 mt-2">
             <span className="text-xs text-slate-400 w-8 flex-shrink-0">{formatTime(currentTime)}</span>
-            <input
-              type="range"
-              min={0}
-              max={duration || 0}
-              value={currentTime}
+            <input type="range" min={0} max={duration || 0} value={currentTime}
               onChange={handleSeek}
-              className="flex-1 h-1.5 accent-sky-500 cursor-pointer"
-            />
+              className="flex-1 h-1.5 accent-sky-500 cursor-pointer" />
             <span className="text-xs text-slate-400 w-8 flex-shrink-0 text-right">{formatTime(duration)}</span>
           </div>
         </div>
 
-        {/* Play/Pause button */}
-        <button
-          onClick={togglePlay}
+        <button onClick={togglePlay}
           className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition hover:opacity-90 active:scale-95"
           style={{ background: "linear-gradient(135deg, #0284C7, #38BDF8)" }}>
           <span className="text-white text-sm">{playing ? "⏸" : "▶"}</span>
         </button>
       </div>
 
-      {/* Volume */}
       <div className="flex items-center gap-2 mt-3 px-1">
         <span className="text-xs text-slate-400">🔈</span>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={volume}
+        <input type="range" min={0} max={1} step={0.01} value={volume}
           onChange={handleVolume}
-          className="flex-1 h-1.5 accent-sky-500 cursor-pointer"
-        />
+          className="flex-1 h-1.5 accent-sky-500 cursor-pointer" />
         <span className="text-xs text-slate-400">🔊</span>
       </div>
     </div>
   );
 }
 
-// ── Main RAB Component ───────────────────────────────────────
 export default function Rab() {
   const [item, setItem]             = useState("");
   const [category, setCategory]     = useState("");
@@ -157,11 +148,9 @@ export default function Rab() {
     if (!item.trim()) { setErrMsg("Nama item wajib diisi."); return; }
     const isDuplicate = data.some((r) => r.item.trim().toLowerCase() === item.trim().toLowerCase());
     if (isDuplicate) { setErrMsg(`Item "${item}" sudah ada.`); return; }
-
     const newRow = { id: Date.now(), item: item.trim(), category, budget, spent, status_dana: statusDana };
     const { error } = await supabase.from("rab").insert(newRow);
     if (error) { setErrMsg("Gagal menyimpan: " + error.message); return; }
-
     setData([...data, newRow]);
     setItem(""); setCategory(""); setBudget(""); setSpent(""); setStatusDana("Sudah Dipakai");
   };
@@ -176,8 +165,8 @@ export default function Rab() {
     if (!error) setData(data.filter((x) => x.id !== id));
   };
 
-  const totalBudget = data.reduce((s, r) => s + (parseFloat(r.budget) || 0), 0);
-  const totalSpent  = data.reduce((s, r) => s + (parseFloat(r.spent)  || 0), 0);
+  const totalBudget       = data.reduce((s, r) => s + (parseFloat(r.budget) || 0), 0);
+  const totalSpent        = data.reduce((s, r) => s + (parseFloat(r.spent)  || 0), 0);
   const totalSudahDipakai = data.filter((r) => !r.status_dana || r.status_dana === "Sudah Dipakai").reduce((s, r) => s + (parseFloat(r.spent) || 0), 0);
   const totalBankBSI      = data.filter((r) => r.status_dana === "Dana di Bank BSI").reduce((s, r) => s + (parseFloat(r.spent) || 0), 0);
 
@@ -201,10 +190,8 @@ export default function Rab() {
             className="text-3xl md:text-4xl font-semibold text-sky-900">RAB Pernikahan</h1>
         </div>
 
-        {/* ✅ Music Player */}
         <MusicPlayer />
 
-        {/* Summary Cards */}
         <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4">
           {[
             { label: "Item",     val: data.length,                                 color: "#0284C7" },
@@ -218,7 +205,6 @@ export default function Rab() {
           ))}
         </div>
 
-        {/* Status Dana Summary */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-sky-100">
             <div className="flex items-center gap-2 mb-1">
@@ -236,7 +222,6 @@ export default function Rab() {
           </div>
         </div>
 
-        {/* Realisasi per Kategori */}
         {categoryStats.length > 0 && (
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-sky-100 mb-4">
             <p className="text-xs text-slate-400 uppercase tracking-widest mb-4">Realisasi per Kategori</p>
@@ -246,12 +231,8 @@ export default function Rab() {
                   <div className="flex justify-between text-xs text-slate-600 mb-1">
                     <span className="font-medium">{c.cat}</span>
                     <span>
-                      <span className={`font-semibold ${c.persen > 100 ? "text-red-500" : c.persen > 80 ? "text-amber-500" : "text-sky-600"}`}>
-                        {c.persen}%
-                      </span>
-                      <span className="text-slate-400 ml-2 hidden md:inline">
-                        Rp {c.spent.toLocaleString("id-ID")} / Rp {c.budget.toLocaleString("id-ID")}
-                      </span>
+                      <span className={`font-semibold ${c.persen > 100 ? "text-red-500" : c.persen > 80 ? "text-amber-500" : "text-sky-600"}`}>{c.persen}%</span>
+                      <span className="text-slate-400 ml-2 hidden md:inline">Rp {c.spent.toLocaleString("id-ID")} / Rp {c.budget.toLocaleString("id-ID")}</span>
                     </span>
                   </div>
                   <div className="w-full bg-sky-100 rounded-full h-2">
@@ -269,13 +250,10 @@ export default function Rab() {
           </div>
         )}
 
-        {/* Form Tambah */}
         <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-sky-100 mb-4">
           <h2 className="font-semibold text-sky-900 mb-3 text-sm">Tambah Item</h2>
           {errMsg && (
-            <div className="mb-3 bg-red-50 border border-red-200 text-red-600 text-xs px-4 py-2.5 rounded-xl">
-              ⚠ {errMsg}
-            </div>
+            <div className="mb-3 bg-red-50 border border-red-200 text-red-600 text-xs px-4 py-2.5 rounded-xl">⚠ {errMsg}</div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
             <input placeholder="Nama item" value={item}
@@ -313,7 +291,6 @@ export default function Rab() {
           </button>
         </div>
 
-        {/* Filter */}
         <div className="flex gap-2 flex-wrap mb-3">
           {usedCats.map((c) => (
             <button key={c} onClick={() => setFilterCat(c)}
@@ -327,7 +304,6 @@ export default function Rab() {
           ))}
         </div>
 
-        {/* Tabel */}
         <div className="bg-white rounded-2xl shadow-sm border border-sky-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[600px]">
@@ -352,9 +328,7 @@ export default function Rab() {
                     return (
                       <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-sky-50"}>
                         <td className="p-3 font-medium text-slate-700">{row.item}</td>
-                        <td className="p-3">
-                          {row.category && <span className="bg-sky-100 text-sky-700 text-xs px-2 py-0.5 rounded-full">{row.category}</span>}
-                        </td>
+                        <td className="p-3">{row.category && <span className="bg-sky-100 text-sky-700 text-xs px-2 py-0.5 rounded-full">{row.category}</span>}</td>
                         <td className="p-3">
                           <input type="number" defaultValue={row.budget}
                             onBlur={(e) => updateRow(row.id, "budget", e.target.value)}
