@@ -10,7 +10,7 @@ const CATEGORIES = [
 
 const STATUS_DANA = ["Sudah Dipakai", "Dana di Bank BSI"];
 
-const MUSIC_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Govinda%2C%20Ernie%20Zakri%20-%20Hal%20Hebat%20Official%20Music%20Video.mp3";
+const MUSIC_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/hal-hebat.mp3";
 
 function MusicPlayer() {
   const audioRef              = useRef(null);
