@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import Sidebar from "../components/Sidebar";
 
@@ -9,6 +9,135 @@ const CATEGORIES = [
 ];
 
 const STATUS_DANA = ["Sudah Dipakai", "Dana di Bank BSI"];
+
+const MUSIC_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Govinda%2C%20Ernie%20Zakri%20-%20Hal%20Hebat%20Official%20Music%20Video.mp3";
+
+function MusicPlayer() {
+  const audioRef              = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const [volume, setVolume]   = useState(0.5);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration]       = useState(0);
+  const [started, setStarted]         = useState(false);
+
+  // ✅ Play saat user pertama kali sentuh layar
+  useEffect(() => {
+    const tryPlay = () => {
+      if (audioRef.current && !started) {
+        audioRef.current.volume = volume;
+        audioRef.current.play()
+          .then(() => { setPlaying(true); setStarted(true); })
+          .catch(() => {});
+      }
+    };
+
+    document.addEventListener("touchstart", tryPlay, { once: true });
+    document.addEventListener("click", tryPlay, { once: true });
+
+    return () => {
+      document.removeEventListener("touchstart", tryPlay);
+      document.removeEventListener("click", tryPlay);
+    };
+  }, [started]);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (playing) {
+      audioRef.current.pause();
+      setPlaying(false);
+    } else {
+      audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
+    }
+  };
+
+  const handleVolume = (e) => {
+    const val = parseFloat(e.target.value);
+    setVolume(val);
+    if (audioRef.current) audioRef.current.volume = val;
+  };
+
+  const handleSeek = (e) => {
+    const val = parseFloat(e.target.value);
+    if (audioRef.current) audioRef.current.currentTime = val;
+    setCurrentTime(val);
+  };
+
+  const handleTimeUpdate = () => {
+    if (!audioRef.current) return;
+    setCurrentTime(audioRef.current.currentTime);
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) setDuration(audioRef.current.duration);
+  };
+
+  const handleEnded = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
+    }
+  };
+
+  const formatTime = (sec) => {
+    if (!sec || isNaN(sec)) return "0:00";
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-4 shadow-sm border border-sky-100 mb-4">
+      <audio
+        ref={audioRef}
+        src={MUSIC_URL}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+        preload="auto"
+      />
+
+      {/* Hint jika belum play */}
+      {!started && (
+        <p className="text-xs text-sky-400 text-center mb-2 animate-pulse">
+          🎵 Tap layar untuk memulai musik
+        </p>
+      )}
+
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: "linear-gradient(135deg, #0284C7, #38BDF8)" }}>
+          <span className="text-2xl">{playing ? "🎵" : "🎶"}</span>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-sky-900 truncate">Hal Hebat</p>
+          <p className="text-xs text-slate-400 truncate">Govinda ft. Ernie Zakri</p>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs text-slate-400 w-8 flex-shrink-0">{formatTime(currentTime)}</span>
+            <input type="range" min={0} max={duration || 0} value={currentTime}
+              onChange={handleSeek}
+              className="flex-1 h-1.5 accent-sky-500 cursor-pointer" />
+            <span className="text-xs text-slate-400 w-8 flex-shrink-0 text-right">{formatTime(duration)}</span>
+          </div>
+        </div>
+
+        <button onClick={togglePlay}
+          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition hover:opacity-90 active:scale-95"
+          style={{ background: "linear-gradient(135deg, #0284C7, #38BDF8)" }}>
+          <span className="text-white text-sm">{playing ? "⏸" : "▶"}</span>
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2 mt-3 px-1">
+        <span className="text-xs text-slate-400">🔈</span>
+        <input type="range" min={0} max={1} step={0.01} value={volume}
+          onChange={handleVolume}
+          className="flex-1 h-1.5 accent-sky-500 cursor-pointer" />
+        <span className="text-xs text-slate-400">🔊</span>
+      </div>
+    </div>
+  );
+}
 
 export default function Rab() {
   const [item, setItem]             = useState("");
@@ -76,6 +205,8 @@ export default function Rab() {
           <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }}
             className="text-3xl md:text-4xl font-semibold text-sky-900">RAB Pernikahan</h1>
         </div>
+
+        <MusicPlayer />
 
         <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4">
           {[
