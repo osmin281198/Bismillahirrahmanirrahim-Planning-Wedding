@@ -7,20 +7,17 @@ const CATEGORIES = [
   "Busana & Seserahan", "Undangan", "Rukun Nikah",
   "Transportasi", "KUA", "Lainnya"
 ];
-
 const STATUS_DANA = ["Sudah Dipakai", "Dana di Bank BSI"];
-
-const MUSIC_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Govinda%2C%20Ernie%20Zakri%20-%20Hal%20Hebat%20Official%20Music%20Video.mp3";
+const MUSIC_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/hal-hebat.mp3";
 
 function MusicPlayer() {
-  const audioRef              = useRef(null);
+  const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume]   = useState(0.5);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration]       = useState(0);
   const [started, setStarted]         = useState(false);
 
-  // ✅ Play saat user pertama kali sentuh layar
   useEffect(() => {
     const tryPlay = () => {
       if (audioRef.current && !started) {
@@ -30,10 +27,8 @@ function MusicPlayer() {
           .catch(() => {});
       }
     };
-
     document.addEventListener("touchstart", tryPlay, { once: true });
     document.addEventListener("click", tryPlay, { once: true });
-
     return () => {
       document.removeEventListener("touchstart", tryPlay);
       document.removeEventListener("click", tryPlay);
@@ -42,12 +37,8 @@ function MusicPlayer() {
 
   const togglePlay = () => {
     if (!audioRef.current) return;
-    if (playing) {
-      audioRef.current.pause();
-      setPlaying(false);
-    } else {
-      audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
-    }
+    if (playing) { audioRef.current.pause(); setPlaying(false); }
+    else { audioRef.current.play().then(() => setPlaying(true)).catch(() => {}); }
   };
 
   const handleVolume = (e) => {
@@ -62,15 +53,6 @@ function MusicPlayer() {
     setCurrentTime(val);
   };
 
-  const handleTimeUpdate = () => {
-    if (!audioRef.current) return;
-    setCurrentTime(audioRef.current.currentTime);
-  };
-
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) setDuration(audioRef.current.duration);
-  };
-
   const handleEnded = () => {
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
@@ -78,61 +60,43 @@ function MusicPlayer() {
     }
   };
 
-  const formatTime = (sec) => {
+  const fmt = (sec) => {
     if (!sec || isNaN(sec)) return "0:00";
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
+    return `${Math.floor(sec/60)}:${Math.floor(sec%60).toString().padStart(2,"0")}`;
   };
 
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm border border-sky-100 mb-4">
-      <audio
-        ref={audioRef}
-        src={MUSIC_URL}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onEnded={handleEnded}
-        preload="auto"
-      />
-
-      {/* Hint jika belum play */}
-      {!started && (
-        <p className="text-xs text-sky-400 text-center mb-2 animate-pulse">
-          🎵 Tap layar untuk memulai musik
-        </p>
-      )}
-
+      <audio ref={audioRef} src={MUSIC_URL} preload="auto"
+        onTimeUpdate={() => audioRef.current && setCurrentTime(audioRef.current.currentTime)}
+        onLoadedMetadata={() => audioRef.current && setDuration(audioRef.current.duration)}
+        onEnded={handleEnded} />
+      {!started && <p className="text-xs text-sky-400 text-center mb-2 animate-pulse">🎵 Tap layar untuk memulai musik</p>}
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: "linear-gradient(135deg, #0284C7, #38BDF8)" }}>
           <span className="text-2xl">{playing ? "🎵" : "🎶"}</span>
         </div>
-
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold text-sky-900 truncate">Hal Hebat</p>
           <p className="text-xs text-slate-400 truncate">Govinda ft. Ernie Zakri</p>
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-xs text-slate-400 w-8 flex-shrink-0">{formatTime(currentTime)}</span>
-            <input type="range" min={0} max={duration || 0} value={currentTime}
-              onChange={handleSeek}
-              className="flex-1 h-1.5 accent-sky-500 cursor-pointer" />
-            <span className="text-xs text-slate-400 w-8 flex-shrink-0 text-right">{formatTime(duration)}</span>
+            <span className="text-xs text-slate-400 w-8">{fmt(currentTime)}</span>
+            <input type="range" min={0} max={duration||0} value={currentTime}
+              onChange={handleSeek} className="flex-1 h-1.5 accent-sky-500 cursor-pointer" />
+            <span className="text-xs text-slate-400 w-8 text-right">{fmt(duration)}</span>
           </div>
         </div>
-
         <button onClick={togglePlay}
-          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition hover:opacity-90 active:scale-95"
+          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 hover:opacity-90"
           style={{ background: "linear-gradient(135deg, #0284C7, #38BDF8)" }}>
           <span className="text-white text-sm">{playing ? "⏸" : "▶"}</span>
         </button>
       </div>
-
       <div className="flex items-center gap-2 mt-3 px-1">
         <span className="text-xs text-slate-400">🔈</span>
         <input type="range" min={0} max={1} step={0.01} value={volume}
-          onChange={handleVolume}
-          className="flex-1 h-1.5 accent-sky-500 cursor-pointer" />
+          onChange={handleVolume} className="flex-1 h-1.5 accent-sky-500 cursor-pointer" />
         <span className="text-xs text-slate-400">🔊</span>
       </div>
     </div>
@@ -268,9 +232,7 @@ export default function Rab() {
 
         <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-sky-100 mb-4">
           <h2 className="font-semibold text-sky-900 mb-3 text-sm">Tambah Item</h2>
-          {errMsg && (
-            <div className="mb-3 bg-red-50 border border-red-200 text-red-600 text-xs px-4 py-2.5 rounded-xl">⚠ {errMsg}</div>
-          )}
+          {errMsg && <div className="mb-3 bg-red-50 border border-red-200 text-red-600 text-xs px-4 py-2.5 rounded-xl">⚠ {errMsg}</div>}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
             <input placeholder="Nama item" value={item}
               onChange={(e) => { setItem(e.target.value); setErrMsg(""); }}
@@ -361,9 +323,7 @@ export default function Rab() {
                         <td className="p-3">
                           <select value={row.status_dana || "Sudah Dipakai"}
                             onChange={(e) => updateRow(row.id, "status_dana", e.target.value)}
-                            className={`text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-400 ${
-                              isBSI ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-600 border-red-200"
-                            }`}>
+                            className={`text-xs px-2 py-1.5 rounded-lg border focus:outline-none ${isBSI ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-600 border-red-200"}`}>
                             {STATUS_DANA.map((s) => <option key={s} value={s}>{s}</option>)}
                           </select>
                         </td>
