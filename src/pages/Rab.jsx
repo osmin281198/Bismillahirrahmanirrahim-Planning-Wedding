@@ -1,10 +1,137 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import Sidebar from "../components/Sidebar";
 
-const CATEGORIES = ["Venue", "Catering", "Dekorasi", "Fotografer", "Busana", "Undangan", "Rukun Nikah", "Transportasi", "Lainnya"];
+const CATEGORIES = [
+  "Venue", "Catering", "Dekorasi", "Fotografer",
+  "Busana & Seserahan", "Undangan", "Rukun Nikah",
+  "Transportasi", "KUA", "Lainnya"
+];
+
 const STATUS_DANA = ["Sudah Dipakai", "Dana di Bank BSI"];
 
+const MUSIC_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Govinda, Ernie Zakri - Hal Hebat Official Music Video.mp3";
+
+// ── Komponen Music Player ────────────────────────────────────
+function MusicPlayer() {
+  const audioRef            = useRef(null);
+  const [playing, setPlaying]   = useState(false);
+  const [volume, setVolume]     = useState(0.5);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (playing) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setPlaying(!playing);
+  };
+
+  const handleVolume = (e) => {
+    const val = parseFloat(e.target.value);
+    setVolume(val);
+    if (audioRef.current) audioRef.current.volume = val;
+  };
+
+  const handleSeek = (e) => {
+    const val = parseFloat(e.target.value);
+    if (audioRef.current) audioRef.current.currentTime = val;
+    setCurrentTime(val);
+  };
+
+  const handleTimeUpdate = () => {
+    if (!audioRef.current) return;
+    setCurrentTime(audioRef.current.currentTime);
+    setProgress((audioRef.current.currentTime / audioRef.current.duration) * 100 || 0);
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) setDuration(audioRef.current.duration);
+  };
+
+  const handleEnded = () => {
+    setPlaying(false);
+    setProgress(0);
+    setCurrentTime(0);
+  };
+
+  const formatTime = (sec) => {
+    if (!sec || isNaN(sec)) return "0:00";
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-4 shadow-sm border border-sky-100 mb-4">
+      <audio
+        ref={audioRef}
+        src={MUSIC_URL}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+        loop={false}
+      />
+
+      <div className="flex items-center gap-4">
+        {/* Album art / icon */}
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ background: "linear-gradient(135deg, #0284C7, #38BDF8)" }}>
+          <span className="text-2xl">{playing ? "🎵" : "🎶"}</span>
+        </div>
+
+        {/* Info & controls */}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-sky-900 truncate">Hal Hebat</p>
+          <p className="text-xs text-slate-400 truncate">Govinda ft. Ernie Zakri</p>
+
+          {/* Progress bar */}
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs text-slate-400 w-8 flex-shrink-0">{formatTime(currentTime)}</span>
+            <input
+              type="range"
+              min={0}
+              max={duration || 0}
+              value={currentTime}
+              onChange={handleSeek}
+              className="flex-1 h-1.5 accent-sky-500 cursor-pointer"
+            />
+            <span className="text-xs text-slate-400 w-8 flex-shrink-0 text-right">{formatTime(duration)}</span>
+          </div>
+        </div>
+
+        {/* Play/Pause button */}
+        <button
+          onClick={togglePlay}
+          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition hover:opacity-90 active:scale-95"
+          style={{ background: "linear-gradient(135deg, #0284C7, #38BDF8)" }}>
+          <span className="text-white text-sm">{playing ? "⏸" : "▶"}</span>
+        </button>
+      </div>
+
+      {/* Volume */}
+      <div className="flex items-center gap-2 mt-3 px-1">
+        <span className="text-xs text-slate-400">🔈</span>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={volume}
+          onChange={handleVolume}
+          className="flex-1 h-1.5 accent-sky-500 cursor-pointer"
+        />
+        <span className="text-xs text-slate-400">🔊</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Main RAB Component ───────────────────────────────────────
 export default function Rab() {
   const [item, setItem]             = useState("");
   const [category, setCategory]     = useState("");
@@ -51,14 +178,8 @@ export default function Rab() {
 
   const totalBudget = data.reduce((s, r) => s + (parseFloat(r.budget) || 0), 0);
   const totalSpent  = data.reduce((s, r) => s + (parseFloat(r.spent)  || 0), 0);
-
-  // Total per status dana
-  const totalSudahDipakai = data
-    .filter((r) => !r.status_dana || r.status_dana === "Sudah Dipakai")
-    .reduce((s, r) => s + (parseFloat(r.spent) || 0), 0);
-  const totalBankBSI = data
-    .filter((r) => r.status_dana === "Dana di Bank BSI")
-    .reduce((s, r) => s + (parseFloat(r.spent) || 0), 0);
+  const totalSudahDipakai = data.filter((r) => !r.status_dana || r.status_dana === "Sudah Dipakai").reduce((s, r) => s + (parseFloat(r.spent) || 0), 0);
+  const totalBankBSI      = data.filter((r) => r.status_dana === "Dana di Bank BSI").reduce((s, r) => s + (parseFloat(r.spent) || 0), 0);
 
   const categoryStats = CATEGORIES.map((cat) => {
     const items = data.filter((r) => r.category === cat);
@@ -80,6 +201,9 @@ export default function Rab() {
             className="text-3xl md:text-4xl font-semibold text-sky-900">RAB Pernikahan</h1>
         </div>
 
+        {/* ✅ Music Player */}
+        <MusicPlayer />
+
         {/* Summary Cards */}
         <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4">
           {[
@@ -97,22 +221,18 @@ export default function Rab() {
         {/* Status Dana Summary */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-sky-100">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-3 h-3 rounded-full bg-red-400" />
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
               <p className="text-xs text-slate-400 uppercase tracking-widest">Sudah Dipakai</p>
             </div>
-            <p className="text-base md:text-xl font-bold text-red-500">
-              Rp {totalSudahDipakai.toLocaleString("id-ID")}
-            </p>
+            <p className="text-base md:text-xl font-bold text-red-500">Rp {totalSudahDipakai.toLocaleString("id-ID")}</p>
           </div>
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-sky-100">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-3 h-3 rounded-full bg-green-400" />
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
               <p className="text-xs text-slate-400 uppercase tracking-widest">Dana di Bank BSI</p>
             </div>
-            <p className="text-base md:text-xl font-bold text-green-600">
-              Rp {totalBankBSI.toLocaleString("id-ID")}
-            </p>
+            <p className="text-base md:text-xl font-bold text-green-600">Rp {totalBankBSI.toLocaleString("id-ID")}</p>
           </div>
         </div>
 
@@ -173,27 +293,19 @@ export default function Rab() {
               onChange={(e) => setSpent(e.target.value)}
               className="border border-slate-200 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" />
           </div>
-
-          {/* Status Dana */}
           <div className="mb-3">
             <p className="text-xs text-slate-400 uppercase tracking-widest mb-2">Status Dana</p>
             <div className="flex gap-4">
               {STATUS_DANA.map((s) => (
                 <label key={s} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="statusDana"
-                    value={s}
-                    checked={statusDana === s}
-                    onChange={() => setStatusDana(s)}
-                    className="accent-sky-500 w-4 h-4"
-                  />
+                  <input type="radio" name="statusDana" value={s}
+                    checked={statusDana === s} onChange={() => setStatusDana(s)}
+                    className="accent-sky-500 w-4 h-4" />
                   <span className="text-sm text-slate-600">{s}</span>
                 </label>
               ))}
             </div>
           </div>
-
           <button onClick={addData}
             className="w-full md:w-auto px-6 py-2.5 rounded-xl text-white text-sm font-semibold hover:opacity-90"
             style={{ background: "linear-gradient(90deg, #0284C7, #38BDF8)" }}>
@@ -201,7 +313,7 @@ export default function Rab() {
           </button>
         </div>
 
-        {/* Filter Kategori */}
+        {/* Filter */}
         <div className="flex gap-2 flex-wrap mb-3">
           {usedCats.map((c) => (
             <button key={c} onClick={() => setFilterCat(c)}
@@ -241,9 +353,7 @@ export default function Rab() {
                       <tr key={row.id} className={i % 2 === 0 ? "bg-white" : "bg-sky-50"}>
                         <td className="p-3 font-medium text-slate-700">{row.item}</td>
                         <td className="p-3">
-                          {row.category && (
-                            <span className="bg-sky-100 text-sky-700 text-xs px-2 py-0.5 rounded-full">{row.category}</span>
-                          )}
+                          {row.category && <span className="bg-sky-100 text-sky-700 text-xs px-2 py-0.5 rounded-full">{row.category}</span>}
                         </td>
                         <td className="p-3">
                           <input type="number" defaultValue={row.budget}
@@ -256,19 +366,13 @@ export default function Rab() {
                             className="w-28 border border-slate-200 p-1.5 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-400" />
                         </td>
                         <td className="p-3">
-                          <span className={`text-xs font-semibold ${p > 100 ? "text-red-500" : p > 80 ? "text-amber-500" : "text-sky-600"}`}>
-                            {p}%
-                          </span>
+                          <span className={`text-xs font-semibold ${p > 100 ? "text-red-500" : p > 80 ? "text-amber-500" : "text-sky-600"}`}>{p}%</span>
                         </td>
-                        {/* Status Dana bisa diganti */}
                         <td className="p-3">
-                          <select
-                            value={row.status_dana || "Sudah Dipakai"}
+                          <select value={row.status_dana || "Sudah Dipakai"}
                             onChange={(e) => updateRow(row.id, "status_dana", e.target.value)}
                             className={`text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-sky-400 ${
-                              isBSI
-                                ? "bg-green-50 text-green-700 border-green-200"
-                                : "bg-red-50 text-red-600 border-red-200"
+                              isBSI ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-600 border-red-200"
                             }`}>
                             {STATUS_DANA.map((s) => <option key={s} value={s}>{s}</option>)}
                           </select>
