@@ -12,11 +12,11 @@ const MUSIC_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/pu
 
 function MusicPlayer() {
   const audioRef = useRef(null);
-  const [playing, setPlaying] = useState(false);
-  const [volume, setVolume]   = useState(0.5);
+  const [playing, setPlaying]     = useState(false);
+  const [volume, setVolume]       = useState(0.5);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration]       = useState(0);
-  const [started, setStarted]         = useState(false);
+  const [duration, setDuration]   = useState(0);
+  const [started, setStarted]     = useState(false);
 
   useEffect(() => {
     const tryPlay = () => {
@@ -71,7 +71,11 @@ function MusicPlayer() {
         onTimeUpdate={() => audioRef.current && setCurrentTime(audioRef.current.currentTime)}
         onLoadedMetadata={() => audioRef.current && setDuration(audioRef.current.duration)}
         onEnded={handleEnded} />
-      {!started && <p className="text-xs text-sky-400 text-center mb-2 animate-pulse">🎵 Tap layar untuk memulai musik</p>}
+      {!started && (
+        <p className="text-xs text-sky-400 text-center mb-2 animate-pulse">
+          🎵 Tap layar untuk memulai musik
+        </p>
+      )}
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: "linear-gradient(135deg, #0284C7, #38BDF8)" }}>
@@ -88,7 +92,7 @@ function MusicPlayer() {
           </div>
         </div>
         <button onClick={togglePlay}
-          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 hover:opacity-90"
+          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 hover:opacity-90 active:scale-95"
           style={{ background: "linear-gradient(135deg, #0284C7, #38BDF8)" }}>
           <span className="text-white text-sm">{playing ? "⏸" : "▶"}</span>
         </button>
