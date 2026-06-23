@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import { supabase } from "../lib/supabase";
+
+const DASHBOARD_MUSIC = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Terpukau.mp3";
 
 const CAT_COLORS = {
   "Venue":              { bar: "#0284C7", light: "#DBEAFE" },
@@ -17,8 +19,129 @@ const CAT_COLORS = {
 
 const getColor = (cat) => CAT_COLORS[cat] || { bar: "#0284C7", light: "#E0F2FE" };
 
-// Format angka dengan hide
-const fmt = (num, hide) => hide ? "Rp ••••••" : `Rp ${num.toLocaleString("id-ID")}`;
+// ✅ Floating Music Player
+function FloatingMusic() {
+  const audioRef              = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const [started, setStarted] = useState(false);
+  const [volume, setVolume]   = useState(0.5);
+  const [showVol, setShowVol] = useState(false);
+
+  useEffect(() => {
+    const tryPlay = () => {
+      if (audioRef.current && !started) {
+        audioRef.current.volume = volume;
+        audioRef.current.play()
+          .then(() => { setPlaying(true); setStarted(true); })
+          .catch(() => {});
+      }
+    };
+    document.addEventListener("touchstart", tryPlay, { once: true });
+    document.addEventListener("click",      tryPlay, { once: true });
+    return () => {
+      document.removeEventListener("touchstart", tryPlay);
+      document.removeEventListener("click",      tryPlay);
+    };
+  }, [started]);
+
+  const togglePlay = (e) => {
+    e.stopPropagation();
+    if (!audioRef.current) return;
+    if (playing) { audioRef.current.pause(); setPlaying(false); }
+    else { audioRef.current.play().then(() => setPlaying(true)).catch(() => {}); }
+    setStarted(true);
+  };
+
+  const handleVolume = (e) => {
+    const val = parseFloat(e.target.value);
+    setVolume(val);
+    if (audioRef.current) audioRef.current.volume = val;
+  };
+
+  const handleEnded = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
+    }
+  };
+
+  return (
+    <div style={{ position:"fixed", bottom:24, right:16, zIndex:50, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:8 }}>
+      <audio ref={audioRef} src={DASHBOARD_MUSIC} preload="auto" onEnded={handleEnded} />
+
+      {/* Volume slider */}
+      {showVol && (
+        <div style={{
+          background:"rgba(255,255,255,0.97)", borderRadius:16,
+          padding:"12px 10px", border:"1px solid #BAE6FD",
+          boxShadow:"0 8px 32px rgba(12,74,110,0.15)",
+          display:"flex", flexDirection:"column", alignItems:"center", gap:4
+        }}>
+          <span style={{ fontSize:"0.65rem", color:"#94A3B8" }}>🔊</span>
+          <input type="range" min={0} max={1} step={0.01} value={volume}
+            onChange={handleVolume}
+            style={{ writingMode:"vertical-lr", direction:"rtl", height:72, accentColor:"#0284C7" }} />
+          <span style={{ fontSize:"0.65rem", color:"#94A3B8" }}>🔈</span>
+        </div>
+      )}
+
+      <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+        {/* Animasi not balok */}
+        {playing && (
+          <div style={{ display:"flex", gap:2, alignItems:"flex-end", height:20 }}>
+            {[1,2,3,4].map((i) => (
+              <div key={i} style={{
+                width:3, borderRadius:2, background:"#0284C7",
+                animation:`pulse${i} ${0.4 + i*0.1}s ease-in-out infinite alternate`,
+              }} />
+            ))}
+            <style>{`
+              @keyframes pulse1{from{height:4px}to{height:16px}}
+              @keyframes pulse2{from{height:6px}to{height:20px}}
+              @keyframes pulse3{from{height:5px}to{height:14px}}
+              @keyframes pulse4{from{height:8px}to{height:18px}}
+            `}</style>
+          </div>
+        )}
+
+        {/* Volume toggle */}
+        <button onClick={(e) => { e.stopPropagation(); setShowVol(!showVol); }}
+          style={{
+            width:36, height:36, borderRadius:"50%",
+            background:"rgba(255,255,255,0.97)",
+            border:"1px solid #BAE6FD",
+            boxShadow:"0 4px 16px rgba(12,74,110,0.12)",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            fontSize:"0.9rem", cursor:"pointer"
+          }}>🎚</button>
+
+        {/* Play/Pause */}
+        <button onClick={togglePlay}
+          style={{
+            width:46, height:46, borderRadius:"50%",
+            background:"linear-gradient(135deg,#0284C7,#38BDF8)",
+            boxShadow:"0 4px 20px rgba(2,132,199,0.4)",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            fontSize:"1rem", color:"white", cursor:"pointer", border:"none"
+          }}>
+          {playing ? "⏸" : "▶"}
+        </button>
+      </div>
+
+      {/* Label lagu */}
+      {started && (
+        <div style={{
+          background:"rgba(255,255,255,0.95)", borderRadius:20,
+          padding:"4px 12px", border:"1px solid #BAE6FD",
+          boxShadow:"0 2px 8px rgba(12,74,110,0.1)"
+        }}>
+          <p style={{ fontSize:"0.6rem", color:"#0284C7", fontWeight:600 }}>🎵 Terpukau</p>
+          <p style={{ fontSize:"0.55rem", color:"#94A3B8" }}>Wedding Playlist</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function StatCard({ label, value, sub, color, hide }) {
   return (
@@ -32,7 +155,7 @@ function StatCard({ label, value, sub, color, hide }) {
   );
 }
 
-function DonutChart({ stats, totalBudget, hide }) {
+function DonutChart({ stats, totalBudget }) {
   const [hovered, setHovered] = useState(null);
   if (!stats.length || totalBudget === 0) return null;
 
@@ -185,9 +308,7 @@ export default function Dashboard() {
   const [totalBankBSI, setTotalBankBSI]           = useState(0);
   const [showSudahDipakai, setShowSudahDipakai]   = useState(true);
   const [showBankBSI, setShowBankBSI]             = useState(true);
-
-  // ✅ State hide/show angka
-  const [hideBalance, setHideBalance] = useState(false);
+  const [hideBalance, setHideBalance]             = useState(false);
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -258,6 +379,10 @@ export default function Dashboard() {
   return (
     <div className="flex min-h-screen" style={{ background: "#F0F9FF", fontFamily: "'Inter', sans-serif" }}>
       <Sidebar />
+
+      {/* ✅ Floating Music */}
+      <FloatingMusic />
+
       <main className="flex-1 pt-16 md:pt-0 p-4 md:p-8 overflow-x-hidden">
 
         {/* Hero */}
@@ -291,7 +416,6 @@ export default function Dashboard() {
                 <p className="text-2xl md:text-5xl font-bold text-white">{hariLagi}</p>
                 <p className="text-sky-200 text-xs uppercase tracking-widest mt-0.5">Hari Lagi</p>
               </div>
-              {/* ✅ Tombol Hide/Show */}
               <button onClick={() => setHideBalance(!hideBalance)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition"
                 style={{ background: "rgba(255,255,255,0.15)", color: "#BAE6FD" }}>
@@ -392,7 +516,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Chart + Tabel */}
+            {/* Chart Kategori */}
             {categoryStats.length > 0 && (
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-sky-100">
                 <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Analisis Anggaran</p>
@@ -401,7 +525,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                   <div className="md:col-span-1 flex flex-col items-center">
                     <p className="text-xs text-slate-400 mb-3 uppercase tracking-widest">Proporsi Budget</p>
-                    <DonutChart stats={categoryStats} totalBudget={totalBudget} hide={hideBalance} />
+                    <DonutChart stats={categoryStats} totalBudget={totalBudget} />
                   </div>
                   <div className="md:col-span-2">
                     <p className="text-xs text-slate-400 mb-3 uppercase tracking-widest">Realisasi</p>
