@@ -1,22 +1,16 @@
 {
-  "name": "Wedding Planner - Ridwan & Nurlaila",
-  "short_name": "Our Big Day",
-  "description": "Wedding Management System",
+  "name": "Undangan Pernikahan Ridwan & Nurlaila",
+  "short_name": "Undangan RN",
+  "description": "Undangan Pernikahan Ridwan Nurjaman & Nurlaila Handayani",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0C4A6E",
+  "background_color": "#F0F9FF",
   "theme_color": "#0284C7",
-  "orientation": "portrait",
   "icons": [
     {
-      "src": "/logo.png",
+      "src": "/vite.svg",
       "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/logo.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/svg+xml"
     }
   ]
 }
