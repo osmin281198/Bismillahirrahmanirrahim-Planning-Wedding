@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
 const INVITATION_MUSIC = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Ada%20Untukmu.mp3";
-const BONEKA_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-photos/boneka.png";
+const BONEKA_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-photos/boneka1.png";
 
 const STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
