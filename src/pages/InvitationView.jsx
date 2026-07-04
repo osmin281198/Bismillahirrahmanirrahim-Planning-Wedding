@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
 const INVITATION_MUSIC = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Ada%20Untukmu.mp3";
-const BONEKA_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-photos/boneka1.png";
+const BONEKA_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-photos/boneka.png";
 
 const STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
@@ -38,17 +38,13 @@ const STYLES = `
 }
 @keyframes bonekaIn {
   0%   { opacity:0; transform:scale(0.4) translateY(40px); }
-  40%  { opacity:1; transform:scale(1.08) translateY(-8px); }
-  60%  { transform:scale(0.97) translateY(0); }
+  40%  { opacity:1; transform:scale(1.05) translateY(-6px); }
+  60%  { transform:scale(0.98) translateY(0); }
   100% { opacity:1; transform:scale(1) translateY(0); }
 }
 @keyframes bonekaFloat {
-  0%,100% { transform:translateY(0) scale(1); }
-  50%      { transform:translateY(-10px) scale(1.03); }
-}
-@keyframes bonekaOut {
-  0%   { opacity:1; transform:scale(1); }
-  100% { opacity:0; transform:scale(1.3); }
+  0%,100% { transform:translateY(0); }
+  50%      { transform:translateY(-10px); }
 }
 @keyframes textReveal {
   0%   { opacity:0; transform:translateY(24px); }
@@ -73,7 +69,6 @@ const STYLES = `
 }
 `;
 
-// ✨ Animasi Boneka + Cincin + Cahaya
 function RingAnimation({ visible, groom, bride }) {
   if (!visible) return null;
   const stars = [
@@ -88,7 +83,6 @@ function RingAnimation({ visible, groom, bride }) {
     { top:"30%", left:"5%",  delay:"0.1s",  tx:"-35px", ty:"-20px" },
     { top:"65%", left:"90%", delay:"0.45s", tx:"35px",  ty:"20px"  },
   ];
-
   return (
     <div style={{
       position:"fixed", inset:0, zIndex:200,
@@ -97,123 +91,71 @@ function RingAnimation({ visible, groom, bride }) {
       background:"linear-gradient(160deg,#0C4A6E 0%,#0284C7 55%,#38BDF8 100%)",
       animation:"overlayIn 0.35s ease both",
     }}>
-      {/* Cahaya latar besar */}
-      <div style={{
-        position:"absolute", width:350, height:350, borderRadius:"50%",
+      <div style={{ position:"absolute", width:350, height:350, borderRadius:"50%",
         background:"radial-gradient(circle,rgba(186,230,253,0.25) 0%,transparent 70%)",
-        animation:"glowPulse 1.4s ease-in-out infinite",
-      }} />
+        animation:"glowPulse 1.4s ease-in-out infinite" }} />
+      <div style={{ position:"absolute", width:260, height:260, borderRadius:"50%",
+        border:"1.5px solid rgba(196,164,90,0.4)", animation:"glowPulse 2s ease-in-out infinite" }} />
+      <div style={{ position:"absolute", width:310, height:310, borderRadius:"50%",
+        border:"1px solid rgba(186,230,253,0.2)", animation:"glowPulse 2.4s 0.3s ease-in-out infinite" }} />
 
-      {/* Lingkaran emas */}
-      <div style={{
-        position:"absolute", width:260, height:260, borderRadius:"50%",
-        border:"1.5px solid rgba(196,164,90,0.4)",
-        animation:"glowPulse 2s ease-in-out infinite",
-      }} />
-      <div style={{
-        position:"absolute", width:300, height:300, borderRadius:"50%",
-        border:"1px solid rgba(186,230,253,0.2)",
-        animation:"glowPulse 2.4s 0.3s ease-in-out infinite",
-      }} />
-
-      {/* Bintang burst */}
       {stars.map((s, i) => (
-        <div key={i} style={{
-          position:"absolute", top:s.top, left:s.left,
-          fontSize:"1rem", color:"#C4A45A",
-          "--tx":s.tx, "--ty":s.ty,
-          animation:`burstStar 2s ${s.delay} ease-out both`,
-        }}>✦</div>
+        <div key={i} style={{ position:"absolute", top:s.top, left:s.left,
+          fontSize:"1rem", color:"#C4A45A", "--tx":s.tx, "--ty":s.ty,
+          animation:`burstStar 2s ${s.delay} ease-out both` }}>✦</div>
       ))}
 
-      {/* Partikel cahaya */}
       {[...Array(16)].map((_, i) => (
-        <div key={i} style={{
-          position:"absolute",
-          width: 3+(i%3)*2, height: 3+(i%3)*2,
-          borderRadius:"50%",
-          background: i%2===0 ? "rgba(196,164,90,0.85)" : "rgba(186,230,253,0.85)",
+        <div key={i} style={{ position:"absolute",
+          width:3+(i%3)*2, height:3+(i%3)*2, borderRadius:"50%",
+          background:i%2===0?"rgba(196,164,90,0.85)":"rgba(186,230,253,0.85)",
           top:`${8+(i*5)%82}%`, left:`${4+(i*11)%88}%`,
-          animation:`sparkle ${1+i*0.12}s ${i*0.08}s ease-in-out infinite`,
-        }} />
+          animation:`sparkle ${1+i*0.12}s ${i*0.08}s ease-in-out infinite` }} />
       ))}
 
-      {/* Cincin kiri */}
-      <div style={{
-        position:"absolute", top:"12%", left:"8%",
-        fontSize:"2.2rem",
+      <div style={{ position:"absolute", top:"10%", left:"6%", fontSize:"2.2rem",
         filter:"drop-shadow(0 0 16px rgba(196,164,90,0.8))",
-        animation:"ringFloat 2s ease-in-out infinite",
-      }}>💍</div>
-
-      {/* Cincin kanan */}
-      <div style={{
-        position:"absolute", top:"12%", right:"8%",
-        fontSize:"2.2rem",
+        animation:"ringFloat 2s ease-in-out infinite" }}>💍</div>
+      <div style={{ position:"absolute", top:"10%", right:"6%", fontSize:"2.2rem",
         filter:"drop-shadow(0 0 16px rgba(196,164,90,0.8))",
-        animation:"ringFloat2 2s 0.3s ease-in-out infinite",
-      }}>💍</div>
-
-      {/* Cincin bawah kiri */}
-      <div style={{
-        position:"absolute", bottom:"14%", left:"10%",
-        fontSize:"1.6rem",
+        animation:"ringFloat2 2s 0.3s ease-in-out infinite" }}>💍</div>
+      <div style={{ position:"absolute", bottom:"12%", left:"8%", fontSize:"1.6rem",
         filter:"drop-shadow(0 0 12px rgba(196,164,90,0.6))",
-        animation:"ringFloat 2.4s 0.5s ease-in-out infinite",
-      }}>💍</div>
-
-      {/* Cincin bawah kanan */}
-      <div style={{
-        position:"absolute", bottom:"14%", right:"10%",
-        fontSize:"1.6rem",
+        animation:"ringFloat 2.4s 0.5s ease-in-out infinite" }}>💍</div>
+      <div style={{ position:"absolute", bottom:"12%", right:"8%", fontSize:"1.6rem",
         filter:"drop-shadow(0 0 12px rgba(196,164,90,0.6))",
-        animation:"ringFloat2 2.2s 0.2s ease-in-out infinite",
-      }}>💍</div>
+        animation:"ringFloat2 2.2s 0.2s ease-in-out infinite" }}>💍</div>
 
-      {/* ✅ Foto Boneka */}
+      {/* ✅ Foto boneka full di animasi */}
       <div style={{
-        position:"relative", zIndex:10,
+        position:"relative", zIndex:10, marginBottom:16,
         animation:"bonekaIn 0.8s ease both, bonekaFloat 2s 0.8s ease-in-out infinite",
         filter:"drop-shadow(0 12px 40px rgba(12,74,110,0.5))",
-        marginBottom:16,
       }}>
-        <img
-          src={BONEKA_URL}
-          alt="Boneka Pasangan"
+        <img src={BONEKA_URL} alt="Boneka Pasangan"
           style={{
-            width:180, height:180,
+            width:220, height:"auto",
             objectFit:"contain",
-            borderRadius:"50%",
-            border:"4px solid rgba(196,164,90,0.5)",
+            borderRadius:20,
+            border:"3px solid rgba(196,164,90,0.5)",
             boxShadow:"0 0 40px rgba(196,164,90,0.4), 0 0 80px rgba(186,230,253,0.3)",
-          }}
-        />
-        {/* Cahaya di bawah boneka */}
-        <div style={{
-          position:"absolute", bottom:-12, left:"50%", transform:"translateX(-50%)",
-          width:100, height:20, borderRadius:"50%",
-          background:"rgba(196,164,90,0.25)",
-          filter:"blur(8px)",
-        }} />
+            display:"block",
+          }} />
+        <div style={{ position:"absolute", bottom:-10, left:"50%", transform:"translateX(-50%)",
+          width:120, height:20, borderRadius:"50%",
+          background:"rgba(196,164,90,0.2)", filter:"blur(8px)" }} />
       </div>
 
-      {/* Teks nama */}
-      <div style={{
-        textAlign:"center",
-        animation:"textReveal 2.8s 0.4s ease both",
-        zIndex:10,
-      }}>
-        <p style={{
-          fontFamily:"'Cormorant Garamond',serif",
+      <div style={{ textAlign:"center", animation:"textReveal 2.8s 0.4s ease both", zIndex:10 }}>
+        <p style={{ fontFamily:"'Cormorant Garamond',serif",
           fontSize:"1.9rem", color:"white", fontWeight:600,
-          letterSpacing:2, textShadow:"0 0 30px rgba(186,230,253,0.8)",
-        }}>
+          letterSpacing:2, textShadow:"0 0 30px rgba(186,230,253,0.8)" }}>
           {groom?.split(" ")[0] || "Ridwan"} &amp; {bride?.split(" ")[0] || "Nurlaila"}
         </p>
-        <p style={{
-          color:"#C4A45A", fontSize:"0.68rem",
-          letterSpacing:"0.3em", textTransform:"uppercase", marginTop:8,
-        }}>✦ Membuka Undangan ✦</p>
+        <p style={{ color:"#C4A45A", fontSize:"0.68rem",
+          letterSpacing:"0.3em", textTransform:"uppercase", marginTop:8 }}>
+          ✦ Membuka Undangan ✦
+        </p>
       </div>
     </div>
   );
@@ -233,7 +175,7 @@ function FloatingClouds({ opacity = 0.55 }) {
         <div key={i} style={{
           position:"absolute", left:0, top:c.top,
           width:c.w, height:c.h, background:"white", borderRadius:50,
-          opacity: opacity*(0.6+i*0.06), filter:"blur(7px)",
+          opacity:opacity*(0.6+i*0.06), filter:"blur(7px)",
           animation:`driftCloud ${c.dur} linear ${c.delay} infinite`,
         }} />
       ))}
@@ -275,7 +217,7 @@ function QuranCard() {
 }
 
 function FloatingMusic() {
-  const audioRef          = useRef(null);
+  const audioRef              = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [started, setStarted] = useState(false);
   const [volume, setVolume]   = useState(0.6);
@@ -321,11 +263,9 @@ function FloatingMusic() {
     <div style={{ position:"fixed", bottom:80, right:16, zIndex:50, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:8 }}>
       <audio ref={audioRef} src={INVITATION_MUSIC} preload="auto" onEnded={handleEnded} />
       {showVol && (
-        <div style={{
-          background:"rgba(255,255,255,0.95)", borderRadius:16, padding:"12px 10px",
+        <div style={{ background:"rgba(255,255,255,0.95)", borderRadius:16, padding:"12px 10px",
           border:"1px solid #BAE6FD", boxShadow:"0 8px 32px rgba(12,74,110,0.15)",
-          display:"flex", flexDirection:"column", alignItems:"center", gap:4
-        }}>
+          display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
           <span style={{ fontSize:"0.65rem", color:"#94A3B8" }}>🔊</span>
           <input type="range" min={0} max={1} step={0.01} value={volume} onChange={handleVolume}
             style={{ writingMode:"vertical-lr", direction:"rtl", height:72, accentColor:"#0284C7" }} />
@@ -347,10 +287,8 @@ function FloatingMusic() {
       {playing && (
         <div style={{ display:"flex", gap:3, justifyContent:"center", height:20, alignItems:"flex-end" }}>
           {[1,2,3,4].map((i) => (
-            <div key={i} style={{
-              width:3, borderRadius:2, background:"#0284C7",
-              animation:`musicPulse ${0.4+i*0.1}s ease-in-out infinite alternate`,
-            }} />
+            <div key={i} style={{ width:3, borderRadius:2, background:"#0284C7",
+              animation:`musicPulse ${0.4+i*0.1}s ease-in-out infinite alternate` }} />
           ))}
         </div>
       )}
@@ -462,7 +400,7 @@ export default function InvitationView() {
 
   const C = {
     deepBlue:"#0C4A6E", midBlue:"#0284C7",
-    skyBlue:"#38BDF8",  lightBlue:"#BAE6FD",
+    skyBlue:"#38BDF8", lightBlue:"#BAE6FD",
     cloudBlue:"#F0F9FF", gold:"#C4A45A",
   };
   const gradMain  = `linear-gradient(160deg,${C.deepBlue} 0%,${C.midBlue} 60%,${C.skyBlue} 100%)`;
@@ -483,6 +421,7 @@ export default function InvitationView() {
         <div className="min-h-screen flex flex-col items-center justify-between py-12 px-6 text-center relative overflow-hidden"
           style={{ background:gradMain, fontFamily:"'Inter',sans-serif" }}>
           <FloatingClouds opacity={0.45} />
+
           <div style={{ position:"relative", zIndex:1, animation:"fadeDown 1s ease both" }}>
             <p style={{ ...arabic, fontSize:"1.55rem", color:C.lightBlue, lineHeight:1.7, marginBottom:4 }}>
               بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ
@@ -490,18 +429,25 @@ export default function InvitationView() {
             <p className="text-sky-200 text-xs uppercase tracking-[0.3em] mt-1">Undangan Pernikahan</p>
             <div className="w-16 h-px bg-sky-400 mx-auto opacity-50 mt-3" />
           </div>
+
           <div className="relative z-10" style={{ animation:"fadeDown 1s 0.15s ease both" }}>
-            {/* Foto boneka di cover */}
-            <div style={{ marginBottom:16 }}>
-              <img src={BONEKA_URL} alt="Boneka"
+            {/* ✅ Foto boneka full - tidak terpotong */}
+            <div style={{ marginBottom:16, display:"flex", justifyContent:"center" }}>
+              <img src={BONEKA_URL} alt="Boneka Pasangan"
                 style={{
-                  width:140, height:140, objectFit:"contain",
-                  borderRadius:"50%", margin:"0 auto",
-                  border:"3px solid rgba(196,164,90,0.4)",
-                  boxShadow:"0 0 30px rgba(196,164,90,0.3)",
+                  width:"70vw",
+                  maxWidth:260,
+                  height:"auto",
+                  objectFit:"contain",
+                  borderRadius:24,
+                  border:"3px solid rgba(196,164,90,0.45)",
+                  boxShadow:"0 8px 40px rgba(12,74,110,0.35), 0 0 20px rgba(196,164,90,0.25)",
                   display:"block",
-                }} />
+                }}
+                onError={(e) => { e.target.style.display="none"; }}
+              />
             </div>
+
             <h1 style={{ ...serif }} className="text-5xl font-semibold text-white mb-1 leading-tight drop-shadow-lg">
               {settings.groom?.split(" ")[0] || "..."}
             </h1>
@@ -509,22 +455,26 @@ export default function InvitationView() {
             <h1 style={{ ...serif }} className="text-5xl font-semibold text-white mb-5 leading-tight drop-shadow-lg">
               {settings.bride?.split(" ")[0] || "..."}
             </h1>
+
             <div style={{ display:"flex", alignItems:"center", gap:10, margin:"8px auto", maxWidth:200 }}>
               <div style={{ flex:1, height:1, background:"linear-gradient(90deg,transparent,#C4A45A,transparent)" }} />
               <span style={{ color:C.gold }}>💍</span>
               <div style={{ flex:1, height:1, background:"linear-gradient(90deg,transparent,#C4A45A,transparent)" }} />
             </div>
+
             <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl px-8 py-4 border border-white border-opacity-20 mb-7">
               <p className="text-sky-200 text-xs uppercase tracking-widest mb-1">Kepada Yth.</p>
               <p style={{ ...serif }} className="text-white text-2xl font-medium capitalize">{guestName}</p>
               <p className="text-sky-300 text-xs mt-1">Mohon maaf bila ada kesalahan penulisan nama</p>
             </div>
+
             <button onClick={handleBukaUndangan} disabled={animating}
               className="px-10 py-4 rounded-full text-sky-900 font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl disabled:opacity-70"
               style={{ background:"linear-gradient(90deg,#BAE6FD,#FFFFFF)" }}>
               {animating ? "✨ Membuka..." : "✉ Buka Undangan"}
             </button>
           </div>
+
           <div style={{ position:"relative", zIndex:1 }}>
             <p className="text-sky-300 text-sm">{formatDate(settings.wedding_date)}</p>
             {settings.wedding_location && <p className="text-sky-400 text-xs mt-1">{settings.wedding_location}</p>}
