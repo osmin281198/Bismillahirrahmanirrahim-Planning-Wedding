@@ -4,23 +4,41 @@ import { supabase } from "../lib/supabase";
 import { getRole } from "../lib/roles";
 
 const ALL_NAV = [
-  { to: "/dashboard", icon: "🏠", label: "Dashboard",  roles: ["admin"] },
-  { to: "/rab",       icon: "💰", label: "Anggaran",   roles: ["admin"] },
-  { to: "/planning",  icon: "📋", label: "Planning",   roles: ["admin"] },
-  { to: "/guests",    icon: "👥", label: "Tamu",       roles: ["admin", "family"] },
-  { to: "/wishes",    icon: "💌", label: "RSVP",       roles: ["admin", "family"] },
-  { to: "/settings",  icon: "⚙️",  label: "Pengaturan", roles: ["admin"] },
+  { to:"/dashboard", icon:"✦", label:"Dashboard",  roles:["admin"] },
+  { to:"/rab",       icon:"◈", label:"Anggaran",   roles:["admin"] },
+  { to:"/planning",  icon:"◉", label:"Planning",   roles:["admin"] },
+  { to:"/guests",    icon:"◎", label:"Tamu",       roles:["admin","family"] },
+  { to:"/wishes",    icon:"◇", label:"RSVP",       roles:["admin","family"] },
+  { to:"/settings",  icon:"◆", label:"Pengaturan", roles:["admin"] },
 ];
+
+const STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap');
+  @keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  @keyframes pulse-dot {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:0.5; transform:scale(0.8); }
+  }
+`;
 
 export default function Sidebar() {
   const location  = useLocation();
   const navigate  = useNavigate();
-  const [open, setOpen]           = useState(false);
+  const [open, setOpen]             = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [role, setRole]           = useState(null);
-  const [userEmail, setUserEmail] = useState("");
+  const [role, setRole]             = useState(null);
+  const [userEmail, setUserEmail]   = useState("");
+  const [groom, setGroom]           = useState("");
+  const [bride, setBride]           = useState("");
 
   useEffect(() => {
+    const el = document.createElement("style");
+    el.textContent = STYLES;
+    document.head.appendChild(el);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         const email = session.user.email;
@@ -28,9 +46,13 @@ export default function Sidebar() {
         setRole(getRole(email));
       }
     });
+    supabase.from("settings").select("groom, bride").eq("id",1).single()
+      .then(({ data }) => { if (data) { setGroom(data.groom||""); setBride(data.bride||""); } });
+
+    return () => document.head.removeChild(el);
   }, []);
 
-  const navItems = ALL_NAV.filter((item) => role && item.roles.includes(role));
+  const navItems = ALL_NAV.filter(item => role && item.roles.includes(role));
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -38,21 +60,32 @@ export default function Sidebar() {
     navigate("/");
   };
 
-  const NavLinks = () => (
-    <nav className="flex flex-col gap-1 flex-1">
+  const bg = "linear-gradient(180deg, #0F172A 0%, #1E293B 100%)";
+  const gold = "#C4A45A";
+
+  const NavLinks = ({ onClose }) => (
+    <nav style={{ flex:1, display:"flex", flexDirection:"column", gap:4 }}>
       {navItems.map((item) => {
         const isActive = location.pathname === item.to;
         return (
-          <Link key={item.to} to={item.to} onClick={() => setOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
+          <Link key={item.to} to={item.to}
+            onClick={onClose}
             style={{
-              background: isActive ? "rgba(255,255,255,0.15)" : "transparent",
-              color: isActive ? "#ffffff" : "#BAE6FD",
-              boxShadow: isActive ? "0 0 16px rgba(56,189,248,0.25)" : "none",
+              display:"flex", alignItems:"center", gap:12,
+              padding:"12px 16px", borderRadius:12, textDecoration:"none",
+              transition:"all 0.2s",
+              background: isActive
+                ? "linear-gradient(135deg,rgba(196,164,90,0.2),rgba(196,164,90,0.05))"
+                : "transparent",
+              border: isActive ? "1px solid rgba(196,164,90,0.3)" : "1px solid transparent",
+              color: isActive ? gold : "rgba(255,255,255,0.6)",
             }}>
-            <span className="text-lg">{item.icon}</span>
-            <span className="font-medium text-sm">{item.label}</span>
-            {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sky-300" />}
+            <span style={{ fontSize:"1rem", color: isActive ? gold : "rgba(255,255,255,0.4)" }}>{item.icon}</span>
+            <span style={{ fontSize:"0.85rem", fontWeight: isActive ? 600 : 400, letterSpacing:"0.03em" }}>{item.label}</span>
+            {isActive && (
+              <div style={{ marginLeft:"auto", width:6, height:6, borderRadius:"50%",
+                background:gold, animation:"pulse-dot 2s ease-in-out infinite" }} />
+            )}
           </Link>
         );
       })}
@@ -60,73 +93,124 @@ export default function Sidebar() {
   );
 
   const UserInfo = () => (
-    <div className="px-4 py-2 mb-2 rounded-xl" style={{ background: "rgba(255,255,255,0.08)" }}>
-      <p className="text-sky-300 text-xs truncate">{userEmail}</p>
-      <p className="text-sky-400 text-xs mt-0.5">
-        {role === "admin" ? "💍 Pengantin" : "👨‍👩‍👧 Keluarga"}
-      </p>
+    <div style={{
+      padding:"12px 16px", borderRadius:12, marginBottom:8,
+      background:"rgba(196,164,90,0.08)", border:"1px solid rgba(196,164,90,0.15)",
+    }}>
+      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+        <div style={{
+          width:36, height:36, borderRadius:"50%",
+          background:"linear-gradient(135deg,#C4A45A,#E8CC8A)",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:"1rem", flexShrink:0,
+        }}>
+          {role === "admin" ? "💍" : "👨‍👩‍👧"}
+        </div>
+        <div style={{ minWidth:0 }}>
+          <p style={{ fontSize:"0.7rem", color:gold, fontWeight:600,
+            letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:2 }}>
+            {role === "admin" ? "Pengantin" : "Keluarga"}
+          </p>
+          <p style={{ fontSize:"0.68rem", color:"rgba(255,255,255,0.4)",
+            overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+            {userEmail}
+          </p>
+        </div>
+      </div>
+      {groom && bride && (
+        <div style={{ marginTop:10, paddingTop:10, borderTop:"1px solid rgba(196,164,90,0.15)", textAlign:"center" }}>
+          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"0.95rem",
+            color:"rgba(255,255,255,0.8)", fontWeight:500 }}>
+            {groom.split(" ")[0]} &amp; {bride.split(" ")[0]}
+          </p>
+        </div>
+      )}
     </div>
   );
 
-  const LogoutButton = () => (
+  const LogoutBtn = () => (
     <button onClick={handleLogout} disabled={loggingOut}
-      className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 w-full text-left disabled:opacity-50"
-      style={{ color: "#FDA4AF", background: "rgba(255,255,255,0.05)" }}>
-      <span className="text-lg">🚪</span>
-      <span className="font-medium text-sm">{loggingOut ? "Keluar..." : "Keluar"}</span>
+      style={{
+        display:"flex", alignItems:"center", gap:10, width:"100%",
+        padding:"11px 16px", borderRadius:12, border:"1px solid rgba(239,68,68,0.2)",
+        background:"rgba(239,68,68,0.05)", cursor:"pointer",
+        color:"rgba(239,68,68,0.7)", fontSize:"0.85rem",
+        transition:"all 0.2s", opacity: loggingOut ? 0.5 : 1,
+      }}>
+      <span>↩</span>
+      <span>{loggingOut ? "Keluar..." : "Keluar"}</span>
     </button>
+  );
+
+  const Brand = () => (
+    <div style={{ marginBottom:24 }}>
+      <p style={{ fontSize:"0.6rem", color:"rgba(196,164,90,0.6)",
+        letterSpacing:"0.3em", textTransform:"uppercase", marginBottom:4 }}>Wedding Planner</p>
+      <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.6rem",
+        fontWeight:600, color:"white", lineHeight:1.2 }}>Our Big Day</h2>
+      <div style={{ marginTop:10, height:1,
+        background:"linear-gradient(90deg,transparent,rgba(196,164,90,0.4),transparent)" }} />
+    </div>
   );
 
   return (
     <>
-      {/* MOBILE: Top navbar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 shadow-md"
-        style={{ background: "linear-gradient(90deg, #0C4A6E, #0284C7)" }}>
-        <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }}
-          className="text-white text-xl font-semibold">Our Big Day</h2>
+      {/* MOBILE TOP NAV */}
+      <div className="md:hidden" style={{
+        position:"fixed", top:0, left:0, right:0, zIndex:50,
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+        padding:"14px 20px", background:"rgba(15,23,42,0.95)",
+        backdropFilter:"blur(12px)", borderBottom:"1px solid rgba(196,164,90,0.15)",
+      }}>
+        <div>
+          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.2rem",
+            color:"white", fontWeight:600 }}>Our Big Day</p>
+        </div>
         <button onClick={() => setOpen(!open)}
-          className="text-white text-2xl w-10 h-10 flex items-center justify-center rounded-xl"
-          style={{ background: "rgba(255,255,255,0.15)" }}>
+          style={{ width:38, height:38, borderRadius:10, background:"rgba(196,164,90,0.1)",
+            border:"1px solid rgba(196,164,90,0.2)", color:gold, fontSize:"1.1rem",
+            display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}>
           {open ? "✕" : "☰"}
         </button>
       </div>
 
-      {/* MOBILE: Drawer */}
+      {/* MOBILE DRAWER */}
       {open && (
-        <div className="md:hidden fixed inset-0 z-40" onClick={() => setOpen(false)}
-          style={{ background: "rgba(0,0,0,0.5)" }}>
-          <div className="w-64 h-full p-6 flex flex-col shadow-xl" onClick={(e) => e.stopPropagation()}
-            style={{ background: "linear-gradient(180deg, #0C4A6E 0%, #0284C7 100%)" }}>
-            <div className="mb-6">
-              <p className="text-sky-300 text-xs uppercase tracking-widest mb-1">Wedding Planner</p>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }}
-                className="text-white text-3xl font-semibold">Our Big Day</h2>
-              <div className="mt-3 h-px bg-sky-500 opacity-40" />
-            </div>
+        <div className="md:hidden" style={{
+          position:"fixed", inset:0, zIndex:40, background:"rgba(0,0,0,0.6)",
+          backdropFilter:"blur(4px)",
+        }} onClick={() => setOpen(false)}>
+          <div style={{
+            width:280, height:"100%", padding:"24px 20px",
+            background:bg, display:"flex", flexDirection:"column",
+            borderRight:"1px solid rgba(196,164,90,0.15)",
+          }} onClick={e => e.stopPropagation()}>
+            <Brand />
             <UserInfo />
-            <NavLinks />
-            <div className="mt-6 pt-4 border-t border-sky-700 space-y-2">
-              <LogoutButton />
-              <p className="text-sky-400 text-xs text-center">✦ Semoga bahagia selalu ✦</p>
+            <NavLinks onClose={() => setOpen(false)} />
+            <div style={{ marginTop:16, paddingTop:16, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
+              <LogoutBtn />
+              <p style={{ textAlign:"center", fontSize:"0.6rem", color:"rgba(196,164,90,0.4)",
+                marginTop:12, letterSpacing:"0.2em" }}>✦ Semoga bahagia selalu ✦</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* DESKTOP: Sidebar */}
-      <aside className="hidden md:flex w-64 min-h-screen p-6 flex-col shadow-xl flex-shrink-0"
-        style={{ background: "linear-gradient(180deg, #0C4A6E 0%, #0284C7 100%)", fontFamily: "'Inter', sans-serif" }}>
-        <div className="mb-6">
-          <p className="text-sky-300 text-xs uppercase tracking-widest mb-1">Wedding Planner</p>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }}
-            className="text-white text-3xl font-semibold leading-tight">Our Big Day</h2>
-          <div className="mt-3 h-px bg-sky-500 opacity-40" />
-        </div>
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden md:flex" style={{
+        width:260, minHeight:"100vh", padding:"28px 20px",
+        background:bg, flexDirection:"column", flexShrink:0,
+        borderRight:"1px solid rgba(196,164,90,0.1)",
+        boxShadow:"4px 0 24px rgba(0,0,0,0.3)",
+      }}>
+        <Brand />
         <UserInfo />
-        <NavLinks />
-        <div className="mt-6 pt-4 border-t border-sky-700 space-y-2">
-          <LogoutButton />
-          <p className="text-sky-400 text-xs text-center">✦ Semoga bahagia selalu ✦</p>
+        <NavLinks onClose={() => {}} />
+        <div style={{ marginTop:16, paddingTop:16, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
+          <LogoutBtn />
+          <p style={{ textAlign:"center", fontSize:"0.6rem", color:"rgba(196,164,90,0.4)",
+            marginTop:12, letterSpacing:"0.2em" }}>✦ Semoga bahagia selalu ✦</p>
         </div>
       </aside>
     </>

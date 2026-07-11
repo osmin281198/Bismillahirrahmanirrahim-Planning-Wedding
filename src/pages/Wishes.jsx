@@ -2,87 +2,160 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import Sidebar from "../components/Sidebar";
 
+const STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap');
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)} }
+`;
+
+const STATUS = {
+  "Hadir":       { color:"#4ADE80", bg:"rgba(74,222,128,0.1)",  border:"rgba(74,222,128,0.2)",  icon:"✓" },
+  "Tidak Hadir": { color:"#F87171", bg:"rgba(248,113,113,0.1)", border:"rgba(248,113,113,0.2)", icon:"✗" },
+  "Masih Ragu":  { color:"#FBBF24", bg:"rgba(251,191,36,0.1)",  border:"rgba(251,191,36,0.2)",  icon:"?" },
+};
+
 export default function Wishes() {
-  const [name, setName]           = useState("");
-  const [message, setMessage]     = useState("");
-  const [attendance, setAttendance] = useState("Hadir");
-  const [data, setData]           = useState([]);
-  const [loading, setLoading]     = useState(false);
+  const [wishes, setWishes]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter]   = useState("Semua");
+  const [search, setSearch]   = useState("");
 
-  useEffect(() => { fetchRsvp(); }, []);
+  useEffect(() => {
+    const el = document.createElement("style");
+    el.textContent = STYLES;
+    document.head.appendChild(el);
+    fetchWishes();
+    return () => document.head.removeChild(el);
+  }, []);
 
-  const fetchRsvp = async () => {
+  const fetchWishes = async () => {
     setLoading(true);
-    const { data: rows, error } = await supabase.from("rsvp").select("*").order("id", { ascending: false });
-    if (!error) setData(rows);
+    const { data } = await supabase.from("rsvp").select("*").order("id", { ascending:false });
+    if (data) setWishes(data);
     setLoading(false);
   };
 
-  const addWish = async () => {
-    if (!name) return;
-    const newWish = { id: Date.now(), name, message, attendance };
-    const { error } = await supabase.from("rsvp").insert(newWish);
-    if (!error) { setData([newWish, ...data]); setName(""); setMessage(""); setAttendance("Hadir"); }
+  const deleteWish = async (id) => {
+    await supabase.from("rsvp").delete().eq("id", id);
+    setWishes(wishes.filter(w => w.id !== id));
   };
 
-  const hadir      = data.filter((d) => d.attendance === "Hadir").length;
-  const tidakHadir = data.filter((d) => d.attendance === "Tidak Hadir").length;
+  const gold = "#C4A45A";
+  const filtered = wishes
+    .filter(w => filter === "Semua" || w.attendance === filter)
+    .filter(w => !search || w.name?.toLowerCase().includes(search.toLowerCase()));
+
+  const counts = {
+    hadir:  wishes.filter(w => w.attendance === "Hadir").length,
+    tidak:  wishes.filter(w => w.attendance === "Tidak Hadir").length,
+    ragu:   wishes.filter(w => w.attendance === "Masih Ragu").length,
+  };
 
   return (
-    <div className="flex min-h-screen" style={{ background: "#F0F9FF", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ display:"flex", minHeight:"100vh", background:"#0F172A", fontFamily:"'Inter',sans-serif" }}>
       <Sidebar />
-      <main className="flex-1 pt-16 md:pt-0 p-4 md:p-8 overflow-x-hidden">
-        <div className="mb-6">
-          <p className="text-sky-500 text-xs uppercase tracking-widest mb-1">Konfirmasi</p>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }}
-            className="text-3xl md:text-4xl font-semibold text-sky-900">RSVP & Ucapan</h1>
+      <main style={{ flex:1, padding:"80px 20px 32px" }} className="md:pt-8 md:p-8">
+
+        {/* Header */}
+        <div style={{ marginBottom:28, animation:"fadeUp 0.6s ease both" }}>
+          <p style={{ color:gold, fontSize:"0.6rem", letterSpacing:"0.3em",
+            textTransform:"uppercase", marginBottom:6 }}>Konfirmasi Kehadiran</p>
+          <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2.2rem",
+            fontWeight:600, color:"white" }}>Ucapan & RSVP</h1>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-sky-100 text-center">
-            <p className="text-2xl md:text-3xl font-bold text-sky-600">{hadir}</p>
-            <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest">Hadir</p>
+        {/* Stats */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12,
+          marginBottom:24, animation:"fadeUp 0.6s 0.1s ease both" }}>
+          {[
+            { label:"Hadir",       count:counts.hadir, ...STATUS["Hadir"] },
+            { label:"Tidak Hadir", count:counts.tidak, ...STATUS["Tidak Hadir"] },
+            { label:"Masih Ragu",  count:counts.ragu,  ...STATUS["Masih Ragu"] },
+          ].map(s => (
+            <div key={s.label} style={{
+              padding:"20px 16px", borderRadius:16, textAlign:"center",
+              background:s.bg, border:`1px solid ${s.border}`,
+            }}>
+              <p style={{ fontSize:"1.8rem", fontWeight:700, color:s.color }}>{s.count}</p>
+              <p style={{ fontSize:"0.7rem", color:"rgba(255,255,255,0.4)", marginTop:4 }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Filter + Search */}
+        <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:20,
+          animation:"fadeUp 0.6s 0.15s ease both" }}>
+          <input placeholder="🔍 Cari nama..." value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ flex:1, minWidth:160, padding:"10px 16px", borderRadius:12,
+              background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)",
+              color:"white", fontSize:"0.85rem", outline:"none" }} />
+          {["Semua","Hadir","Tidak Hadir","Masih Ragu"].map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              style={{
+                padding:"10px 16px", borderRadius:12, fontSize:"0.8rem",
+                border: filter===f ? `1px solid ${gold}` : "1px solid rgba(255,255,255,0.08)",
+                background: filter===f ? "rgba(196,164,90,0.15)" : "rgba(255,255,255,0.03)",
+                color: filter===f ? gold : "rgba(255,255,255,0.4)",
+                cursor:"pointer", transition:"all 0.2s",
+              }}>{f}</button>
+          ))}
+        </div>
+
+        {/* List */}
+        {loading ? (
+          <div style={{ textAlign:"center", padding:"48px", color:"rgba(255,255,255,0.3)" }}>Memuat...</div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign:"center", padding:"64px 0" }}>
+            <p style={{ fontSize:"3rem", marginBottom:12 }}>💌</p>
+            <p style={{ color:"rgba(255,255,255,0.3)" }}>Belum ada ucapan.</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-sky-100 text-center">
-            <p className="text-2xl md:text-3xl font-bold text-slate-400">{tidakHadir}</p>
-            <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest">Tidak Hadir</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm border border-sky-100 mb-5">
-          <input className="border border-slate-200 p-3 rounded-xl w-full mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
-            placeholder="Nama" value={name} onChange={(e) => setName(e.target.value)} />
-          <select className="border border-slate-200 p-3 rounded-xl w-full mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
-            value={attendance} onChange={(e) => setAttendance(e.target.value)}>
-            <option>Hadir</option>
-            <option>Tidak Hadir</option>
-          </select>
-          <textarea className="border border-slate-200 p-3 rounded-xl w-full mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
-            placeholder="Ucapan & doa..." rows={3} value={message} onChange={(e) => setMessage(e.target.value)} />
-          <button onClick={addWish}
-            className="w-full md:w-auto px-6 py-2.5 rounded-xl text-white text-sm font-semibold transition hover:opacity-90"
-            style={{ background: "linear-gradient(90deg, #0284C7, #38BDF8)" }}>Simpan</button>
-        </div>
-
-        <div className="space-y-3">
-          {loading ? (
-            <p className="text-center text-slate-400 py-6">Memuat...</p>
-          ) : data.length === 0 ? (
-            <p className="text-center text-slate-400 py-6">Belum ada RSVP masuk.</p>
-          ) : (
-            data.map((item) => (
-              <div key={item.id} className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-sky-100">
-                <div className="flex justify-between items-start mb-1">
-                  <h3 className="font-semibold text-sky-900 text-sm">{item.name}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ml-2 ${
-                    item.attendance === "Hadir" ? "bg-sky-100 text-sky-700" : "bg-slate-100 text-slate-500"
-                  }`}>{item.attendance}</span>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {filtered.map((w, i) => {
+              const s = STATUS[w.attendance] || STATUS["Masih Ragu"];
+              return (
+                <div key={w.id}
+                  style={{
+                    padding:"18px 20px", borderRadius:16,
+                    background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)",
+                    animation:`fadeUp 0.4s ${i*0.04}s ease both`,
+                    transition:"all 0.2s",
+                  }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12 }}>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
+                        <div style={{ width:32, height:32, borderRadius:"50%", flexShrink:0,
+                          background:`linear-gradient(135deg,${s.color}30,${s.color}10)`,
+                          border:`1px solid ${s.border}`,
+                          display:"flex", alignItems:"center", justifyContent:"center",
+                          color:s.color, fontSize:"0.75rem", fontWeight:700 }}>{s.icon}</div>
+                        <div>
+                          <p style={{ color:"white", fontWeight:600, fontSize:"0.9rem" }}>{w.name}</p>
+                          <span style={{
+                            fontSize:"0.68rem", padding:"2px 8px", borderRadius:99,
+                            background:s.bg, border:`1px solid ${s.border}`, color:s.color,
+                          }}>{w.attendance}</span>
+                        </div>
+                      </div>
+                      {w.message && (
+                        <p style={{ color:"rgba(255,255,255,0.4)", fontSize:"0.82rem",
+                          fontStyle:"italic", paddingLeft:42, lineHeight:1.6 }}>
+                          "{w.message}"
+                        </p>
+                      )}
+                    </div>
+                    <button onClick={() => deleteWish(w.id)}
+                      style={{ background:"none", border:"none", color:"rgba(255,255,255,0.15)",
+                        cursor:"pointer", fontSize:"1rem", padding:4, flexShrink:0,
+                        transition:"color 0.2s" }}
+                      onMouseEnter={e => e.target.style.color="rgba(239,68,68,0.6)"}
+                      onMouseLeave={e => e.target.style.color="rgba(255,255,255,0.15)"}>✕</button>
+                  </div>
                 </div>
-                {item.message && <p className="text-slate-500 text-xs italic mt-1">"{item.message}"</p>}
-              </div>
-            ))
-          )}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </main>
     </div>
   );

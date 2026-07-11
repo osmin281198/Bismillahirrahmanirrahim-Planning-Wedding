@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { getRole } from "../lib/roles";
+
+const STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)} }
+@keyframes shimmer {
+  0%{background-position:-200% center}100%{background-position:200% center}
+}
+`;
 
 export default function Login() {
   const navigate = useNavigate();
@@ -11,129 +20,195 @@ export default function Login() {
   const [photoUrl, setPhotoUrl] = useState("");
   const [groom, setGroom]       = useState("");
   const [bride, setBride]       = useState("");
+  const [showPass, setShowPass] = useState(false);
 
   useEffect(() => {
-    // Cek kalau sudah login, langsung ke dashboard
+    const el = document.createElement("style");
+    el.textContent = STYLES;
+    document.head.appendChild(el);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate("/dashboard");
+      if (session) {
+        const role = getRole(session.user.email);
+        if (role === "family") navigate("/guests");
+        else if (role === "admin") navigate("/dashboard");
+      }
     });
 
-    // Ambil foto & nama dari settings
-    supabase.from("settings").select("groom, bride, photo_url").eq("id", 1).single()
+    supabase.from("settings").select("groom, bride, photo_url").eq("id",1).single()
       .then(({ data }) => {
-        if (data) {
-          setGroom(data.groom || "");
-          setBride(data.bride || "");
-          setPhotoUrl(data.photo_url || "");
-        }
+        if (data) { setGroom(data.groom||""); setBride(data.bride||""); setPhotoUrl(data.photo_url||""); }
       });
+
+    return () => document.head.removeChild(el);
   }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      setError("Email atau password salah. Silakan coba lagi.");
-      setLoading(false);
-      return;
-    }
-
-    navigate("/dashboard");
+    setError(""); setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { setError("Email atau password salah."); setLoading(false); return; }
+    const role = getRole(data.user.email);
+    if (role === "family") navigate("/guests");
+    else if (role === "admin") navigate("/dashboard");
+    else { await supabase.auth.signOut(); setError("Akun tidak memiliki akses."); setLoading(false); }
   };
 
+  const gold = "#C4A45A";
+
   return (
-    <div className="min-h-screen flex flex-col md:flex-row" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight:"100vh", display:"flex", fontFamily:"'Inter',sans-serif",
+      background:"linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#0F2744 100%)" }}>
 
-      {/* Kiri — Foto & Nama */}
-      <div className="md:w-1/2 flex flex-col items-center justify-center py-10 md:py-16 px-8 relative overflow-hidden"
-        style={{ background: "linear-gradient(160deg, #0C4A6E 0%, #0284C7 60%, #38BDF8 100%)", minHeight: "280px" }}>
-        <div className="absolute inset-0 opacity-5"
-          style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+      {/* Kiri — Foto & Branding */}
+      <div className="hidden md:flex" style={{
+        width:"45%", flexDirection:"column", alignItems:"center", justifyContent:"center",
+        padding:"48px 40px", position:"relative", overflow:"hidden",
+        borderRight:"1px solid rgba(196,164,90,0.15)",
+      }}>
+        {/* Background pattern */}
+        <div style={{ position:"absolute", inset:0, opacity:0.04,
+          backgroundImage:"radial-gradient(circle,white 1px,transparent 1px)",
+          backgroundSize:"28px 28px" }} />
 
-        <div className="relative z-10 mb-5">
+        {/* Foto */}
+        <div style={{ position:"relative", marginBottom:32, animation:"fadeUp 0.8s ease both" }}>
           {photoUrl ? (
-            <div className="relative">
-              <img src={photoUrl} alt="Foto Pasangan"
-                className="w-36 h-36 md:w-56 md:h-56 object-cover rounded-2xl md:rounded-3xl shadow-2xl border-4"
-                style={{ borderColor: "rgba(255,255,255,0.2)" }} />
-              <div className="absolute inset-0 rounded-2xl md:rounded-3xl"
-                style={{ boxShadow: "0 0 60px rgba(56,189,248,0.4)" }} />
+            <div style={{ position:"relative" }}>
+              <div style={{
+                position:"absolute", inset:-3, borderRadius:20,
+                background:"linear-gradient(135deg,#C4A45A,#E8CC8A,#C4A45A)",
+                backgroundSize:"200% 200%", animation:"shimmer 3s linear infinite",
+              }} />
+              <img src={photoUrl} alt="Foto Pasangan" style={{
+                position:"relative", width:280, height:320,
+                objectFit:"cover", borderRadius:18, display:"block",
+                boxShadow:"0 24px 64px rgba(0,0,0,0.5)",
+              }} onError={e => e.target.style.display="none"} />
             </div>
           ) : (
-            <div className="w-36 h-36 md:w-56 md:h-56 rounded-2xl md:rounded-3xl flex items-center justify-center"
-              style={{ background: "rgba(255,255,255,0.1)", border: "2px dashed rgba(255,255,255,0.3)" }}>
-              <span className="text-5xl">💑</span>
-            </div>
+            <div style={{ width:200, height:200, borderRadius:"50%",
+              background:"rgba(196,164,90,0.1)", border:"2px dashed rgba(196,164,90,0.3)",
+              display:"flex", alignItems:"center", justifyContent:"center", fontSize:"4rem" }}>💑</div>
           )}
         </div>
 
-        <div className="relative z-10 text-center">
-          <p className="text-sky-300 text-xs uppercase tracking-[0.3em] mb-2">The Wedding Of</p>
+        <div style={{ textAlign:"center", animation:"fadeUp 0.8s 0.2s ease both" }}>
+          <p style={{ color:"rgba(196,164,90,0.7)", fontSize:"0.65rem",
+            letterSpacing:"0.35em", textTransform:"uppercase", marginBottom:12 }}>The Wedding Of</p>
           {groom && bride ? (
             <>
-              <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }}
-                className="text-3xl md:text-4xl font-semibold text-white">{groom.split(" ")[0]}</h1>
-              <p style={{ fontFamily: "'Cormorant Garamond', serif" }}
-                className="text-sky-300 text-xl md:text-2xl my-1">&amp;</p>
-              <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }}
-                className="text-3xl md:text-4xl font-semibold text-white">{bride.split(" ")[0]}</h1>
+              <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2.8rem",
+                fontWeight:600, color:"white", lineHeight:1.1 }}>{groom.split(" ")[0]}</h1>
+              <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.8rem",
+                color:gold, margin:"4px 0" }}>&amp;</p>
+              <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2.8rem",
+                fontWeight:600, color:"white", lineHeight:1.1 }}>{bride.split(" ")[0]}</h1>
             </>
           ) : (
-            <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }}
-              className="text-3xl md:text-4xl font-semibold text-white">Wedding Planner</h1>
+            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2.5rem",
+              fontWeight:600, color:"white" }}>Wedding Planner</h1>
           )}
-          <p className="text-sky-300 text-sm mt-2">Wedding Management System</p>
+          <div style={{ marginTop:16, height:1, maxWidth:120, margin:"16px auto 0",
+            background:"linear-gradient(90deg,transparent,rgba(196,164,90,0.6),transparent)" }} />
+          <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.75rem", marginTop:12, letterSpacing:"0.1em" }}>
+            Wedding Management System
+          </p>
         </div>
       </div>
 
-      {/* Kanan — Form Login */}
-      <div className="md:w-1/2 flex items-center justify-center px-6 md:px-8 py-10 md:py-16 bg-white">
-        <div className="w-full max-w-sm">
-          <div className="mb-8">
-            <p className="text-sky-500 text-xs uppercase tracking-widest mb-2">Selamat Datang</p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif" }}
-              className="text-3xl font-semibold text-sky-900">Masuk ke Dashboard</h2>
-            <p className="text-slate-400 text-sm mt-2">Kelola pernikahan impian Anda</p>
+      {/* Kanan — Form */}
+      <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 32px" }}>
+        <div style={{ width:"100%", maxWidth:380, animation:"fadeUp 0.8s 0.1s ease both" }}>
+
+          {/* Mobile branding */}
+          <div className="md:hidden" style={{ textAlign:"center", marginBottom:40 }}>
+            <p style={{ color:"rgba(196,164,90,0.7)", fontSize:"0.6rem",
+              letterSpacing:"0.3em", textTransform:"uppercase", marginBottom:8 }}>Wedding Planner</p>
+            <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2.2rem",
+              color:"white", fontWeight:600 }}>Our Big Day</h1>
+          </div>
+
+          <div style={{ marginBottom:36 }}>
+            <p style={{ color:gold, fontSize:"0.65rem", letterSpacing:"0.25em",
+              textTransform:"uppercase", marginBottom:8 }}>Selamat Datang</p>
+            <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem",
+              fontWeight:600, color:"white", marginBottom:8 }}>Masuk ke Dashboard</h2>
+            <p style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.82rem" }}>Kelola pernikahan impian Anda</p>
           </div>
 
           {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
-              ⚠ {error}
-            </div>
+            <div style={{
+              marginBottom:20, padding:"12px 16px", borderRadius:12,
+              background:"rgba(239,68,68,0.1)", border:"1px solid rgba(239,68,68,0.2)",
+              color:"#FCA5A5", fontSize:"0.82rem",
+            }}>⚠ {error}</div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} style={{ display:"flex", flexDirection:"column", gap:16 }}>
             <div>
-              <label className="block text-xs text-slate-400 uppercase tracking-widest mb-2">Email</label>
+              <label style={{ display:"block", color:"rgba(255,255,255,0.4)", fontSize:"0.65rem",
+                letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:8 }}>Email</label>
               <input type="email" placeholder="email@contoh.com" value={email}
-                onChange={(e) => setEmail(e.target.value)} required
-                className="w-full border border-slate-200 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 transition" />
+                onChange={e => setEmail(e.target.value)} required
+                style={{
+                  width:"100%", padding:"14px 16px", borderRadius:12, fontSize:"0.9rem",
+                  background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)",
+                  color:"white", outline:"none", boxSizing:"border-box",
+                  transition:"border-color 0.2s",
+                }}
+                onFocus={e => e.target.style.borderColor="rgba(196,164,90,0.5)"}
+                onBlur={e => e.target.style.borderColor="rgba(255,255,255,0.1)"}
+              />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 uppercase tracking-widest mb-2">Password</label>
-              <input type="password" placeholder="••••••••" value={password}
-                onChange={(e) => setPassword(e.target.value)} required
-                className="w-full border border-slate-200 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 transition" />
+              <label style={{ display:"block", color:"rgba(255,255,255,0.4)", fontSize:"0.65rem",
+                letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:8 }}>Password</label>
+              <div style={{ position:"relative" }}>
+                <input type={showPass ? "text" : "password"} placeholder="••••••••" value={password}
+                  onChange={e => setPassword(e.target.value)} required
+                  style={{
+                    width:"100%", padding:"14px 48px 14px 16px", borderRadius:12, fontSize:"0.9rem",
+                    background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)",
+                    color:"white", outline:"none", boxSizing:"border-box",
+                    transition:"border-color 0.2s",
+                  }}
+                  onFocus={e => e.target.style.borderColor="rgba(196,164,90,0.5)"}
+                  onBlur={e => e.target.style.borderColor="rgba(255,255,255,0.1)"}
+                />
+                <button type="button" onClick={() => setShowPass(!showPass)}
+                  style={{ position:"absolute", right:14, top:"50%", transform:"translateY(-50%)",
+                    background:"none", border:"none", color:"rgba(255,255,255,0.3)",
+                    cursor:"pointer", fontSize:"0.85rem" }}>
+                  {showPass ? "🙈" : "👁"}
+                </button>
+              </div>
             </div>
             <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-xl text-white font-semibold text-sm tracking-wide transition hover:opacity-90 active:scale-95 disabled:opacity-50"
-              style={{ background: "linear-gradient(90deg, #0284C7, #38BDF8)" }}>
+              style={{
+                marginTop:8, padding:"15px", borderRadius:12, border:"none",
+                background: loading ? "rgba(196,164,90,0.3)" : "linear-gradient(135deg,#C4A45A,#E8CC8A)",
+                color:"#0F172A", fontWeight:700, fontSize:"0.9rem",
+                letterSpacing:"0.05em", cursor: loading ? "not-allowed" : "pointer",
+                transition:"all 0.2s", boxShadow: loading ? "none" : "0 8px 24px rgba(196,164,90,0.3)",
+              }}>
               {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+                  <div style={{ width:16, height:16, borderRadius:"50%",
+                    border:"2px solid #0F172A", borderTopColor:"transparent",
+                    animation:"spin 0.8s linear infinite" }} />
                   Masuk...
                 </span>
-              ) : "Masuk"}
+              ) : "Masuk →"}
             </button>
           </form>
 
-          <p className="text-slate-300 text-xs text-center mt-8">© 2026 Wedding Planner</p>
+          <p style={{ textAlign:"center", color:"rgba(255,255,255,0.2)", fontSize:"0.7rem", marginTop:32 }}>
+            © 2026 Wedding Planner · All rights reserved
+          </p>
         </div>
       </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }

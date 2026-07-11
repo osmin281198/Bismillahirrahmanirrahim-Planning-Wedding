@@ -2,241 +2,186 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import Sidebar from "../components/Sidebar";
 
-function Field({ label, value, onChange, placeholder, type = "text" }) {
+const STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&display=swap');
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)} }
+`;
+
+function Field({ label, value, onChange, type="text", placeholder="" }) {
   return (
     <div>
-      <label className="block text-xs text-slate-400 uppercase tracking-widest mb-1.5">
-        {label}
-      </label>
-      <input
-        type={type}
-        className="border border-slate-200 p-3 rounded-xl w-full text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+      <label style={{ display:"block", color:"rgba(255,255,255,0.35)", fontSize:"0.65rem",
+        letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:8 }}>{label}</label>
+      <input type={type} value={value} onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        style={{
+          width:"100%", padding:"13px 16px", borderRadius:12, fontSize:"0.88rem",
+          background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)",
+          color:"white", outline:"none", boxSizing:"border-box", transition:"border-color 0.2s",
+        }}
+        onFocus={e => e.target.style.borderColor="rgba(196,164,90,0.4)"}
+        onBlur={e => e.target.style.borderColor="rgba(255,255,255,0.1)"}
       />
     </div>
   );
 }
 
 export default function Settings() {
-  const [groom, setGroom]               = useState("");
-  const [bride, setBride]               = useState("");
-  const [groomFather, setGroomFather]   = useState("");
-  const [groomMother, setGroomMother]   = useState("");
-  const [brideFather, setBrideFather]   = useState("");
-  const [brideMother, setBrideMother]   = useState("");
-  const [weddingDate, setWeddingDate]   = useState("");
-  const [weddingTime, setWeddingTime]   = useState("");
+  const [groom, setGroom]                   = useState("");
+  const [bride, setBride]                   = useState("");
+  const [groomFather, setGroomFather]       = useState("");
+  const [groomMother, setGroomMother]       = useState("");
+  const [brideFather, setBrideFather]       = useState("");
+  const [brideMother, setBrideMother]       = useState("");
+  const [weddingDate, setWeddingDate]       = useState("");
+  const [weddingTime, setWeddingTime]       = useState("");
   const [weddingLocation, setWeddingLocation] = useState("");
-  const [photoUrl, setPhotoUrl]         = useState("");
-  const [uploading, setUploading]       = useState(false);
-  const [loading, setLoading]           = useState(false);
-  const [saved, setSaved]               = useState(false);
+  const [photoUrl, setPhotoUrl]             = useState("");
+  const [uploading, setUploading]           = useState(false);
+  const [saving, setSaving]                 = useState(false);
+  const [saved, setSaved]                   = useState(false);
+  const [loading, setLoading]               = useState(true);
 
-  useEffect(() => { fetchSettings(); }, []);
+  useEffect(() => {
+    const el = document.createElement("style");
+    el.textContent = STYLES;
+    document.head.appendChild(el);
+    fetchSettings();
+    return () => document.head.removeChild(el);
+  }, []);
 
   const fetchSettings = async () => {
-    const { data, error } = await supabase
-      .from("settings")
-      .select("*")
-      .eq("id", 1)
-      .single();
-
-    if (!error && data) {
-      setGroom(data.groom || "");
-      setBride(data.bride || "");
-      setGroomFather(data.groom_father || "");
-      setGroomMother(data.groom_mother || "");
-      setBrideFather(data.bride_father || "");
-      setBrideMother(data.bride_mother || "");
-      setWeddingDate(data.wedding_date || "");
-      setWeddingTime(data.wedding_time || "");
-      setWeddingLocation(data.wedding_location || "");
-      setPhotoUrl(data.photo_url || "");
-    }
-  };
-
-  const uploadPhoto = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert("Maksimal 5MB"); return; }
-    setUploading(true);
-    const ext = file.name.split(".").pop();
-    const { error: uploadError } = await supabase.storage
-      .from("wedding-photos")
-      .upload(`couple-photo.${ext}`, file, { upsert: true });
-    if (uploadError) { alert("Gagal upload: " + uploadError.message); setUploading(false); return; }
-    const { data } = supabase.storage.from("wedding-photos").getPublicUrl(`couple-photo.${ext}`);
-    setPhotoUrl(data.publicUrl);
-    await supabase.from("settings").update({ photo_url: data.publicUrl }).eq("id", 1);
-    setUploading(false);
-  };
-
-  const save = async () => {
-    setLoading(true);
-    const { error } = await supabase
-      .from("settings")
-      .update({
-        groom,
-        bride,
-        photo_url:        photoUrl,
-        groom_father:     groomFather,
-        groom_mother:     groomMother,
-        bride_father:     brideFather,
-        bride_mother:     brideMother,
-        wedding_date:     weddingDate || null,
-        wedding_time:     weddingTime,
-        wedding_location: weddingLocation,
-      })
-      .eq("id", 1);
-
-    if (error) {
-      alert("Gagal simpan: " + error.message);
-    } else {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
+    const { data } = await supabase.from("settings").select("*").eq("id",1).single();
+    if (data) {
+      setGroom(data.groom||""); setBride(data.bride||"");
+      setGroomFather(data.groom_father||""); setGroomMother(data.groom_mother||"");
+      setBrideFather(data.bride_father||""); setBrideMother(data.bride_mother||"");
+      setWeddingDate(data.wedding_date||""); setWeddingTime(data.wedding_time||"");
+      setWeddingLocation(data.wedding_location||""); setPhotoUrl(data.photo_url||"");
     }
     setLoading(false);
   };
 
-  // Format tanggal untuk preview
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const handleUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const ext  = file.name.split(".").pop();
+    const path = `couple-photo.${ext}`;
+    await supabase.storage.from("wedding-photos").upload(path, file, { upsert:true });
+    const { data } = supabase.storage.from("wedding-photos").getPublicUrl(path);
+    setPhotoUrl(data.publicUrl);
+    setUploading(false);
   };
 
+  const handleSave = async () => {
+    setSaving(true);
+    await supabase.from("settings").update({
+      groom, bride, groom_father:groomFather, groom_mother:groomMother,
+      bride_father:brideFather, bride_mother:brideMother,
+      wedding_date:weddingDate, wedding_time:weddingTime,
+      wedding_location:weddingLocation, photo_url:photoUrl,
+    }).eq("id",1);
+    setSaving(false); setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
+
+  const gold = "#C4A45A";
+  const formatDateID = (d) => d ? new Date(d).toLocaleDateString("id-ID",{weekday:"long",year:"numeric",month:"long",day:"numeric"}) : "";
+
   return (
-    <div className="flex min-h-screen" style={{ background: "#F0F9FF", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ display:"flex", minHeight:"100vh", background:"#0F172A", fontFamily:"'Inter',sans-serif" }}>
       <Sidebar />
-      <main className="flex-1 pt-16 md:pt-0 p-4 md:p-8 overflow-x-hidden">
-        <div className="mb-5">
-          <p className="text-sky-500 text-xs uppercase tracking-widest mb-1">Konfigurasi</p>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }}
-            className="text-3xl md:text-4xl font-semibold text-sky-900">
-            Pengaturan Wedding
-          </h1>
+      <main style={{ flex:1, padding:"80px 20px 40px", maxWidth:720, margin:"0 auto" }}
+        className="md:pt-8">
+
+        <div style={{ marginBottom:32, animation:"fadeUp 0.6s ease both" }}>
+          <p style={{ color:gold, fontSize:"0.6rem", letterSpacing:"0.3em",
+            textTransform:"uppercase", marginBottom:6 }}>Konfigurasi</p>
+          <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2.2rem",
+            fontWeight:600, color:"white" }}>Pengaturan</h1>
         </div>
 
-        <div className="max-w-lg space-y-4">
+        {loading ? (
+          <div style={{ textAlign:"center", padding:"48px", color:"rgba(255,255,255,0.3)" }}>Memuat...</div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
 
-          {/* Foto Pasangan */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-sky-100">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-lg">📸</span>
-              <p className="text-xs text-slate-400 uppercase tracking-widest">Foto Pasangan</p>
-            </div>
-            <div className="flex justify-center mb-4">
-              {photoUrl ? (
-                <img src={photoUrl} alt="Foto"
-                  className="w-36 h-36 object-cover rounded-2xl shadow-md border-4 border-sky-100" />
-              ) : (
-                <div className="w-36 h-36 rounded-2xl border-2 border-dashed border-sky-200 flex flex-col items-center justify-center text-slate-400"
-                  style={{ background: "#F0F9FF" }}>
-                  <span className="text-4xl mb-2">📸</span>
-                  <span className="text-xs">Belum ada foto</span>
-                </div>
-              )}
-            </div>
-            <label className="block cursor-pointer">
-              <div className="w-full py-3 rounded-xl text-center text-sm font-medium border-2 border-dashed border-sky-300 text-sky-600 hover:bg-sky-50 transition">
-                {uploading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
-                    Mengupload...
-                  </span>
-                ) : "📁 Pilih Foto Pasangan"}
-              </div>
-              <input type="file" accept="image/*" onChange={uploadPhoto} className="hidden" disabled={uploading} />
-            </label>
-            <p className="text-xs text-slate-400 text-center mt-2">Format: JPG, PNG. Maksimal 5MB.</p>
-          </div>
-
-          {/* Tanggal & Lokasi Acara */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-sky-100">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-lg">📅</span>
-              <p className="text-xs text-slate-400 uppercase tracking-widest">Tanggal & Lokasi Acara</p>
-            </div>
-            <div className="space-y-3">
-              <Field
-                label="Tanggal Akad / Resepsi"
-                value={weddingDate}
-                onChange={setWeddingDate}
-                placeholder="Pilih tanggal"
-                type="date"
-              />
-              {/* Preview tanggal */}
-              {weddingDate && (
-                <div className="bg-sky-50 border border-sky-100 rounded-xl px-4 py-2.5 flex items-center gap-2">
-                  <span className="text-sky-400 text-sm">📅</span>
-                  <p className="text-sky-700 text-sm font-medium">{formatDate(weddingDate)}</p>
-                </div>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Field
-                  label="Waktu Akad"
-                  value={weddingTime}
-                  onChange={setWeddingTime}
-                  placeholder="cth: 08.00 WIB"
-                />
-                <Field
-                  label="Lokasi"
-                  value={weddingLocation}
-                  onChange={setWeddingLocation}
-                  placeholder="cth: Bandung, Jawa Barat"
-                />
+            {/* Foto */}
+            <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)",
+              borderRadius:20, padding:"24px", animation:"fadeUp 0.6s 0.1s ease both" }}>
+              <p style={{ color:gold, fontSize:"0.7rem", letterSpacing:"0.2em",
+                textTransform:"uppercase", marginBottom:16 }}>Foto Pasangan</p>
+              <div style={{ display:"flex", gap:20, alignItems:"center", flexWrap:"wrap" }}>
+                {photoUrl ? (
+                  <img src={photoUrl} alt="Foto" style={{ width:80, height:80,
+                    objectFit:"cover", borderRadius:16,
+                    border:"2px solid rgba(196,164,90,0.3)" }} />
+                ) : (
+                  <div style={{ width:80, height:80, borderRadius:16,
+                    background:"rgba(196,164,90,0.08)", border:"2px dashed rgba(196,164,90,0.2)",
+                    display:"flex", alignItems:"center", justifyContent:"center", fontSize:"2rem" }}>💑</div>
+                )}
+                <label style={{
+                  padding:"11px 20px", borderRadius:12, cursor:"pointer",
+                  background:"rgba(196,164,90,0.1)", border:"1px solid rgba(196,164,90,0.2)",
+                  color:gold, fontSize:"0.82rem", fontWeight:600,
+                }}>
+                  {uploading ? "Mengupload..." : "📷 Ganti Foto"}
+                  <input type="file" accept="image/*" onChange={handleUpload} style={{ display:"none" }} />
+                </label>
               </div>
             </div>
-          </div>
 
-          {/* Mempelai Pria */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-sky-100">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-lg">🤵</span>
-              <p className="text-xs text-slate-400 uppercase tracking-widest">Mempelai Pria</p>
-            </div>
-            <div className="space-y-3">
-              <Field label="Nama Lengkap" value={groom} onChange={setGroom} placeholder="Nama lengkap pria" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Field label="Nama Ayah" value={groomFather} onChange={setGroomFather} placeholder="Nama ayah pria" />
-                <Field label="Nama Ibu"  value={groomMother} onChange={setGroomMother} placeholder="Nama ibu pria" />
+            {/* Mempelai */}
+            <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)",
+              borderRadius:20, padding:"24px", animation:"fadeUp 0.6s 0.15s ease both" }}>
+              <p style={{ color:gold, fontSize:"0.7rem", letterSpacing:"0.2em",
+                textTransform:"uppercase", marginBottom:16 }}>Data Mempelai</p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+                <Field label="Nama Mempelai Pria" value={groom} onChange={setGroom} placeholder="Nama lengkap" />
+                <Field label="Nama Mempelai Wanita" value={bride} onChange={setBride} placeholder="Nama lengkap" />
+                <Field label="Ayah Mempelai Pria" value={groomFather} onChange={setGroomFather} />
+                <Field label="Ibu Mempelai Pria" value={groomMother} onChange={setGroomMother} />
+                <Field label="Ayah Mempelai Wanita" value={brideFather} onChange={setBrideFather} />
+                <Field label="Ibu Mempelai Wanita" value={brideMother} onChange={setBrideMother} />
               </div>
             </div>
-          </div>
 
-          {/* Mempelai Wanita */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-sky-100">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-lg">👰</span>
-              <p className="text-xs text-slate-400 uppercase tracking-widest">Mempelai Wanita</p>
-            </div>
-            <div className="space-y-3">
-              <Field label="Nama Lengkap" value={bride} onChange={setBride} placeholder="Nama lengkap wanita" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Field label="Nama Ayah" value={brideFather} onChange={setBrideFather} placeholder="Nama ayah wanita" />
-                <Field label="Nama Ibu"  value={brideMother} onChange={setBrideMother} placeholder="Nama ibu wanita" />
+            {/* Acara */}
+            <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)",
+              borderRadius:20, padding:"24px", animation:"fadeUp 0.6s 0.2s ease both" }}>
+              <p style={{ color:gold, fontSize:"0.7rem", letterSpacing:"0.2em",
+                textTransform:"uppercase", marginBottom:16 }}>Detail Acara</p>
+              <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+                <Field label="Tanggal Pernikahan" value={weddingDate} onChange={setWeddingDate} type="date" />
+                {weddingDate && (
+                  <div style={{ padding:"10px 16px", borderRadius:10,
+                    background:"rgba(196,164,90,0.08)", border:"1px solid rgba(196,164,90,0.15)" }}>
+                    <p style={{ color:gold, fontSize:"0.82rem" }}>📅 {formatDateID(weddingDate)}</p>
+                  </div>
+                )}
+                <Field label="Waktu" value={weddingTime} onChange={setWeddingTime} type="time" />
+                <Field label="Lokasi" value={weddingLocation} onChange={setWeddingLocation} placeholder="Nama gedung / alamat" />
               </div>
             </div>
+
+            {/* Save */}
+            <button onClick={handleSave} disabled={saving}
+              style={{
+                padding:"16px", borderRadius:14, border:"none",
+                background: saved ? "linear-gradient(135deg,#4ADE80,#22C55E)"
+                  : `linear-gradient(135deg,${gold},#E8CC8A)`,
+                color:"#0F172A", fontWeight:700, fontSize:"0.92rem",
+                cursor: saving ? "not-allowed" : "pointer",
+                transition:"all 0.3s",
+                boxShadow: `0 8px 24px rgba(196,164,90,0.25)`,
+                animation:"fadeUp 0.6s 0.25s ease both",
+              }}>
+              {saved ? "✓ Tersimpan!" : saving ? "Menyimpan..." : "Simpan Perubahan"}
+            </button>
           </div>
-
-          {/* Tombol Simpan */}
-          <button
-            onClick={save}
-            disabled={loading || uploading}
-            className="w-full py-3 rounded-xl text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition"
-            style={{ background: "linear-gradient(90deg, #0284C7, #38BDF8)" }}
-          >
-            {loading ? "Menyimpan..." : "Simpan Semua Perubahan"}
-          </button>
-
-          {saved && (
-            <div className="bg-sky-50 border border-sky-200 text-sky-700 text-sm text-center py-3 rounded-xl">
-              ✓ Semua data berhasil disimpan
-            </div>
-          )}
-        </div>
+        )}
       </main>
     </div>
   );
