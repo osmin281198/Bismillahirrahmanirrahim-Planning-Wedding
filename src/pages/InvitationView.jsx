@@ -5,11 +5,47 @@ import { supabase } from "../lib/supabase";
 const INVITATION_MUSIC = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Ada%20Untukmu.mp3";
 const BONEKA_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-photos/boneka.png";
 
+// ── Warna Tema Floral ─────────────────────────────────────
+const C = {
+  green1:  "#2D5016", // hijau tua
+  green2:  "#4A7C59", // hijau medium
+  green3:  "#7BAE7F", // hijau muda
+  green4:  "#C8E6C9", // hijau sangat muda
+  cream:   "#FAF7F0", // krem
+  cream2:  "#F5EDD9", // krem gelap
+  gold:    "#C4A45A", // emas
+  gold2:   "#E8CC8A", // emas muda
+  brown:   "#8B6914", // coklat emas
+  white:   "#FFFFFF",
+  text:    "#2D3A1E", // teks gelap hijau
+  textMid: "#4A5E35", // teks medium
+};
+
+const gradMain   = `linear-gradient(160deg, ${C.green1} 0%, ${C.green2} 50%, ${C.green3} 100%)`;
+const gradLight  = `linear-gradient(135deg, ${C.green2} 0%, ${C.green3} 100%)`;
+const gradCream  = `linear-gradient(160deg, ${C.cream} 0%, ${C.cream2} 100%)`;
+const gradGold   = `linear-gradient(135deg, ${C.gold} 0%, ${C.gold2} 100%)`;
+
 const STYLES = `
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap');
-@keyframes driftCloud {
-  from { transform: translateX(-350px); }
-  to   { transform: translateX(110vw); }
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Playfair+Display:wght@400;500;600&display=swap');
+
+@keyframes leafSway {
+  0%,100% { transform: rotate(-3deg) translateY(0); }
+  50%      { transform: rotate(3deg) translateY(-5px); }
+}
+@keyframes leafSway2 {
+  0%,100% { transform: rotate(3deg) translateY(0); }
+  50%      { transform: rotate(-3deg) translateY(-4px); }
+}
+@keyframes petalFall {
+  0%   { opacity:0; transform: translateY(-20px) rotate(0deg) translateX(0); }
+  10%  { opacity:1; }
+  90%  { opacity:0.6; }
+  100% { opacity:0; transform: translateY(100vh) rotate(720deg) translateX(60px); }
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
 }
 @keyframes fadeDown {
   from { opacity:0; transform:translateY(-16px); }
@@ -17,44 +53,38 @@ const STYLES = `
 }
 @keyframes bounceY {
   0%,100% { transform:translateY(0); }
-  50%      { transform:translateY(-7px); }
+  50%      { transform:translateY(-8px); }
 }
-@keyframes musicPulse {
+@keyframes musicBar {
   0%,100% { height:4px; }
-  50%      { height:18px; }
+  50%      { height:16px; }
 }
 @keyframes glowPulse {
-  0%,100% { opacity:0.4; transform:scale(1); }
-  50%      { opacity:1;   transform:scale(1.18); }
+  0%,100% { opacity:0.5; transform:scale(1); }
+  50%      { opacity:1; transform:scale(1.1); }
 }
-@keyframes sparkle {
-  0%   { opacity:0; transform:scale(0) rotate(0deg); }
-  50%  { opacity:1; transform:scale(1) rotate(180deg); }
-  100% { opacity:0; transform:scale(0) rotate(360deg); }
+@keyframes bonekaIn {
+  0%   { opacity:0; transform:scale(0.5) translateY(30px); }
+  60%  { opacity:1; transform:scale(1.05) translateY(-5px); }
+  100% { opacity:1; transform:scale(1) translateY(0); }
+}
+@keyframes bonekaFloat {
+  0%,100% { transform:translateY(0); }
+  50%      { transform:translateY(-8px); }
 }
 @keyframes overlayIn {
   from { opacity:0; }
   to   { opacity:1; }
 }
-@keyframes bonekaIn {
-  0%   { opacity:0; transform:scale(0.4) translateY(40px); }
-  40%  { opacity:1; transform:scale(1.05) translateY(-6px); }
-  60%  { transform:scale(0.98) translateY(0); }
-  100% { opacity:1; transform:scale(1) translateY(0); }
-}
-@keyframes bonekaFloat {
-  0%,100% { transform:translateY(0); }
-  50%      { transform:translateY(-10px); }
-}
 @keyframes textReveal {
-  0%   { opacity:0; transform:translateY(24px); }
+  0%   { opacity:0; transform:translateY(20px); }
   30%  { opacity:1; transform:translateY(0); }
-  80%  { opacity:1; transform:translateY(0); }
-  100% { opacity:0; transform:translateY(-16px); }
+  80%  { opacity:1; }
+  100% { opacity:0; transform:translateY(-15px); }
 }
-@keyframes burstStar {
-  0%   { opacity:1; transform:scale(0) translate(0,0); }
-  100% { opacity:0; transform:scale(1.5) translate(var(--tx),var(--ty)); }
+@keyframes burstPetal {
+  0%   { opacity:1; transform:scale(0) translate(0,0) rotate(0deg); }
+  100% { opacity:0; transform:scale(1.5) translate(var(--tx),var(--ty)) rotate(180deg); }
 }
 @keyframes ringFloat {
   0%,100% { transform:translateY(0) rotate(-15deg); }
@@ -64,158 +94,150 @@ const STYLES = `
   0%,100% { transform:translateY(0) rotate(15deg); }
   50%      { transform:translateY(-8px) rotate(15deg); }
 }
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{ animation:none!important; }
+@keyframes sectionIn {
+  from { opacity:0; transform:translateY(30px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after { animation:none!important; transition:none!important; }
 }
 `;
 
-function RingAnimation({ visible, groom, bride }) {
-  if (!visible) return null;
-  const stars = [
-    { top:"10%", left:"15%", delay:"0s",    tx:"-40px", ty:"-30px" },
-    { top:"15%", left:"80%", delay:"0.2s",  tx:"35px",  ty:"-40px" },
-    { top:"75%", left:"10%", delay:"0.4s",  tx:"-30px", ty:"30px"  },
-    { top:"80%", left:"85%", delay:"0.3s",  tx:"40px",  ty:"35px"  },
-    { top:"45%", left:"3%",  delay:"0.5s",  tx:"-45px", ty:"0px"   },
-    { top:"50%", left:"93%", delay:"0.15s", tx:"45px",  ty:"0px"   },
-    { top:"5%",  left:"50%", delay:"0.25s", tx:"0px",   ty:"-50px" },
-    { top:"90%", left:"50%", delay:"0.35s", tx:"0px",   ty:"50px"  },
-    { top:"30%", left:"5%",  delay:"0.1s",  tx:"-35px", ty:"-20px" },
-    { top:"65%", left:"90%", delay:"0.45s", tx:"35px",  ty:"20px"  },
+// ── SVG Ornamen Bunga ─────────────────────────────────────
+const FlowerSVG = ({ size=60, color=C.green3, opacity=0.6 }) => (
+  <svg width={size} height={size} viewBox="0 0 100 100" style={{ opacity }}>
+    {[0,45,90,135,180,225,270,315].map((angle, i) => (
+      <ellipse key={i} cx={50} cy={25} rx={8} ry={14}
+        fill={color} opacity={0.7}
+        transform={`rotate(${angle} 50 50)`} />
+    ))}
+    <circle cx={50} cy={50} r={12} fill={C.gold} opacity={0.9} />
+    <circle cx={50} cy={50} r={7} fill={C.gold2} />
+  </svg>
+);
+
+const LeafSVG = ({ size=40, color=C.green2, flip=false }) => (
+  <svg width={size} height={size*1.5} viewBox="0 0 40 60"
+    style={{ transform: flip ? "scaleX(-1)" : "none" }}>
+    <path d="M20 55 C20 55 2 35 5 15 C8 0 20 2 20 2 C20 2 32 0 35 15 C38 35 20 55 20 55Z"
+      fill={color} opacity={0.8} />
+    <path d="M20 55 L20 5" stroke={C.green1} strokeWidth={1.5} opacity={0.5} />
+    <path d="M20 20 C14 18 10 22 8 28" stroke={C.green1} strokeWidth={1} opacity={0.4} fill="none" />
+    <path d="M20 20 C26 18 30 22 32 28" stroke={C.green1} strokeWidth={1} opacity={0.4} fill="none" />
+  </svg>
+);
+
+// ── Kelopak Bunga Jatuh ───────────────────────────────────
+const FallingPetals = () => {
+  const petals = [
+    { left:"10%", delay:"0s",   dur:"6s",  color:C.green3 },
+    { left:"25%", delay:"1.5s", dur:"7s",  color:C.gold },
+    { left:"40%", delay:"0.8s", dur:"5.5s",color:C.green4 },
+    { left:"60%", delay:"2s",   dur:"8s",  color:C.green3 },
+    { left:"75%", delay:"0.3s", dur:"6.5s",color:C.gold2 },
+    { left:"88%", delay:"1.2s", dur:"7.5s",color:C.green3 },
+    { left:"15%", delay:"3s",   dur:"6s",  color:C.gold },
+    { left:"55%", delay:"2.5s", dur:"5s",  color:C.green4 },
   ];
   return (
-    <div style={{
-      position:"fixed", inset:0, zIndex:200,
-      display:"flex", flexDirection:"column",
-      alignItems:"center", justifyContent:"center",
-      background:"linear-gradient(160deg,#0C4A6E 0%,#0284C7 55%,#38BDF8 100%)",
-      animation:"overlayIn 0.35s ease both",
-    }}>
-      <div style={{ position:"absolute", width:350, height:350, borderRadius:"50%",
-        background:"radial-gradient(circle,rgba(186,230,253,0.25) 0%,transparent 70%)",
-        animation:"glowPulse 1.4s ease-in-out infinite" }} />
-      <div style={{ position:"absolute", width:260, height:260, borderRadius:"50%",
-        border:"1.5px solid rgba(196,164,90,0.4)", animation:"glowPulse 2s ease-in-out infinite" }} />
-      <div style={{ position:"absolute", width:310, height:310, borderRadius:"50%",
-        border:"1px solid rgba(186,230,253,0.2)", animation:"glowPulse 2.4s 0.3s ease-in-out infinite" }} />
-
-      {stars.map((s, i) => (
-        <div key={i} style={{ position:"absolute", top:s.top, left:s.left,
-          fontSize:"1rem", color:"#C4A45A", "--tx":s.tx, "--ty":s.ty,
-          animation:`burstStar 2s ${s.delay} ease-out both` }}>✦</div>
-      ))}
-
-      {[...Array(16)].map((_, i) => (
-        <div key={i} style={{ position:"absolute",
-          width:3+(i%3)*2, height:3+(i%3)*2, borderRadius:"50%",
-          background:i%2===0?"rgba(196,164,90,0.85)":"rgba(186,230,253,0.85)",
-          top:`${8+(i*5)%82}%`, left:`${4+(i*11)%88}%`,
-          animation:`sparkle ${1+i*0.12}s ${i*0.08}s ease-in-out infinite` }} />
-      ))}
-
-      <div style={{ position:"absolute", top:"10%", left:"6%", fontSize:"2.2rem",
-        filter:"drop-shadow(0 0 16px rgba(196,164,90,0.8))",
-        animation:"ringFloat 2s ease-in-out infinite" }}>💍</div>
-      <div style={{ position:"absolute", top:"10%", right:"6%", fontSize:"2.2rem",
-        filter:"drop-shadow(0 0 16px rgba(196,164,90,0.8))",
-        animation:"ringFloat2 2s 0.3s ease-in-out infinite" }}>💍</div>
-      <div style={{ position:"absolute", bottom:"12%", left:"8%", fontSize:"1.6rem",
-        filter:"drop-shadow(0 0 12px rgba(196,164,90,0.6))",
-        animation:"ringFloat 2.4s 0.5s ease-in-out infinite" }}>💍</div>
-      <div style={{ position:"absolute", bottom:"12%", right:"8%", fontSize:"1.6rem",
-        filter:"drop-shadow(0 0 12px rgba(196,164,90,0.6))",
-        animation:"ringFloat2 2.2s 0.2s ease-in-out infinite" }}>💍</div>
-
-      {/* ✅ Foto boneka full di animasi */}
-      <div style={{
-        position:"relative", zIndex:10, marginBottom:16,
-        animation:"bonekaIn 0.8s ease both, bonekaFloat 2s 0.8s ease-in-out infinite",
-        filter:"drop-shadow(0 12px 40px rgba(12,74,110,0.5))",
-      }}>
-        <img src={BONEKA_URL} alt="Boneka Pasangan"
-          style={{
-            width:220, height:"auto",
-            objectFit:"contain",
-            borderRadius:20,
-            border:"3px solid rgba(196,164,90,0.5)",
-            boxShadow:"0 0 40px rgba(196,164,90,0.4), 0 0 80px rgba(186,230,253,0.3)",
-            display:"block",
-          }} />
-        <div style={{ position:"absolute", bottom:-10, left:"50%", transform:"translateX(-50%)",
-          width:120, height:20, borderRadius:"50%",
-          background:"rgba(196,164,90,0.2)", filter:"blur(8px)" }} />
-      </div>
-
-      <div style={{ textAlign:"center", animation:"textReveal 2.8s 0.4s ease both", zIndex:10 }}>
-        <p style={{ fontFamily:"'Cormorant Garamond',serif",
-          fontSize:"1.9rem", color:"white", fontWeight:600,
-          letterSpacing:2, textShadow:"0 0 30px rgba(186,230,253,0.8)" }}>
-          {groom?.split(" ")[0] || "Ridwan"} &amp; {bride?.split(" ")[0] || "Nurlaila"}
-        </p>
-        <p style={{ color:"#C4A45A", fontSize:"0.68rem",
-          letterSpacing:"0.3em", textTransform:"uppercase", marginTop:8 }}>
-          ✦ Membuka Undangan ✦
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function FloatingClouds({ opacity = 0.55 }) {
-  const clouds = [
-    { w:200, h:52, top:"7%",  dur:"38s", delay:"0s"   },
-    { w:140, h:38, top:"18%", dur:"50s", delay:"-15s"  },
-    { w:260, h:64, top:"4%",  dur:"46s", delay:"-28s"  },
-    { w:180, h:46, top:"27%", dur:"55s", delay:"-8s"   },
-    { w:120, h:34, top:"35%", dur:"42s", delay:"-22s"  },
-  ];
-  return (
-    <div style={{ position:"absolute", inset:0, overflow:"hidden", pointerEvents:"none", zIndex:0 }} aria-hidden>
-      {clouds.map((c, i) => (
+    <div style={{ position:"absolute", inset:0, overflow:"hidden", pointerEvents:"none", zIndex:1 }}>
+      {petals.map((p, i) => (
         <div key={i} style={{
-          position:"absolute", left:0, top:c.top,
-          width:c.w, height:c.h, background:"white", borderRadius:50,
-          opacity:opacity*(0.6+i*0.06), filter:"blur(7px)",
-          animation:`driftCloud ${c.dur} linear ${c.delay} infinite`,
-        }} />
+          position:"absolute", top:"-20px", left:p.left,
+          animation:`petalFall ${p.dur} ${p.delay} ease-in infinite`,
+        }}>
+          <svg width={12} height={16} viewBox="0 0 12 16">
+            <ellipse cx={6} cy={8} rx={5} ry={7} fill={p.color} opacity={0.7} />
+          </svg>
+        </div>
       ))}
     </div>
   );
-}
+};
 
-function GoldDivider({ dots = 1, my = 20 }) {
-  return (
-    <div style={{ display:"flex", alignItems:"center", gap:10, margin:`${my}px 0` }}>
-      <div style={{ flex:1, height:1, background:"linear-gradient(90deg,transparent,#C4A45A,transparent)" }} />
-      {Array.from({ length: dots }).map((_, i) => (
-        <div key={i} style={{ width:7, height:7, background:"#C4A45A", transform:"rotate(45deg)", flexShrink:0 }} />
-      ))}
-      <div style={{ flex:1, height:1, background:"linear-gradient(90deg,transparent,#C4A45A,transparent)" }} />
+// ── Header Ornamen ────────────────────────────────────────
+const FloralHeader = ({ light=false }) => (
+  <div style={{ position:"relative", width:"100%", height:80, marginBottom:-20 }}>
+    {/* Cabang kiri */}
+    <div style={{ position:"absolute", left:0, bottom:0,
+      animation:"leafSway 4s ease-in-out infinite" }}>
+      <LeafSVG size={35} color={light ? C.green3 : C.green4} />
     </div>
-  );
-}
-
-function QuranCard() {
-  return (
-    <div style={{
-      background:"linear-gradient(135deg,rgba(186,230,253,0.28),rgba(240,249,255,0.55))",
-      border:"1px solid rgba(196,164,90,0.22)", borderRadius:18,
-      padding:"24px 18px", textAlign:"center",
-    }}>
-      <p style={{ color:"#C4A45A", fontSize:"0.58rem", letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:10 }}>
-        Q.S. Ar-Rum : 21
-      </p>
-      <p style={{ fontFamily:"'Amiri',serif", direction:"rtl", fontSize:"1.2rem", color:"#0C4A6E", lineHeight:2.0, marginBottom:10 }}>
-        وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا لِّتَسْكُنُوْٓا اِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَّرَحْمَةً
-      </p>
-      <GoldDivider />
-      <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:"0.78rem", color:"#475569", lineHeight:1.75 }}>
-        "Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang."
-      </p>
+    <div style={{ position:"absolute", left:30, bottom:10,
+      animation:"leafSway2 5s ease-in-out infinite" }}>
+      <LeafSVG size={25} color={light ? C.green2 : C.green3} />
     </div>
-  );
-}
+    {/* Bunga tengah */}
+    <div style={{ position:"absolute", left:"50%", transform:"translateX(-50%)", top:0 }}>
+      <FlowerSVG size={50} color={light ? C.green2 : C.green3} opacity={0.8} />
+    </div>
+    {/* Cabang kanan */}
+    <div style={{ position:"absolute", right:30, bottom:10,
+      animation:"leafSway 5s 1s ease-in-out infinite" }}>
+      <LeafSVG size={25} color={light ? C.green2 : C.green3} flip />
+    </div>
+    <div style={{ position:"absolute", right:0, bottom:0,
+      animation:"leafSway2 4s ease-in-out infinite" }}>
+      <LeafSVG size={35} color={light ? C.green3 : C.green4} flip />
+    </div>
+  </div>
+);
 
+const FloralFooter = ({ light=false }) => (
+  <div style={{ position:"relative", width:"100%", height:80, marginTop:-20 }}>
+    <div style={{ position:"absolute", left:0, top:0, transform:"scaleY(-1)",
+      animation:"leafSway2 4.5s ease-in-out infinite" }}>
+      <LeafSVG size={35} color={light ? C.green3 : C.green4} />
+    </div>
+    <div style={{ position:"absolute", left:"50%", transform:"translateX(-50%) scaleY(-1)", top:0 }}>
+      <FlowerSVG size={45} color={light ? C.green2 : C.green3} opacity={0.7} />
+    </div>
+    <div style={{ position:"absolute", right:0, top:0, transform:"scaleY(-1)",
+      animation:"leafSway 4.5s ease-in-out infinite" }}>
+      <LeafSVG size={35} color={light ? C.green3 : C.green4} flip />
+    </div>
+  </div>
+);
+
+// ── Gold Divider ──────────────────────────────────────────
+const GoldDivider = ({ my=20 }) => (
+  <div style={{ display:"flex", alignItems:"center", gap:10, margin:`${my}px 0` }}>
+    <div style={{ flex:1, height:1, background:`linear-gradient(90deg,transparent,${C.gold},transparent)` }} />
+    <FlowerSVG size={20} color={C.gold} opacity={1} />
+    <div style={{ flex:1, height:1, background:`linear-gradient(90deg,transparent,${C.gold},transparent)` }} />
+  </div>
+);
+
+// ── Ayat Quran ────────────────────────────────────────────
+const QuranCard = () => (
+  <div style={{
+    background:`linear-gradient(135deg,rgba(196,164,90,0.08),rgba(196,164,90,0.03))`,
+    border:`1px solid rgba(196,164,90,0.25)`, borderRadius:20,
+    padding:"24px 20px", textAlign:"center",
+    position:"relative", overflow:"hidden",
+  }}>
+    <div style={{ position:"absolute", top:-10, left:-10, opacity:0.08 }}>
+      <FlowerSVG size={80} color={C.green2} opacity={1} />
+    </div>
+    <div style={{ position:"absolute", bottom:-10, right:-10, opacity:0.08 }}>
+      <FlowerSVG size={80} color={C.green2} opacity={1} />
+    </div>
+    <p style={{ color:C.gold, fontSize:"0.58rem", letterSpacing:"0.2em",
+      textTransform:"uppercase", marginBottom:12, position:"relative" }}>Q.S. Ar-Rum : 21</p>
+    <p style={{ fontFamily:"'Amiri',serif", direction:"rtl", fontSize:"1.2rem",
+      color:C.green1, lineHeight:2.2, marginBottom:12, position:"relative" }}>
+      وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا لِّتَسْكُنُوْٓا اِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَّرَحْمَةً
+    </p>
+    <GoldDivider my={8} />
+    <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic",
+      fontSize:"0.82rem", color:C.textMid, lineHeight:1.8, position:"relative" }}>
+      "Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang."
+    </p>
+  </div>
+);
+
+// ── Floating Music ────────────────────────────────────────
 function FloatingMusic() {
   const audioRef              = useRef(null);
   const [playing, setPlaying] = useState(false);
@@ -230,8 +252,8 @@ function FloatingMusic() {
         audioRef.current.play().then(() => { setPlaying(true); setStarted(true); }).catch(() => {});
       }
     };
-    document.addEventListener("touchstart", tryPlay, { once: true });
-    document.addEventListener("click", tryPlay, { once: true });
+    document.addEventListener("touchstart", tryPlay, { once:true });
+    document.addEventListener("click", tryPlay, { once:true });
     return () => {
       document.removeEventListener("touchstart", tryPlay);
       document.removeEventListener("click", tryPlay);
@@ -246,56 +268,148 @@ function FloatingMusic() {
     setStarted(true);
   };
 
-  const handleVolume = (e) => {
-    const val = parseFloat(e.target.value);
-    setVolume(val);
-    if (audioRef.current) audioRef.current.volume = val;
-  };
-
   const handleEnded = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
-    }
+    if (audioRef.current) { audioRef.current.currentTime=0; audioRef.current.play().then(()=>setPlaying(true)).catch(()=>{}); }
   };
 
   return (
-    <div style={{ position:"fixed", bottom:80, right:16, zIndex:50, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:8 }}>
+    <div style={{ position:"fixed", bottom:80, right:14, zIndex:50,
+      display:"flex", flexDirection:"column", alignItems:"flex-end", gap:8 }}>
       <audio ref={audioRef} src={INVITATION_MUSIC} preload="auto" onEnded={handleEnded} />
       {showVol && (
-        <div style={{ background:"rgba(255,255,255,0.95)", borderRadius:16, padding:"12px 10px",
-          border:"1px solid #BAE6FD", boxShadow:"0 8px 32px rgba(12,74,110,0.15)",
+        <div style={{ background:C.cream, borderRadius:14, padding:"10px 8px",
+          border:`1px solid rgba(196,164,90,0.3)`, boxShadow:"0 8px 24px rgba(0,0,0,0.15)",
           display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
-          <span style={{ fontSize:"0.65rem", color:"#94A3B8" }}>🔊</span>
-          <input type="range" min={0} max={1} step={0.01} value={volume} onChange={handleVolume}
-            style={{ writingMode:"vertical-lr", direction:"rtl", height:72, accentColor:"#0284C7" }} />
-          <span style={{ fontSize:"0.65rem", color:"#94A3B8" }}>🔈</span>
+          <span style={{ fontSize:"0.6rem", color:C.green2 }}>🔊</span>
+          <input type="range" min={0} max={1} step={0.01} value={volume}
+            onChange={e => { setVolume(parseFloat(e.target.value)); if(audioRef.current) audioRef.current.volume=parseFloat(e.target.value); }}
+            style={{ writingMode:"vertical-lr", direction:"rtl", height:60, accentColor:C.green2 }} />
+          <span style={{ fontSize:"0.6rem", color:C.green2 }}>🔈</span>
         </div>
       )}
-      <div style={{ display:"flex", gap:8 }}>
-        <button onClick={(e) => { e.stopPropagation(); setShowVol(!showVol); }}
-          style={{ width:40, height:40, borderRadius:"50%", background:"rgba(255,255,255,0.95)",
-            border:"1px solid #BAE6FD", boxShadow:"0 4px 16px rgba(12,74,110,0.12)",
-            display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1rem", cursor:"pointer" }}>🎚</button>
+      <div style={{ display:"flex", gap:8, alignItems:"flex-end" }}>
+        {playing && (
+          <div style={{ display:"flex", gap:2, alignItems:"flex-end", height:20 }}>
+            {[1,2,3,4].map(i => (
+              <div key={i} style={{ width:3, borderRadius:2, background:C.green2,
+                animation:`musicBar ${0.4+i*0.1}s ease-in-out infinite alternate` }} />
+            ))}
+          </div>
+        )}
+        <button onClick={e=>{e.stopPropagation();setShowVol(!showVol)}}
+          style={{ width:36, height:36, borderRadius:"50%", background:C.cream,
+            border:`1px solid rgba(196,164,90,0.3)`, boxShadow:"0 4px 12px rgba(0,0,0,0.1)",
+            display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}>🎚</button>
         <button onClick={togglePlay}
-          style={{ width:48, height:48, borderRadius:"50%", background:"linear-gradient(135deg,#0284C7,#38BDF8)",
-            boxShadow:"0 4px 20px rgba(2,132,199,0.4)", display:"flex", alignItems:"center",
-            justifyContent:"center", fontSize:"1.1rem", color:"white", cursor:"pointer", border:"none" }}>
+          style={{ width:46, height:46, borderRadius:"50%", background:gradGold,
+            boxShadow:`0 4px 16px rgba(196,164,90,0.4)`, border:"none",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            fontSize:"1.1rem", color:"white", cursor:"pointer" }}>
           {playing ? "⏸" : "▶"}
         </button>
       </div>
-      {playing && (
-        <div style={{ display:"flex", gap:3, justifyContent:"center", height:20, alignItems:"flex-end" }}>
-          {[1,2,3,4].map((i) => (
-            <div key={i} style={{ width:3, borderRadius:2, background:"#0284C7",
-              animation:`musicPulse ${0.4+i*0.1}s ease-in-out infinite alternate` }} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
 
+// ── Animasi Pembuka ───────────────────────────────────────
+function OpeningAnimation({ visible, groom, bride }) {
+  if (!visible) return null;
+  const petals = [
+    { top:"8%",  left:"12%", delay:"0s",    tx:"-40px", ty:"-30px" },
+    { top:"12%", left:"82%", delay:"0.2s",  tx:"35px",  ty:"-40px" },
+    { top:"78%", left:"8%",  delay:"0.4s",  tx:"-30px", ty:"30px"  },
+    { top:"82%", left:"88%", delay:"0.3s",  tx:"40px",  ty:"35px"  },
+    { top:"40%", left:"2%",  delay:"0.5s",  tx:"-45px", ty:"0px"   },
+    { top:"45%", left:"94%", delay:"0.15s", tx:"45px",  ty:"0px"   },
+    { top:"3%",  left:"50%", delay:"0.25s", tx:"0px",   ty:"-50px" },
+    { top:"92%", left:"50%", delay:"0.35s", tx:"0px",   ty:"50px"  },
+  ];
+  return (
+    <div style={{
+      position:"fixed", inset:0, zIndex:200,
+      display:"flex", flexDirection:"column",
+      alignItems:"center", justifyContent:"center",
+      background:`linear-gradient(160deg, ${C.green1} 0%, ${C.green2} 60%, ${C.green3} 100%)`,
+      animation:"overlayIn 0.4s ease both", overflow:"hidden",
+    }}>
+      {/* Kelopak burst */}
+      {petals.map((p,i) => (
+        <div key={i} style={{ position:"absolute", top:p.top, left:p.left,
+          "--tx":p.tx, "--ty":p.ty, animation:`burstPetal 2s ${p.delay} ease-out both` }}>
+          <svg width={14} height={18} viewBox="0 0 14 18">
+            <ellipse cx={7} cy={9} rx={6} ry={8} fill={C.gold} opacity={0.8} />
+          </svg>
+        </div>
+      ))}
+
+      {/* Ornamen bunga di pojok */}
+      <div style={{ position:"absolute", top:0, left:0, opacity:0.3, animation:"leafSway 3s ease-in-out infinite" }}>
+        <FlowerSVG size={100} color={C.green4} opacity={1} />
+      </div>
+      <div style={{ position:"absolute", top:0, right:0, opacity:0.3, animation:"leafSway2 3s ease-in-out infinite" }}>
+        <FlowerSVG size={100} color={C.green4} opacity={1} />
+      </div>
+      <div style={{ position:"absolute", bottom:0, left:0, opacity:0.2, transform:"rotate(180deg)" }}>
+        <FlowerSVG size={120} color={C.green4} opacity={1} />
+      </div>
+      <div style={{ position:"absolute", bottom:0, right:0, opacity:0.2, transform:"rotate(180deg)" }}>
+        <FlowerSVG size={120} color={C.green4} opacity={1} />
+      </div>
+
+      {/* Cincin */}
+      <div style={{ position:"absolute", top:"8%", left:"5%", fontSize:"1.8rem",
+        filter:`drop-shadow(0 0 12px ${C.gold})`,
+        animation:"ringFloat 2s ease-in-out infinite" }}>💍</div>
+      <div style={{ position:"absolute", top:"8%", right:"5%", fontSize:"1.8rem",
+        filter:`drop-shadow(0 0 12px ${C.gold})`,
+        animation:"ringFloat2 2s 0.3s ease-in-out infinite" }}>💍</div>
+
+      {/* Cahaya */}
+      <div style={{ position:"absolute", width:280, height:280, borderRadius:"50%",
+        background:`radial-gradient(circle,rgba(196,164,90,0.2) 0%,transparent 70%)`,
+        animation:"glowPulse 1.5s ease-in-out infinite" }} />
+
+      {/* Foto boneka */}
+      <div style={{ position:"relative", zIndex:10, marginBottom:20,
+        animation:"bonekaIn 0.8s ease both, bonekaFloat 2s 0.8s ease-in-out infinite",
+        filter:`drop-shadow(0 12px 30px rgba(0,0,0,0.4))` }}>
+        <img src={BONEKA_URL} alt="Boneka"
+          style={{ width:200, height:"auto", objectFit:"contain", borderRadius:20,
+            border:`3px solid rgba(196,164,90,0.5)`,
+            boxShadow:`0 0 30px rgba(196,164,90,0.3)`, display:"block" }}
+          onError={e => e.target.style.display="none"} />
+      </div>
+
+      {/* Teks */}
+      <div style={{ textAlign:"center", zIndex:10,
+        animation:"textReveal 2.8s 0.5s ease both" }}>
+        <p style={{ fontFamily:"'Playfair Display',serif", fontSize:"0.65rem",
+          color:C.gold2, letterSpacing:"0.35em", textTransform:"uppercase", marginBottom:8 }}>
+          ✿ The Wedding Of ✿
+        </p>
+        <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem",
+          color:"white", fontWeight:600, letterSpacing:2,
+          textShadow:`0 0 30px rgba(196,164,90,0.5)` }}>
+          {groom?.split(" ")[0] || "Ridwan"} &amp; {bride?.split(" ")[0] || "Nurlaila"}
+        </p>
+        <p style={{ color:C.gold, fontSize:"0.68rem", letterSpacing:"0.3em",
+          textTransform:"uppercase", marginTop:8 }}>✦ Membuka Undangan ✦</p>
+      </div>
+
+      {/* Partikel */}
+      {[...Array(12)].map((_,i) => (
+        <div key={i} style={{ position:"absolute",
+          width:4+(i%3)*2, height:4+(i%3)*2, borderRadius:"50%",
+          background: i%2===0 ? C.gold : C.green4,
+          top:`${10+(i*7)%80}%`, left:`${5+(i*13)%85}%`,
+          animation:`glowPulse ${1+i*0.15}s ${i*0.1}s ease-in-out infinite` }} />
+      ))}
+    </div>
+  );
+}
+
+// ── Countdown ─────────────────────────────────────────────
 function useCountdown(targetDate) {
   const [time, setTime] = useState({ days:0, hours:0, minutes:0, seconds:0 });
   useEffect(() => {
@@ -304,10 +418,10 @@ function useCountdown(targetDate) {
       const diff = new Date(targetDate) - new Date();
       if (diff <= 0) { setTime({ days:0, hours:0, minutes:0, seconds:0 }); return; }
       setTime({
-        days:    Math.floor(diff / 86400000),
-        hours:   Math.floor((diff % 86400000) / 3600000),
-        minutes: Math.floor((diff % 3600000)  / 60000),
-        seconds: Math.floor((diff % 60000)    / 1000),
+        days:    Math.floor(diff/86400000),
+        hours:   Math.floor((diff%86400000)/3600000),
+        minutes: Math.floor((diff%3600000)/60000),
+        seconds: Math.floor((diff%60000)/1000),
       });
     };
     tick();
@@ -317,13 +431,40 @@ function useCountdown(targetDate) {
   return time;
 }
 
+// ── Section Observer ──────────────────────────────────────
+function useInView(ref) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) setVisible(true);
+    }, { threshold:0.1 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return visible;
+}
+
+function Section({ children, style={} }) {
+  const ref = useRef();
+  const visible = useInView(ref);
+  return (
+    <div ref={ref} style={{
+      ...style,
+      opacity: visible ? 1 : 0,
+      transform: visible ? "translateY(0)" : "translateY(30px)",
+      transition: "opacity 0.8s ease, transform 0.8s ease",
+    }}>
+      {children}
+    </div>
+  );
+}
+
+// ── MAIN COMPONENT ────────────────────────────────────────
 export default function InvitationView() {
   const { slug } = useParams();
   const [settings, setSettings] = useState({
-    groom:"...", bride:"...",
-    groom_father:"", groom_mother:"",
-    bride_father:"", bride_mother:"",
-    photo_url:"",
+    groom:"", bride:"", groom_father:"", groom_mother:"",
+    bride_father:"", bride_mother:"", photo_url:"",
     wedding_date:"", wedding_time:"", wedding_location:"",
   });
   const [opened, setOpened]               = useState(false);
@@ -347,425 +488,580 @@ export default function InvitationView() {
   }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const [sRes, wRes] = await Promise.all([
-        supabase.from("settings").select("*").eq("id",1).single(),
-        supabase.from("rsvp").select("*").order("id",{ ascending:false }),
-      ]);
+    Promise.all([
+      supabase.from("settings").select("*").eq("id",1).single(),
+      supabase.from("rsvp").select("*").order("id",{ascending:false}),
+    ]).then(([sRes, wRes]) => {
       if (!sRes.error && sRes.data) setSettings(sRes.data);
       if (!wRes.error && wRes.data) setWishes(wRes.data);
-    };
-    fetchData();
+    });
   }, []);
 
   const formatDate = (d) => d
-    ? new Date(d).toLocaleDateString("id-ID",{ weekday:"long", year:"numeric", month:"long", day:"numeric" })
+    ? new Date(d).toLocaleDateString("id-ID",{weekday:"long",year:"numeric",month:"long",day:"numeric"})
     : "Segera";
 
-  const handleBukaUndangan = () => {
+  const handleBuka = () => {
     setAnimating(true);
     setTimeout(() => { setOpened(true); setAnimating(false); }, 3000);
   };
 
   const submitRsvp = async () => {
     if (!rsvpName) return;
-    const newWish = { id:Date.now(), name:rsvpName, message:rsvpMsg, attendance:rsvpAttend };
-    const { error } = await supabase.from("rsvp").insert(newWish);
+    const w = { id:Date.now(), name:rsvpName, message:rsvpMsg, attendance:rsvpAttend };
+    const { error } = await supabase.from("rsvp").insert(w);
     if (!error) {
-      setWishes([newWish,...wishes]);
+      setWishes([w,...wishes]);
       setRsvpName(""); setRsvpMsg(""); setRsvpAttend("Hadir");
       setWishSubmitted(true);
       setTimeout(()=>setWishSubmitted(false), 3000);
     }
   };
 
-  const copyText = (text, key) => {
-    const run = async () => {
-      try { await navigator.clipboard.writeText(text); }
-      catch {
-        const el = document.createElement("textarea");
-        el.value = text; el.style.cssText = "position:fixed;opacity:0;top:0;left:0";
-        document.body.appendChild(el); el.focus(); el.select();
-        document.execCommand("copy"); document.body.removeChild(el);
-      }
-      setCopied(key); setTimeout(()=>setCopied(""), 2000);
-    };
-    run();
+  const copyText = async (text, key) => {
+    try { await navigator.clipboard.writeText(text); }
+    catch {
+      const el = document.createElement("textarea");
+      el.value=text; el.style.cssText="position:fixed;opacity:0";
+      document.body.appendChild(el); el.focus(); el.select();
+      document.execCommand("copy"); document.body.removeChild(el);
+    }
+    setCopied(key); setTimeout(()=>setCopied(""),2000);
   };
 
   const scrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior:"smooth" });
+    document.getElementById(id)?.scrollIntoView({behavior:"smooth"});
     setActiveSection(id);
   };
 
-  const C = {
-    deepBlue:"#0C4A6E", midBlue:"#0284C7",
-    skyBlue:"#38BDF8", lightBlue:"#BAE6FD",
-    cloudBlue:"#F0F9FF", gold:"#C4A45A",
-  };
-  const gradMain  = `linear-gradient(160deg,${C.deepBlue} 0%,${C.midBlue} 60%,${C.skyBlue} 100%)`;
-  const gradLight = `linear-gradient(135deg,${C.skyBlue} 0%,${C.midBlue} 100%)`;
-  const serif  = { fontFamily:"'Cormorant Garamond',serif" };
-  const arabic = { fontFamily:"'Amiri',serif", direction:"rtl" };
-  const glass  = {
-    background:"rgba(255,255,255,0.75)",
-    backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
-    border:"1px solid rgba(255,255,255,0.9)",
-    borderRadius:24, boxShadow:"0 8px 32px rgba(12,74,110,0.09)",
+  const serif   = { fontFamily:"'Cormorant Garamond',serif" };
+  const display = { fontFamily:"'Playfair Display',serif" };
+  const arabic  = { fontFamily:"'Amiri',serif", direction:"rtl" };
+
+  const inputStyle = {
+    width:"100%", padding:"13px 16px", borderRadius:12, fontSize:"0.88rem",
+    background:"rgba(255,255,255,0.7)", border:`1px solid rgba(74,124,89,0.2)`,
+    color:C.text, outline:"none", boxSizing:"border-box",
+    fontFamily:"'Inter',sans-serif",
   };
 
+  const glassCard = {
+    background:"rgba(255,255,255,0.85)",
+    backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)",
+    border:`1px solid rgba(196,164,90,0.2)`,
+    borderRadius:20, boxShadow:"0 8px 32px rgba(45,80,22,0.1)",
+  };
+
+  // ── COVER ──────────────────────────────────────────────
   if (!opened) {
     return (
       <>
-        <RingAnimation visible={animating} groom={settings.groom} bride={settings.bride} />
-        <div className="min-h-screen flex flex-col items-center justify-between py-12 px-6 text-center relative overflow-hidden"
-          style={{ background:gradMain, fontFamily:"'Inter',sans-serif" }}>
-          <FloatingClouds opacity={0.45} />
+        <OpeningAnimation visible={animating} groom={settings.groom} bride={settings.bride} />
+        <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column",
+          alignItems:"center", justifyContent:"space-between",
+          padding:"40px 24px", textAlign:"center",
+          background:gradMain, position:"relative", overflow:"hidden",
+          fontFamily:"'Inter',sans-serif" }}>
 
-          <div style={{ position:"relative", zIndex:1, animation:"fadeDown 1s ease both" }}>
-            <p style={{ ...arabic, fontSize:"1.55rem", color:C.lightBlue, lineHeight:1.7, marginBottom:4 }}>
+          <FallingPetals />
+
+          {/* Ornamen atas */}
+          <div style={{ position:"relative", zIndex:2, width:"100%", animation:"fadeDown 1s ease both" }}>
+            <p style={{ ...arabic, fontSize:"1.6rem", color:C.green4, lineHeight:1.8 }}>
               بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ
             </p>
-            <p className="text-sky-200 text-xs uppercase tracking-[0.3em] mt-1">Undangan Pernikahan</p>
-            <div className="w-16 h-px bg-sky-400 mx-auto opacity-50 mt-3" />
+            <p style={{ color:C.green4, fontSize:"0.6rem", letterSpacing:"0.3em",
+              textTransform:"uppercase", marginTop:4, opacity:0.8 }}>Undangan Pernikahan</p>
+            <div style={{ width:60, height:1, margin:"10px auto",
+              background:`linear-gradient(90deg,transparent,${C.gold},transparent)` }} />
+            <FloralHeader />
           </div>
 
-          <div className="relative z-10" style={{ animation:"fadeDown 1s 0.15s ease both" }}>
-            {/* ✅ Foto boneka full - tidak terpotong */}
+          {/* Konten tengah */}
+          <div style={{ position:"relative", zIndex:2, animation:"fadeDown 1s 0.2s ease both" }}>
+            {/* Foto boneka */}
             <div style={{ marginBottom:16, display:"flex", justifyContent:"center" }}>
-              <img src={BONEKA_URL} alt="Boneka Pasangan"
-                style={{
-                  width:"70vw",
-                  maxWidth:260,
-                  height:"auto",
-                  objectFit:"contain",
-                  borderRadius:24,
-                  border:"3px solid rgba(196,164,90,0.45)",
-                  boxShadow:"0 8px 40px rgba(12,74,110,0.35), 0 0 20px rgba(196,164,90,0.25)",
-                  display:"block",
-                }}
-                onError={(e) => { e.target.style.display="none"; }}
-              />
+              <div style={{ position:"relative", display:"inline-block" }}>
+                <div style={{ position:"absolute", inset:-3, borderRadius:22,
+                  background:gradGold, opacity:0.6 }} />
+                <img src={BONEKA_URL} alt="Boneka"
+                  style={{ position:"relative", width:"65vw", maxWidth:230, height:"auto",
+                    objectFit:"contain", borderRadius:20, display:"block",
+                    boxShadow:`0 12px 40px rgba(45,80,22,0.4)` }}
+                  onError={e=>e.target.style.display="none"} />
+              </div>
             </div>
 
-            <h1 style={{ ...serif }} className="text-5xl font-semibold text-white mb-1 leading-tight drop-shadow-lg">
-              {settings.groom?.split(" ")[0] || "..."}
+            <h1 style={{ ...display, fontSize:"3rem", fontWeight:600,
+              color:"white", lineHeight:1.1, textShadow:`0 2px 20px rgba(0,0,0,0.3)` }}>
+              {settings.groom?.split(" ")[0] || "Ridwan"}
             </h1>
-            <p style={{ ...serif, color:C.gold }} className="text-3xl my-1">&amp;</p>
-            <h1 style={{ ...serif }} className="text-5xl font-semibold text-white mb-5 leading-tight drop-shadow-lg">
-              {settings.bride?.split(" ")[0] || "..."}
+            <p style={{ ...display, fontSize:"1.8rem", color:C.gold, margin:"4px 0" }}>&amp;</p>
+            <h1 style={{ ...display, fontSize:"3rem", fontWeight:600,
+              color:"white", lineHeight:1.1, textShadow:`0 2px 20px rgba(0,0,0,0.3)`,
+              marginBottom:20 }}>
+              {settings.bride?.split(" ")[0] || "Nurlaila"}
             </h1>
 
-            <div style={{ display:"flex", alignItems:"center", gap:10, margin:"8px auto", maxWidth:200 }}>
-              <div style={{ flex:1, height:1, background:"linear-gradient(90deg,transparent,#C4A45A,transparent)" }} />
-              <span style={{ color:C.gold }}>💍</span>
-              <div style={{ flex:1, height:1, background:"linear-gradient(90deg,transparent,#C4A45A,transparent)" }} />
+            {/* Kepada */}
+            <div style={{ ...glassCard, padding:"16px 24px", marginBottom:20, maxWidth:320, margin:"0 auto 20px" }}>
+              <p style={{ color:C.textMid, fontSize:"0.65rem", letterSpacing:"0.2em",
+                textTransform:"uppercase", marginBottom:6 }}>Kepada Yth.</p>
+              <p style={{ ...serif, fontSize:"1.3rem", color:C.green1,
+                fontWeight:600, textTransform:"capitalize" }}>{guestName}</p>
+              <p style={{ color:C.textMid, fontSize:"0.7rem", marginTop:4, opacity:0.7 }}>
+                Mohon maaf bila ada kesalahan penulisan nama
+              </p>
             </div>
 
-            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl px-8 py-4 border border-white border-opacity-20 mb-7">
-              <p className="text-sky-200 text-xs uppercase tracking-widest mb-1">Kepada Yth.</p>
-              <p style={{ ...serif }} className="text-white text-2xl font-medium capitalize">{guestName}</p>
-              <p className="text-sky-300 text-xs mt-1">Mohon maaf bila ada kesalahan penulisan nama</p>
-            </div>
-
-            <button onClick={handleBukaUndangan} disabled={animating}
-              className="px-10 py-4 rounded-full text-sky-900 font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl disabled:opacity-70"
-              style={{ background:"linear-gradient(90deg,#BAE6FD,#FFFFFF)" }}>
-              {animating ? "✨ Membuka..." : "✉ Buka Undangan"}
+            <button onClick={handleBuka} disabled={animating}
+              style={{ padding:"14px 36px", borderRadius:99, border:"none",
+                background:gradGold, color:C.green1, fontWeight:700,
+                fontSize:"0.9rem", letterSpacing:"0.05em", cursor:"pointer",
+                boxShadow:`0 8px 24px rgba(196,164,90,0.4)`,
+                transition:"all 0.2s", opacity:animating?0.7:1 }}>
+              {animating ? "✿ Membuka..." : "✉ Buka Undangan"}
             </button>
           </div>
 
-          <div style={{ position:"relative", zIndex:1 }}>
-            <p className="text-sky-300 text-sm">{formatDate(settings.wedding_date)}</p>
-            {settings.wedding_location && <p className="text-sky-400 text-xs mt-1">{settings.wedding_location}</p>}
+          {/* Footer cover */}
+          <div style={{ position:"relative", zIndex:2, width:"100%" }}>
+            <FloralFooter />
+            <p style={{ color:C.green4, fontSize:"0.82rem", opacity:0.8, marginTop:8 }}>
+              {formatDate(settings.wedding_date)}
+            </p>
+            {settings.wedding_location && (
+              <p style={{ color:C.green4, fontSize:"0.7rem", opacity:0.6, marginTop:2 }}>
+                📍 {settings.wedding_location}
+              </p>
+            )}
           </div>
         </div>
       </>
     );
   }
 
+  // ── HALAMAN UTAMA ──────────────────────────────────────
   return (
-    <div style={{ fontFamily:"'Inter',sans-serif", background:C.cloudBlue }} className="pb-20">
+    <div style={{ fontFamily:"'Inter',sans-serif", background:C.cream, overflowX:"hidden" }}
+      className="pb-20">
       <FloatingMusic />
 
-      <section id="hero" className="min-h-screen flex flex-col items-center justify-center text-center px-6 relative overflow-hidden"
-        style={{ background:gradMain }}>
-        <FloatingClouds opacity={0.4} />
-        <div className="absolute inset-0 opacity-5"
-          style={{ backgroundImage:"radial-gradient(circle,white 1px,transparent 1px)", backgroundSize:"30px 30px" }} />
-        <div style={{ position:"relative", zIndex:1, animation:"fadeDown 0.9s ease both" }}>
-          <p style={{ ...arabic, fontSize:"1.8rem", color:C.lightBlue, lineHeight:1.8, marginBottom:4 }}>
+      {/* HERO */}
+      <section id="hero" style={{
+        minHeight:"100vh", display:"flex", flexDirection:"column",
+        alignItems:"center", justifyContent:"center", textAlign:"center",
+        padding:"40px 24px", background:gradMain, position:"relative", overflow:"hidden",
+      }}>
+        <FallingPetals />
+        <div style={{ position:"absolute", inset:0, opacity:0.04,
+          backgroundImage:"radial-gradient(circle,white 1px,transparent 1px)",
+          backgroundSize:"24px 24px" }} />
+
+        <div style={{ position:"relative", zIndex:2, animation:"fadeDown 0.9s ease both" }}>
+          <p style={{ ...arabic, fontSize:"1.8rem", color:C.green4, lineHeight:1.9, marginBottom:8 }}>
             بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ
           </p>
-          <GoldDivider dots={3} my={14} />
-          <p className="text-sky-200 text-xs uppercase tracking-[0.3em] mb-6">The Wedding Of</p>
-          <h1 style={{ ...serif }} className="text-7xl font-semibold text-white drop-shadow-lg">
+          <GoldDivider my={12} />
+          <p style={{ color:C.green4, fontSize:"0.6rem", letterSpacing:"0.35em",
+            textTransform:"uppercase", marginBottom:12, opacity:0.9 }}>The Wedding Of</p>
+          <h1 style={{ ...display, fontSize:"4.5rem", fontWeight:600, color:"white",
+            lineHeight:1, textShadow:`0 4px 20px rgba(0,0,0,0.3)` }}>
             {settings.groom?.split(" ")[0]}
           </h1>
-          <p style={{ ...serif, color:C.gold }} className="text-4xl my-3">&amp;</p>
-          <h1 style={{ ...serif }} className="text-7xl font-semibold text-white drop-shadow-lg">
+          <p style={{ ...display, fontSize:"2.5rem", color:C.gold, margin:"6px 0" }}>&amp;</p>
+          <h1 style={{ ...display, fontSize:"4.5rem", fontWeight:600, color:"white",
+            lineHeight:1, textShadow:`0 4px 20px rgba(0,0,0,0.3)`, marginBottom:20 }}>
             {settings.bride?.split(" ")[0]}
           </h1>
-          <p className="text-sky-200 text-sm mt-5">{formatDate(settings.wedding_date)}</p>
-          <div className="grid grid-cols-4 gap-3 mt-8">
+
+          <p style={{ color:C.green4, fontSize:"0.85rem", opacity:0.85, marginBottom:24 }}>
+            {formatDate(settings.wedding_date)}
+          </p>
+
+          {/* Countdown */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, maxWidth:320, margin:"0 auto" }}>
             {[
               { val:countdown.days,    label:"Hari" },
               { val:countdown.hours,   label:"Jam" },
               { val:countdown.minutes, label:"Menit" },
               { val:countdown.seconds, label:"Detik" },
-            ].map(({ val, label }) => (
-              <div key={label} className="flex flex-col items-center">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center border border-white border-opacity-20 backdrop-blur-sm"
-                  style={{ background:"rgba(255,255,255,0.12)" }}>
-                  <span className="text-2xl font-bold text-white">{String(val).padStart(2,"0")}</span>
+            ].map(({val,label}) => (
+              <div key={label} style={{ textAlign:"center" }}>
+                <div style={{ ...glassCard, padding:"12px 8px", marginBottom:6,
+                  background:"rgba(255,255,255,0.15)" }}>
+                  <p style={{ fontSize:"1.8rem", fontWeight:700, color:"white",
+                    fontFamily:"'Playfair Display',serif", margin:0 }}>
+                    {String(val).padStart(2,"0")}
+                  </p>
                 </div>
-                <span className="text-sky-300 text-xs mt-1">{label}</span>
+                <p style={{ color:C.green4, fontSize:"0.62rem", letterSpacing:"0.1em",
+                  textTransform:"uppercase", opacity:0.8 }}>{label}</p>
               </div>
             ))}
           </div>
         </div>
-        <div className="absolute bottom-8 text-sky-300 text-xs" style={{ animation:"bounceY 2s ease-in-out infinite" }}>↓</div>
+
+        <div style={{ position:"absolute", bottom:20, zIndex:2,
+          animation:"bounceY 2s ease-in-out infinite", color:C.green4, fontSize:"0.8rem" }}>
+          ↓ scroll
+        </div>
       </section>
 
-      <section className="py-16 px-8 text-center bg-white">
-        <div style={{ maxWidth:460, margin:"0 auto" }}>
+      {/* PEMBUKA */}
+      <section style={{ padding:"0 24px 40px", background:C.cream }}>
+        <FloralHeader light />
+        <Section>
           <QuranCard />
-          <div style={{ marginTop:28 }}>
-            <h2 style={{ ...serif }} className="text-3xl font-semibold text-sky-900 mb-4">Assalamu'alaikum Wr. Wb.</h2>
-            <p className="text-slate-500 text-sm leading-relaxed max-w-sm mx-auto">
+          <div style={{ textAlign:"center", marginTop:24, padding:"0 8px" }}>
+            <h2 style={{ ...serif, fontSize:"1.8rem", fontWeight:600, color:C.green1, marginBottom:12 }}>
+              Assalamu'alaikum Wr. Wb.
+            </h2>
+            <p style={{ color:C.textMid, fontSize:"0.88rem", lineHeight:1.9, maxWidth:340, margin:"0 auto" }}>
               Dengan memohon rahmat dan ridho Allah SWT, kami mengundang Bapak/Ibu/Saudara(i) untuk menghadiri acara pernikahan putra-putri kami.
             </p>
           </div>
-        </div>
+        </Section>
+        <FloralFooter light />
       </section>
 
-      <section id="mempelai" className="py-16 px-6 relative overflow-hidden" style={{ background:C.cloudBlue }}>
-        <div className="text-center mb-10">
-          <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:6 }}>Mempelai</p>
-          <h2 style={{ ...serif }} className="text-3xl font-semibold text-sky-900">Kedua Mempelai</h2>
-          <GoldDivider my={14} />
-        </div>
-        <div style={{ ...glass, maxWidth:384, margin:"0 auto 12px", padding:"32px 24px", textAlign:"center" }}>
-          {settings.photo_url ? (
-            <img src={settings.photo_url} alt="Foto" className="w-24 h-24 object-cover rounded-full mx-auto mb-4 border-4 border-sky-100 shadow" />
-          ) : (
-            <div className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-5xl"
-              style={{ background:`linear-gradient(135deg,${C.lightBlue},${C.skyBlue})` }}>👰</div>
-          )}
-          <h3 style={{ ...serif }} className="text-2xl font-semibold text-sky-900 mb-1">{settings.bride}</h3>
-          <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.16em", textTransform:"uppercase", marginBottom:10 }}>Mempelai Wanita</p>
-          {(settings.bride_father || settings.bride_mother) && (
-            <>
-              <div className="h-px bg-sky-100 my-3" />
-              <p className="text-slate-500 text-sm">Putri dari</p>
-              <p className="text-slate-700 text-sm font-medium mt-1">
-                {settings.bride_father && `Bpk. ${settings.bride_father}`}
-                {settings.bride_father && settings.bride_mother && " & "}
-                {settings.bride_mother && `Ibu ${settings.bride_mother}`}
-              </p>
-            </>
-          )}
-        </div>
-        <div className="text-center my-2">
-          <p style={{ ...serif, color:C.gold }} className="text-4xl">&amp;</p>
-        </div>
-        <div style={{ ...glass, maxWidth:384, margin:"0 auto", padding:"32px 24px", textAlign:"center" }}>
-          <div className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-5xl"
-            style={{ background:`linear-gradient(135deg,${C.lightBlue},${C.skyBlue})` }}>🤵</div>
-          <h3 style={{ ...serif }} className="text-2xl font-semibold text-sky-900 mb-1">{settings.groom}</h3>
-          <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.16em", textTransform:"uppercase", marginBottom:10 }}>Mempelai Pria</p>
-          {(settings.groom_father || settings.groom_mother) && (
-            <>
-              <div className="h-px bg-sky-100 my-3" />
-              <p className="text-slate-500 text-sm">Putra dari</p>
-              <p className="text-slate-700 text-sm font-medium mt-1">
-                {settings.groom_father && `Bpk. ${settings.groom_father}`}
-                {settings.groom_father && settings.groom_mother && " & "}
-                {settings.groom_mother && `Ibu ${settings.groom_mother}`}
-              </p>
-            </>
-          )}
-        </div>
+      {/* MEMPELAI */}
+      <section id="mempelai" style={{ padding:"20px 20px 40px",
+        background:`linear-gradient(180deg,${C.cream2} 0%,${C.cream} 100%)` }}>
+        <Section>
+          <div style={{ textAlign:"center", marginBottom:24 }}>
+            <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.25em",
+              textTransform:"uppercase", marginBottom:6 }}>Mempelai</p>
+            <h2 style={{ ...serif, fontSize:"2rem", fontWeight:600, color:C.green1 }}>
+              Kedua Mempelai
+            </h2>
+            <GoldDivider my={12} />
+          </div>
+
+          {/* Bride */}
+          <div style={{ ...glassCard, padding:"28px 20px", textAlign:"center", marginBottom:12 }}>
+            <div style={{ width:80, height:80, borderRadius:"50%", margin:"0 auto 14px",
+              background:gradLight, display:"flex", alignItems:"center",
+              justifyContent:"center", fontSize:"2.5rem",
+              boxShadow:`0 8px 20px rgba(74,124,89,0.3)` }}>
+              {settings.photo_url ? (
+                <img src={settings.photo_url} alt="Foto"
+                  style={{ width:"100%", height:"100%", objectFit:"cover", borderRadius:"50%" }} />
+              ) : "👰"}
+            </div>
+            <h3 style={{ ...serif, fontSize:"1.5rem", fontWeight:600, color:C.green1, marginBottom:4 }}>
+              {settings.bride}
+            </h3>
+            <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.2em",
+              textTransform:"uppercase", marginBottom:12 }}>Mempelai Wanita</p>
+            {(settings.bride_father||settings.bride_mother) && (
+              <>
+                <div style={{ height:1, background:`rgba(196,164,90,0.2)`, margin:"12px 0" }} />
+                <p style={{ color:C.textMid, fontSize:"0.8rem" }}>Putri dari</p>
+                <p style={{ color:C.text, fontSize:"0.88rem", fontWeight:600, marginTop:4 }}>
+                  {settings.bride_father && `Bpk. ${settings.bride_father}`}
+                  {settings.bride_father && settings.bride_mother && " & "}
+                  {settings.bride_mother && `Ibu ${settings.bride_mother}`}
+                </p>
+              </>
+            )}
+          </div>
+
+          <div style={{ textAlign:"center", margin:"8px 0" }}>
+            <FlowerSVG size={32} color={C.gold} opacity={0.8} />
+          </div>
+
+          {/* Groom */}
+          <div style={{ ...glassCard, padding:"28px 20px", textAlign:"center" }}>
+            <div style={{ width:80, height:80, borderRadius:"50%", margin:"0 auto 14px",
+              background:gradLight, display:"flex", alignItems:"center",
+              justifyContent:"center", fontSize:"2.5rem",
+              boxShadow:`0 8px 20px rgba(74,124,89,0.3)` }}>🤵</div>
+            <h3 style={{ ...serif, fontSize:"1.5rem", fontWeight:600, color:C.green1, marginBottom:4 }}>
+              {settings.groom}
+            </h3>
+            <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.2em",
+              textTransform:"uppercase", marginBottom:12 }}>Mempelai Pria</p>
+            {(settings.groom_father||settings.groom_mother) && (
+              <>
+                <div style={{ height:1, background:`rgba(196,164,90,0.2)`, margin:"12px 0" }} />
+                <p style={{ color:C.textMid, fontSize:"0.8rem" }}>Putra dari</p>
+                <p style={{ color:C.text, fontSize:"0.88rem", fontWeight:600, marginTop:4 }}>
+                  {settings.groom_father && `Bpk. ${settings.groom_father}`}
+                  {settings.groom_father && settings.groom_mother && " & "}
+                  {settings.groom_mother && `Ibu ${settings.groom_mother}`}
+                </p>
+              </>
+            )}
+          </div>
+        </Section>
       </section>
 
-      <section id="acara" className="py-16 px-6 bg-white">
-        <div className="text-center mb-10">
-          <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:6 }}>Tanggal & Waktu</p>
-          <h2 style={{ ...serif }} className="text-3xl font-semibold text-sky-900">Acara Pernikahan</h2>
-          <GoldDivider my={14} />
+      {/* ACARA */}
+      <section id="acara" style={{ padding:"20px 20px 40px", background:C.cream }}>
+        <div style={{ position:"relative" }}>
+          <FloralHeader light />
         </div>
-        <div className="max-w-sm mx-auto space-y-4">
-          {["Akad Nikah","Resepsi"].map((label, idx) => (
-            <div key={label} className="rounded-3xl overflow-hidden shadow-sm border border-sky-100">
-              <div className="py-3 px-6 text-center text-white text-sm font-semibold tracking-widest uppercase" style={{ background:gradLight }}>
-                {label}
+        <Section>
+          <div style={{ textAlign:"center", marginBottom:24 }}>
+            <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.25em",
+              textTransform:"uppercase", marginBottom:6 }}>Tanggal & Waktu</p>
+            <h2 style={{ ...serif, fontSize:"2rem", fontWeight:600, color:C.green1 }}>
+              Acara Pernikahan
+            </h2>
+            <GoldDivider my={12} />
+          </div>
+
+          {["Akad Nikah","Resepsi"].map((label,idx) => (
+            <div key={label} style={{ ...glassCard, marginBottom:14, overflow:"hidden" }}>
+              <div style={{ padding:"12px 20px", textAlign:"center",
+                background:gradLight, borderRadius:"20px 20px 0 0" }}>
+                <p style={{ color:"white", fontSize:"0.75rem", fontWeight:700,
+                  letterSpacing:"0.25em", textTransform:"uppercase" }}>{label}</p>
               </div>
-              <div className="bg-white px-6 py-6 text-center">
+              <div style={{ padding:"20px", textAlign:"center" }}>
                 {settings.wedding_date ? (
                   <>
-                    <p className="text-xs text-slate-400 uppercase tracking-widest mb-2">
-                      {new Date(settings.wedding_date).toLocaleDateString("id-ID",{ weekday:"long" })}
+                    <p style={{ color:C.textMid, fontSize:"0.72rem", letterSpacing:"0.1em",
+                      textTransform:"uppercase", marginBottom:6 }}>
+                      {new Date(settings.wedding_date).toLocaleDateString("id-ID",{weekday:"long"})}
                     </p>
-                    <p style={{ ...serif }} className="text-5xl font-semibold text-sky-900">
+                    <p style={{ ...display, fontSize:"3.5rem", fontWeight:600,
+                      color:C.green1, lineHeight:1 }}>
                       {new Date(settings.wedding_date).getDate()}
                     </p>
-                    <p style={{ ...serif }} className="text-xl text-sky-700">
-                      {new Date(settings.wedding_date).toLocaleDateString("id-ID",{ month:"long", year:"numeric" })}
+                    <p style={{ ...serif, fontSize:"1.2rem", color:C.green2 }}>
+                      {new Date(settings.wedding_date).toLocaleDateString("id-ID",{month:"long",year:"numeric"})}
                     </p>
                   </>
-                ) : (
-                  <p className="text-slate-400 text-sm">Tanggal belum diatur</p>
-                )}
-                <div className="h-px bg-sky-100 my-4" />
-                <p className="text-sky-600 font-medium text-sm">
-                  {settings.wedding_time ? (idx===0 ? settings.wedding_time : settings.wedding_time+" — Selesai") : "Waktu belum diatur"}
+                ) : <p style={{ color:C.textMid }}>Tanggal belum diatur</p>}
+                <div style={{ height:1, background:`rgba(196,164,90,0.2)`, margin:"14px 0" }} />
+                <p style={{ color:C.green2, fontWeight:600, fontSize:"0.88rem" }}>
+                  {settings.wedding_time
+                    ? (idx===0 ? settings.wedding_time : settings.wedding_time+" — Selesai")
+                    : "Waktu belum diatur"}
                 </p>
-                <p className="text-slate-500 text-sm mt-1">{settings.wedding_location || "Lokasi belum diatur"}</p>
+                <p style={{ color:C.textMid, fontSize:"0.82rem", marginTop:4 }}>
+                  {settings.wedding_location || "Lokasi belum diatur"}
+                </p>
               </div>
             </div>
           ))}
-        </div>
+        </Section>
+        <FloralFooter light />
       </section>
 
-      <section id="lokasi" className="py-16 px-6" style={{ background:C.cloudBlue }}>
-        <div className="text-center mb-8">
-          <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:6 }}>Lokasi</p>
-          <h2 style={{ ...serif }} className="text-3xl font-semibold text-sky-900">Tempat Acara</h2>
-          <GoldDivider my={14} />
-        </div>
-        <div className="max-w-sm mx-auto">
-          <div style={{ ...glass, overflow:"hidden" }}>
-            <div className="w-full h-52 overflow-hidden">
-              <iframe title="Lokasi Acara" width="100%" height="100%" loading="lazy" style={{ border:0 }}
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(settings.wedding_location||"Bandung Jawa Barat")}&t=m&z=14&output=embed&iwloc=near`} />
+      {/* LOKASI */}
+      <section id="lokasi" style={{ padding:"20px 20px 40px",
+        background:`linear-gradient(180deg,${C.cream2} 0%,${C.cream} 100%)` }}>
+        <Section>
+          <div style={{ textAlign:"center", marginBottom:20 }}>
+            <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.25em",
+              textTransform:"uppercase", marginBottom:6 }}>Lokasi</p>
+            <h2 style={{ ...serif, fontSize:"2rem", fontWeight:600, color:C.green1 }}>
+              Tempat Acara
+            </h2>
+            <GoldDivider my={12} />
+          </div>
+          <div style={{ ...glassCard, overflow:"hidden" }}>
+            <div style={{ width:"100%", height:200, overflow:"hidden" }}>
+              <iframe title="Lokasi" width="100%" height="100%" loading="lazy" style={{ border:0 }}
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(settings.wedding_location||"Bandung")}&t=m&z=14&output=embed&iwloc=near`} />
             </div>
-            <div className="p-6 text-center">
-              <p className="font-semibold text-sky-900 mb-1">{settings.wedding_location||"Lokasi belum diatur"}</p>
+            <div style={{ padding:"20px", textAlign:"center" }}>
+              <p style={{ fontWeight:600, color:C.green1, fontSize:"0.9rem", marginBottom:12 }}>
+                {settings.wedding_location || "Lokasi belum diatur"}
+              </p>
               <a href={`https://maps.google.com/?q=${encodeURIComponent(settings.wedding_location||"Bandung")}`}
                 target="_blank" rel="noreferrer"
-                className="inline-block mt-3 px-6 py-2.5 rounded-full text-white text-sm font-medium transition hover:opacity-90"
-                style={{ background:gradLight }}>
+                style={{ display:"inline-block", padding:"10px 24px", borderRadius:99,
+                  background:gradGold, color:C.green1, fontSize:"0.82rem", fontWeight:700,
+                  textDecoration:"none", boxShadow:`0 4px 14px rgba(196,164,90,0.3)` }}>
                 📍 Buka Google Maps
               </a>
             </div>
           </div>
-        </div>
+        </Section>
       </section>
 
-      <section className="py-16 px-6 bg-white">
-        <div className="text-center mb-8">
-          <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:6 }}>Hadiah</p>
-          <h2 style={{ ...serif }} className="text-3xl font-semibold text-sky-900">Wedding Gift</h2>
-          <GoldDivider my={14} />
-          <p className="text-slate-400 text-sm mt-2 max-w-xs mx-auto">Doa restu Anda adalah karunia terindah.</p>
-        </div>
-        <div className="max-w-sm mx-auto space-y-4">
+      {/* WEDDING GIFT */}
+      <section style={{ padding:"20px 20px 40px", background:C.cream }}>
+        <FloralHeader light />
+        <Section>
+          <div style={{ textAlign:"center", marginBottom:20 }}>
+            <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.25em",
+              textTransform:"uppercase", marginBottom:6 }}>Hadiah</p>
+            <h2 style={{ ...serif, fontSize:"2rem", fontWeight:600, color:C.green1 }}>
+              Wedding Gift
+            </h2>
+            <GoldDivider my={12} />
+            <p style={{ color:C.textMid, fontSize:"0.82rem" }}>Doa restu Anda adalah karunia terindah.</p>
+          </div>
           {[
-            { bank:"BRI", no:"1234567890123", an:settings.groom, key:"bri", bg:"#0284C7" },
-            { bank:"BCA", no:"9876543210987", an:settings.bride, key:"bca", bg:"#0C4A6E" },
-          ].map((r) => (
-            <div key={r.key} className="rounded-2xl p-5 border border-sky-100 shadow-sm" style={{ background:C.cloudBlue }}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="text-white text-xs font-bold px-3 py-1 rounded-lg" style={{ background:r.bg }}>{r.bank}</div>
-                <span className="text-slate-400 text-xs">A/n {r.an}</span>
+            { bank:"BRI", no:"1234567890123", an:settings.groom, color:C.green2 },
+            { bank:"BCA", no:"9876543210987", an:settings.bride, color:C.green1 },
+          ].map(r => (
+            <div key={r.bank} style={{ ...glassCard, padding:"18px 20px", marginBottom:12 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                <span style={{ padding:"4px 12px", borderRadius:99, background:r.color,
+                  color:"white", fontSize:"0.75rem", fontWeight:700 }}>{r.bank}</span>
+                <span style={{ color:C.textMid, fontSize:"0.75rem" }}>A/n {r.an}</span>
               </div>
-              <p className="text-sky-900 font-mono font-bold text-lg tracking-widest">{r.no}</p>
-              <button onClick={()=>copyText(r.no, r.key)}
-                className="mt-3 w-full py-2 rounded-xl text-sky-700 text-xs font-medium border border-sky-200 hover:bg-sky-50 transition">
-                {copied===r.key ? "✓ Tersalin!" : "Salin Nomor Rekening"}
+              <p style={{ fontFamily:"monospace", fontWeight:700, fontSize:"1.1rem",
+                color:C.green1, letterSpacing:2, marginBottom:10 }}>{r.no}</p>
+              <button onClick={()=>copyText(r.no,r.bank)}
+                style={{ width:"100%", padding:"10px", borderRadius:10,
+                  background:`rgba(74,124,89,0.08)`, border:`1px solid rgba(74,124,89,0.2)`,
+                  color:C.green2, fontSize:"0.8rem", fontWeight:600, cursor:"pointer" }}>
+                {copied===r.bank ? "✓ Tersalin!" : "Salin Nomor Rekening"}
               </button>
             </div>
           ))}
-        </div>
+        </Section>
+        <FloralFooter light />
       </section>
 
-      <section id="ucapan" className="py-16 px-6" style={{ background:C.cloudBlue }}>
-        <div className="text-center mb-8">
-          <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:6 }}>Konfirmasi</p>
-          <h2 style={{ ...serif }} className="text-3xl font-semibold text-sky-900">Ucapan & RSVP</h2>
-          <GoldDivider my={14} />
-        </div>
-        <div className="max-w-sm mx-auto grid grid-cols-3 gap-3 mb-6">
-          {[
-            { label:"Hadir", count:wishes.filter(w=>w.attendance==="Hadir").length,       color:"#0284C7" },
-            { label:"Tidak", count:wishes.filter(w=>w.attendance==="Tidak Hadir").length, color:"#94A3B8" },
-            { label:"Ragu",  count:wishes.filter(w=>w.attendance==="Masih Ragu").length,  color:"#0EA5E9" },
-          ].map((s) => (
-            <div key={s.label} style={{ ...glass, padding:"16px 12px", textAlign:"center" }}>
-              <p className="text-2xl font-bold" style={{ color:s.color }}>{s.count}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{s.label}</p>
-            </div>
-          ))}
-        </div>
-        <div style={{ ...glass, maxWidth:384, margin:"0 auto 20px", padding:"24px 20px" }}>
-          <input className="w-full border border-slate-200 p-3 rounded-xl text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-sky-400"
-            placeholder="Nama Anda" value={rsvpName} onChange={(e)=>setRsvpName(e.target.value)} />
-          <select className="w-full border border-slate-200 p-3 rounded-xl text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-sky-400"
-            value={rsvpAttend} onChange={(e)=>setRsvpAttend(e.target.value)}>
-            <option>Hadir</option>
-            <option>Tidak Hadir</option>
-            <option>Masih Ragu</option>
-          </select>
-          <textarea className="w-full border border-slate-200 p-3 rounded-xl text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-sky-400"
-            placeholder="Ucapan & doa untuk mempelai..." rows={3} value={rsvpMsg} onChange={(e)=>setRsvpMsg(e.target.value)} />
-          <button onClick={submitRsvp} className="w-full py-3 rounded-xl text-white text-sm font-semibold transition hover:opacity-90" style={{ background:gradLight }}>
-            Kirim Ucapan
-          </button>
-          {wishSubmitted && <p className="text-center text-sky-600 text-sm mt-3">✓ Terima kasih atas ucapannya!</p>}
-        </div>
-        <div className="max-w-sm mx-auto space-y-3">
-          {wishes.map((w) => (
-            <div key={w.id} style={{ ...glass, padding:"14px 16px" }}>
-              <div className="flex justify-between items-center mb-1">
-                <p className="font-semibold text-sky-900 text-sm">{w.name}</p>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${w.attendance==="Hadir"?"bg-sky-100 text-sky-600":w.attendance==="Tidak Hadir"?"bg-slate-100 text-slate-500":"bg-yellow-50 text-yellow-600"}`}>
-                  {w.attendance}
-                </span>
+      {/* RSVP & UCAPAN */}
+      <section id="ucapan" style={{ padding:"20px 20px 40px",
+        background:`linear-gradient(180deg,${C.cream2} 0%,${C.cream} 100%)` }}>
+        <Section>
+          <div style={{ textAlign:"center", marginBottom:20 }}>
+            <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.25em",
+              textTransform:"uppercase", marginBottom:6 }}>Konfirmasi</p>
+            <h2 style={{ ...serif, fontSize:"2rem", fontWeight:600, color:C.green1 }}>
+              Ucapan & RSVP
+            </h2>
+            <GoldDivider my={12} />
+          </div>
+
+          {/* Stats */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,minmax(0,1fr))",
+            gap:10, marginBottom:20 }}>
+            {[
+              { label:"Hadir",  count:wishes.filter(w=>w.attendance==="Hadir").length,       color:C.green2 },
+              { label:"Tidak",  count:wishes.filter(w=>w.attendance==="Tidak Hadir").length, color:"#E57373" },
+              { label:"Ragu",   count:wishes.filter(w=>w.attendance==="Masih Ragu").length,  color:C.gold },
+            ].map(s => (
+              <div key={s.label} style={{ ...glassCard, padding:"14px 10px", textAlign:"center" }}>
+                <p style={{ fontSize:"1.5rem", fontWeight:700, color:s.color, margin:0 }}>{s.count}</p>
+                <p style={{ fontSize:"0.68rem", color:C.textMid, marginTop:3 }}>{s.label}</p>
               </div>
-              {w.message && <p className="text-slate-500 text-xs italic mt-1">"{w.message}"</p>}
+            ))}
+          </div>
+
+          {/* Form */}
+          <div style={{ ...glassCard, padding:"20px", marginBottom:16 }}>
+            <input style={{ ...inputStyle, marginBottom:10 }}
+              placeholder="Nama Anda" value={rsvpName} onChange={e=>setRsvpName(e.target.value)} />
+            <select style={{ ...inputStyle, marginBottom:10 }}
+              value={rsvpAttend} onChange={e=>setRsvpAttend(e.target.value)}>
+              <option>Hadir</option>
+              <option>Tidak Hadir</option>
+              <option>Masih Ragu</option>
+            </select>
+            <textarea style={{ ...inputStyle, marginBottom:10, resize:"none" }}
+              placeholder="Ucapan & doa untuk mempelai..." rows={3}
+              value={rsvpMsg} onChange={e=>setRsvpMsg(e.target.value)} />
+            <button onClick={submitRsvp}
+              style={{ width:"100%", padding:"13px", borderRadius:12, border:"none",
+                background:gradGold, color:C.green1, fontWeight:700,
+                fontSize:"0.9rem", cursor:"pointer",
+                boxShadow:`0 6px 16px rgba(196,164,90,0.3)` }}>
+              Kirim Ucapan
+            </button>
+            {wishSubmitted && (
+              <p style={{ textAlign:"center", color:C.green2, fontSize:"0.85rem", marginTop:10 }}>
+                ✿ Terima kasih atas ucapannya!
+              </p>
+            )}
+          </div>
+
+          {/* Daftar ucapan */}
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {wishes.map(w => (
+              <div key={w.id} style={{ ...glassCard, padding:"14px 16px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
+                  <p style={{ fontWeight:600, color:C.green1, fontSize:"0.88rem" }}>{w.name}</p>
+                  <span style={{
+                    fontSize:"0.68rem", padding:"3px 10px", borderRadius:99, fontWeight:600,
+                    background: w.attendance==="Hadir" ? `rgba(74,124,89,0.12)`
+                      : w.attendance==="Tidak Hadir" ? "rgba(229,115,115,0.12)" : "rgba(196,164,90,0.12)",
+                    color: w.attendance==="Hadir" ? C.green2
+                      : w.attendance==="Tidak Hadir" ? "#E57373" : C.gold,
+                    border: `1px solid ${w.attendance==="Hadir" ? "rgba(74,124,89,0.2)"
+                      : w.attendance==="Tidak Hadir" ? "rgba(229,115,115,0.2)" : "rgba(196,164,90,0.2)"}`,
+                  }}>{w.attendance}</span>
+                </div>
+                {w.message && (
+                  <p style={{ color:C.textMid, fontSize:"0.82rem", fontStyle:"italic",
+                    lineHeight:1.6 }}>"{w.message}"</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </Section>
+      </section>
+
+      {/* PENUTUP */}
+      <section style={{ padding:"0 20px 80px", background:C.cream }}>
+        <FloralHeader light />
+        <Section>
+          <div style={{ textAlign:"center", padding:"20px 0" }}>
+            <p style={{ ...arabic, fontSize:"1.5rem", color:C.green2, lineHeight:1.9, marginBottom:8 }}>
+              وَالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللّٰهِ وَبَرَكَاتُهُ
+            </p>
+            <p style={{ ...serif, fontStyle:"italic", color:C.textMid,
+              fontSize:"0.75rem", marginBottom:20 }}>
+              Wassalamu'alaikum Warahmatullahi Wabarakatuh
+            </p>
+            <GoldDivider />
+            <p style={{ ...serif, fontStyle:"italic", color:C.textMid,
+              fontSize:"0.88rem", lineHeight:1.8, maxWidth:320, margin:"16px auto" }}>
+              "Semoga Allah menghimpun yang terserak dari keduanya, memberkati mereka berdua, dan meningkatkan kualitas keturunannya sebagai pembuka pintu rahmat."
+            </p>
+            <GoldDivider />
+            <div style={{ margin:"16px 0", display:"flex", justifyContent:"center" }}>
+              <FlowerSVG size={40} color={C.green2} opacity={0.8} />
             </div>
-          ))}
-        </div>
+            <p style={{ ...display, fontSize:"1.8rem", fontWeight:600, color:C.green1 }}>
+              {settings.groom?.split(" ")[0]} &amp; {settings.bride?.split(" ")[0]}
+            </p>
+            <p style={{ color:C.gold, fontSize:"0.7rem", letterSpacing:"0.2em",
+              marginTop:8 }}>✦ Turut berbahagia segenap keluarga besar ✦</p>
+          </div>
+        </Section>
+        <FloralFooter light />
       </section>
 
-      <section className="py-20 px-8 text-center relative overflow-hidden" style={{ background:gradMain }}>
-        <FloatingClouds opacity={0.3} />
-        <div style={{ position:"relative", zIndex:1 }}>
-          <p style={{ ...arabic, fontSize:"1.6rem", color:C.lightBlue, lineHeight:1.9, marginBottom:4 }}>
-            وَالسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللّٰهِ وَبَرَكَاتُهُ
-          </p>
-          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", color:"#38BDF8", fontSize:"0.72rem", marginBottom:20 }}>
-            Wassalamu'alaikum Warahmatullahi Wabarakatuh
-          </p>
-          <GoldDivider dots={3} my={16} />
-          <p style={{ fontFamily:"'Cormorant Garamond',serif" }} className="text-white text-xl leading-relaxed italic max-w-sm mx-auto">
-            "Semoga Allah menghimpun yang terserak dari keduanya, memberkati mereka berdua, dan meningkatkan kualitas keturunannya sebagai pembuka pintu rahmat."
-          </p>
-          <GoldDivider my={20} />
-          <p style={{ ...serif }} className="text-white text-3xl font-semibold mb-1">
-            {settings.groom?.split(" ")[0]} &amp; {settings.bride?.split(" ")[0]}
-          </p>
-          <p style={{ color:C.gold }} className="text-xs tracking-widest mt-1">✦ Turut berbahagia segenap keluarga besar ✦</p>
-          <p className="text-sky-400 text-xs mt-6">Wassalamu'alaikum Wr. Wb.</p>
-        </div>
-      </section>
-
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-sky-100 shadow-xl"
-        style={{ background:"rgba(255,255,255,0.95)", backdropFilter:"blur(12px)" }}>
-        <div className="flex justify-around items-center py-2 max-w-sm mx-auto">
+      {/* BOTTOM NAV */}
+      <nav style={{
+        position:"fixed", bottom:0, left:0, right:0, zIndex:50,
+        background:"rgba(250,247,240,0.95)", backdropFilter:"blur(12px)",
+        borderTop:`1px solid rgba(196,164,90,0.2)`,
+        boxShadow:"0 -4px 24px rgba(45,80,22,0.1)",
+      }}>
+        <div style={{ display:"flex", justifyContent:"space-around",
+          alignItems:"center", padding:"10px 0", maxWidth:480, margin:"0 auto" }}>
           {[
             { id:"hero",     icon:"🏠", label:"Home" },
             { id:"mempelai", icon:"💑", label:"Mempelai" },
-            { id:"acara",    icon:"📅", label:"Acara" },
+            { id:"acara",    icon:"🌿", label:"Acara" },
             { id:"lokasi",   icon:"📍", label:"Lokasi" },
             { id:"ucapan",   icon:"💌", label:"Ucapan" },
-          ].map((nav) => (
+          ].map(nav => (
             <button key={nav.id} onClick={()=>scrollTo(nav.id)}
-              className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all"
-              style={{ color:activeSection===nav.id?"#0284C7":"#94A3B8" }}>
-              <span className="text-lg">{nav.icon}</span>
-              <span className="text-xs font-medium">{nav.label}</span>
-              {activeSection===nav.id && <div className="w-1 h-1 rounded-full mt-0.5" style={{ background:"#0284C7" }} />}
+              style={{ display:"flex", flexDirection:"column", alignItems:"center",
+                gap:2, padding:"6px 10px", borderRadius:12, border:"none",
+                background: activeSection===nav.id ? `rgba(74,124,89,0.12)` : "transparent",
+                color: activeSection===nav.id ? C.green2 : C.textMid,
+                cursor:"pointer", transition:"all 0.2s" }}>
+              <span style={{ fontSize:"1.1rem" }}>{nav.icon}</span>
+              <span style={{ fontSize:"0.62rem", fontWeight: activeSection===nav.id ? 700 : 400 }}>
+                {nav.label}
+              </span>
+              {activeSection===nav.id && (
+                <div style={{ width:4, height:4, borderRadius:"50%", background:C.green2 }} />
+              )}
             </button>
           ))}
         </div>
