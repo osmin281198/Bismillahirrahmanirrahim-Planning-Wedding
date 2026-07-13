@@ -5,24 +5,22 @@ import { supabase } from "../lib/supabase";
 const DASHBOARD_MUSIC = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Terpukau.mp3";
 
 const CAT_COLORS = {
-  "Venue":              { bar: "#C4A45A", light: "rgba(196,164,90,0.1)" },
-  "Catering":           { bar: "#4ADE80", light: "rgba(74,222,128,0.1)" },
-  "Dekorasi":           { bar: "#60A5FA", light: "rgba(96,165,250,0.1)" },
-  "Fotografer":         { bar: "#A78BFA", light: "rgba(167,139,250,0.1)" },
-  "Busana & Seserahan": { bar: "#F472B6", light: "rgba(244,114,182,0.1)" },
-  "Undangan":           { bar: "#FB923C", light: "rgba(251,146,60,0.1)"  },
-  "Rukun Nikah":        { bar: "#FBBF24", light: "rgba(251,191,36,0.1)"  },
-  "Transportasi":       { bar: "#34D399", light: "rgba(52,211,153,0.1)"  },
-  "KUA":                { bar: "#E879F9", light: "rgba(232,121,249,0.1)" },
-  "Lainnya":            { bar: "#94A3B8", light: "rgba(148,163,184,0.1)" },
+  "Venue":              { bar:"#C4A45A", light:"rgba(196,164,90,0.1)"  },
+  "Catering":           { bar:"#4ADE80", light:"rgba(74,222,128,0.1)"  },
+  "Dekorasi":           { bar:"#60A5FA", light:"rgba(96,165,250,0.1)"  },
+  "Fotografer":         { bar:"#A78BFA", light:"rgba(167,139,250,0.1)" },
+  "Busana & Seserahan": { bar:"#F472B6", light:"rgba(244,114,182,0.1)" },
+  "Undangan":           { bar:"#FB923C", light:"rgba(251,146,60,0.1)"  },
+  "Rukun Nikah":        { bar:"#FBBF24", light:"rgba(251,191,36,0.1)"  },
+  "Transportasi":       { bar:"#34D399", light:"rgba(52,211,153,0.1)"  },
+  "KUA":                { bar:"#E879F9", light:"rgba(232,121,249,0.1)" },
+  "Lainnya":            { bar:"#94A3B8", light:"rgba(148,163,184,0.1)" },
 };
 
 const getColor = (cat) => CAT_COLORS[cat] || { bar:"#C4A45A", light:"rgba(196,164,90,0.1)" };
 const gold = "#C4A45A";
 const goldLight = "#E8CC8A";
-const fmt = (num, hide) => hide ? "Rp ••••••" : `Rp ${num.toLocaleString("id-ID")}`;
 
-// ── Floating Music ────────────────────────────────────────
 function FloatingMusic() {
   const audioRef              = useRef(null);
   const [playing, setPlaying] = useState(false);
@@ -34,11 +32,11 @@ function FloatingMusic() {
     const tryPlay = () => {
       if (audioRef.current && !started) {
         audioRef.current.volume = volume;
-        audioRef.current.play().then(() => { setPlaying(true); setStarted(true); }).catch(() => {});
+        audioRef.current.play().then(()=>{setPlaying(true);setStarted(true);}).catch(()=>{});
       }
     };
-    document.addEventListener("touchstart", tryPlay, { once:true });
-    document.addEventListener("click",      tryPlay, { once:true });
+    document.addEventListener("touchstart", tryPlay, {once:true});
+    document.addEventListener("click",      tryPlay, {once:true});
     return () => {
       document.removeEventListener("touchstart", tryPlay);
       document.removeEventListener("click",      tryPlay);
@@ -71,7 +69,7 @@ function FloatingMusic() {
           display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
           <span style={{ fontSize:"0.6rem", color:gold }}>🔊</span>
           <input type="range" min={0} max={1} step={0.01} value={volume}
-            onChange={e => { setVolume(parseFloat(e.target.value)); if(audioRef.current) audioRef.current.volume=parseFloat(e.target.value); }}
+            onChange={e => { const v=parseFloat(e.target.value); setVolume(v); if(audioRef.current) audioRef.current.volume=v; }}
             style={{ writingMode:"vertical-lr", direction:"rtl", height:70, accentColor:gold }} />
           <span style={{ fontSize:"0.6rem", color:gold }}>🔈</span>
         </div>
@@ -79,7 +77,7 @@ function FloatingMusic() {
       <div style={{ display:"flex", gap:8, alignItems:"center" }}>
         {playing && (
           <div style={{ display:"flex", gap:2, alignItems:"flex-end", height:20 }}>
-            {[1,2,3,4].map(i => (
+            {[1,2,3,4].map(i=>(
               <div key={i} style={{ width:3, borderRadius:2, background:gold,
                 animation:`pulse${i} ${0.4+i*0.1}s ease-in-out infinite alternate` }} />
             ))}
@@ -88,6 +86,7 @@ function FloatingMusic() {
               @keyframes pulse2{from{height:6px}to{height:20px}}
               @keyframes pulse3{from{height:5px}to{height:14px}}
               @keyframes pulse4{from{height:8px}to{height:18px}}
+              @keyframes spin{to{transform:rotate(360deg)}}
             `}</style>
           </div>
         )}
@@ -126,7 +125,7 @@ function StatCard({ label, value, sub, color, hide }) {
         overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
         {hide ? "Rp ••••••" : value}
       </p>
-      {sub && <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.25)", marginTop:4 }}>
+      {sub && <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.25)", marginTop:4, margin:0 }}>
         {hide ? "•••" : sub}
       </p>}
     </div>
@@ -134,21 +133,21 @@ function StatCard({ label, value, sub, color, hide }) {
 }
 
 export default function Dashboard() {
-  const [groom, setGroom]                   = useState("");
-  const [bride, setBride]                   = useState("");
-  const [photoUrl, setPhotoUrl]             = useState("");
-  const [dashboardPhoto, setDashboardPhoto] = useState("");
-  const [weddingDate, setWeddingDate]       = useState("");
-  const [weddingTime, setWeddingTime]       = useState("");
+  const [groom, setGroom]                     = useState("");
+  const [bride, setBride]                     = useState("");
+  const [photoUrl, setPhotoUrl]               = useState("");
+  const [dashboardPhoto, setDashboardPhoto]   = useState("");
+  const [weddingDate, setWeddingDate]         = useState("");
+  const [weddingTime, setWeddingTime]         = useState("");
   const [weddingLocation, setWeddingLocation] = useState("");
-  const [totalBudget, setTotalBudget]       = useState(0);
-  const [totalSpent, setTotalSpent]         = useState(0);
-  const [totalGuests, setTotalGuests]       = useState(0);
-  const [planningDone, setPlanningDone]     = useState(0);
-  const [planningTotal, setPlanningTotal]   = useState(0);
-  const [hadir, setHadir]                   = useState(0);
-  const [categoryStats, setCategoryStats]   = useState([]);
-  const [loading, setLoading]               = useState(true);
+  const [totalBudget, setTotalBudget]         = useState(0);
+  const [totalSpent, setTotalSpent]           = useState(0);
+  const [totalGuests, setTotalGuests]         = useState(0);
+  const [planningDone, setPlanningDone]       = useState(0);
+  const [planningTotal, setPlanningTotal]     = useState(0);
+  const [hadir, setHadir]                     = useState(0);
+  const [categoryStats, setCategoryStats]     = useState([]);
+  const [loading, setLoading]                 = useState(true);
   const [totalSudahDipakai, setTotalSudahDipakai] = useState(0);
   const [totalBankBSI, setTotalBankBSI]           = useState(0);
   const [showSudahDipakai, setShowSudahDipakai]   = useState(true);
@@ -161,9 +160,9 @@ export default function Dashboard() {
   const fetchAll = async () => {
     setLoading(true);
     const [settingsRes, rabRes, guestsRes, planningRes, rsvpRes] = await Promise.all([
-      supabase.from("settings").select("groom, bride, photo_url, dashboard_photo_url, wedding_date, wedding_time, wedding_location").eq("id",1).single(),
-      supabase.from("rab").select("budget, spent, category, status_dana"),
-      supabase.from("guests").select("id, slug"),
+      supabase.from("settings").select("groom,bride,photo_url,dashboard_photo_url,wedding_date,wedding_time,wedding_location").eq("id",1).single(),
+      supabase.from("rab").select("budget,spent,category,status_dana"),
+      supabase.from("guests").select("id,slug"),
       supabase.from("planning").select("done"),
       supabase.from("rsvp").select("attendance"),
     ]);
@@ -185,11 +184,11 @@ export default function Dashboard() {
       const catMap = {};
       rows.forEach(r => {
         const cat = r.category||"Lainnya";
-        if (!catMap[cat]) catMap[cat] = { budget:0, spent:0, sudahDipakai:0, bankBSI:0 };
+        if (!catMap[cat]) catMap[cat]={budget:0,spent:0,sudahDipakai:0,bankBSI:0};
         catMap[cat].budget += parseFloat(r.budget)||0;
         catMap[cat].spent  += parseFloat(r.spent)||0;
-        if (!r.status_dana||r.status_dana==="Sudah Dipakai") catMap[cat].sudahDipakai += parseFloat(r.spent)||0;
-        else if (r.status_dana==="Dana di Bank BSI") catMap[cat].bankBSI += parseFloat(r.spent)||0;
+        if (!r.status_dana||r.status_dana==="Sudah Dipakai") catMap[cat].sudahDipakai+=parseFloat(r.spent)||0;
+        else if (r.status_dana==="Dana di Bank BSI") catMap[cat].bankBSI+=parseFloat(r.spent)||0;
       });
       setCategoryStats(Object.entries(catMap)
         .map(([cat,val])=>({cat,...val,realisasi:val.budget>0?Math.round((val.spent/val.budget)*100):0}))
@@ -198,7 +197,7 @@ export default function Dashboard() {
 
     if (!guestsRes.error && guestsRes.data) {
       setTotalGuests(guestsRes.data.length);
-      if (guestsRes.data.length > 0) setGuestSlug(guestsRes.data[0].slug||"tamu");
+      if (guestsRes.data.length>0) setGuestSlug(guestsRes.data[0].slug||"preview");
     }
     if (!planningRes.error && planningRes.data) {
       setPlanningTotal(planningRes.data.length);
@@ -208,11 +207,12 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  const persen           = totalBudget > 0 ? Math.round((totalSpent/totalBudget)*100) : 0;
-  const progressPlanning = planningTotal > 0 ? Math.round((planningDone/planningTotal)*100) : 0;
+  const persen           = totalBudget>0 ? Math.round((totalSpent/totalBudget)*100) : 0;
+  const progressPlanning = planningTotal>0 ? Math.round((planningDone/planningTotal)*100) : 0;
   const hariLagi         = weddingDate ? Math.max(0,Math.floor((new Date(weddingDate)-new Date())/86400000)) : 0;
   const monitoringTotal  = (showSudahDipakai?totalSudahDipakai:0)+(showBankBSI?totalBankBSI:0);
   const heroPic          = dashboardPhoto||photoUrl;
+  const fmtRp            = (n) => `Rp ${n.toLocaleString("id-ID")}`;
 
   const formatDate = (d) => {
     if (!d) return "Tanggal belum diatur";
@@ -225,8 +225,15 @@ export default function Dashboard() {
   const grandBudget       = categoryStats.reduce((s,c)=>s+c.budget,0);
 
   const cardStyle = {
-    background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)",
+    background:"rgba(255,255,255,0.04)",
+    border:"1px solid rgba(255,255,255,0.08)",
     borderRadius:16, padding:"16px",
+  };
+
+  // ✅ Buka undangan di tab baru
+  const handleLihatUndangan = () => {
+    const slug = guestSlug || "preview";
+    window.open(`/invitation/${slug}`, "_blank");
   };
 
   return (
@@ -235,14 +242,14 @@ export default function Dashboard() {
       <Sidebar />
       <FloatingMusic />
 
-      <main style={{ flex:1, minWidth:0, width:0, padding:"68px 14px 32px",
-        overflowX:"hidden", boxSizing:"border-box" }}>
+      <main style={{ flex:1, minWidth:0, width:0,
+        padding:"68px 14px 32px", overflowX:"hidden", boxSizing:"border-box" }}>
 
         {/* ── HERO ─────────────────────────────────────── */}
         <div style={{ borderRadius:20, overflow:"hidden", marginBottom:16,
-          background:`linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#2D3748 100%)`,
+          background:"linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#2D3748 100%)",
           border:`1px solid rgba(196,164,90,0.2)`,
-          boxShadow:`0 8px 32px rgba(0,0,0,0.4)` }}>
+          boxShadow:"0 8px 32px rgba(0,0,0,0.4)" }}>
           <div style={{ position:"relative" }}>
             <div style={{ position:"absolute", inset:0, opacity:0.04,
               backgroundImage:"radial-gradient(circle,white 1px,transparent 1px)",
@@ -252,8 +259,7 @@ export default function Dashboard() {
               {heroPic ? (
                 <img src={heroPic} alt="Foto"
                   style={{ width:56, height:56, objectFit:"cover", borderRadius:14, flexShrink:0,
-                    border:`2px solid rgba(196,164,90,0.4)`,
-                    boxShadow:`0 4px 16px rgba(196,164,90,0.2)` }} />
+                    border:`2px solid rgba(196,164,90,0.4)` }} />
               ) : (
                 <div style={{ width:56, height:56, borderRadius:14, flexShrink:0,
                   background:"rgba(196,164,90,0.1)", border:`2px dashed rgba(196,164,90,0.3)`,
@@ -267,7 +273,7 @@ export default function Dashboard() {
                   overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                   {groom&&bride ? `${groom.split(" ")[0]} & ${bride.split(" ")[0]}` : "Wedding Planner"}
                 </h1>
-                <p style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.68rem", marginTop:3,
+                <p style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.65rem", marginTop:3,
                   overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                   {formatDate(weddingDate)}{weddingTime?` • ${weddingTime}`:""}
                 </p>
@@ -280,83 +286,94 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Tombol aksi */}
+            {/* ✅ Tombol aksi — pakai onClick bukan href */}
             <div style={{ padding:"0 16px 16px", display:"flex", gap:8, flexWrap:"wrap" }}>
-              {/* ✅ Tombol Review Undangan */}
-              <a href={`/invitation/${guestSlug||"preview"}`} target="_blank" rel="noreferrer"
+              <button
+                onClick={handleLihatUndangan}
                 style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 16px",
-                  borderRadius:10, textDecoration:"none", flexShrink:0,
+                  borderRadius:10, border:"none", cursor:"pointer", flexShrink:0,
                   background:`linear-gradient(135deg,${gold},${goldLight})`,
                   boxShadow:`0 4px 14px rgba(196,164,90,0.35)`,
                   color:"#0F172A", fontSize:"0.78rem", fontWeight:700 }}>
                 👁 Lihat Undangan
-              </a>
-              <button onClick={()=>setHideBalance(!hideBalance)}
+              </button>
+              <button
+                onClick={() => setHideBalance(prev => !prev)}
                 style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 14px",
-                  borderRadius:10, border:`1px solid rgba(196,164,90,0.2)`,
-                  background:"rgba(196,164,90,0.08)", cursor:"pointer",
-                  color:"rgba(196,164,90,0.8)", fontSize:"0.78rem", fontWeight:600 }}>
+                  borderRadius:10, border:`1px solid rgba(196,164,90,0.25)`,
+                  background:"rgba(196,164,90,0.1)", cursor:"pointer",
+                  color:"rgba(196,164,90,0.9)", fontSize:"0.78rem", fontWeight:600 }}>
                 {hideBalance ? "👁 Tampilkan" : "🙈 Sembunyikan"}
               </button>
             </div>
           </div>
         </div>
 
-        {/* ── AYAT AL-QURAN ────────────────────────────── */}
+        {/* ── DOA / AYAT ───────────────────────────────── */}
         <div style={{ ...cardStyle, marginBottom:16,
           background:"linear-gradient(135deg,rgba(196,164,90,0.08),rgba(196,164,90,0.02))",
-          border:`1px solid rgba(196,164,90,0.2)`, position:"relative", overflow:"hidden" }}>
-          <div style={{ position:"absolute", top:-20, right:-20, width:80, height:80,
-            borderRadius:"50%", background:`radial-gradient(circle,rgba(196,164,90,0.08),transparent)` }} />
+          border:`1px solid rgba(196,164,90,0.2)` }}>
           <p style={{ color:gold, fontSize:"0.58rem", letterSpacing:"0.22em",
-            textTransform:"uppercase", textAlign:"center", marginBottom:10 }}>Q.S. Ar-Rum : 21</p>
-          <p style={{ fontFamily:"'Amiri',serif", direction:"rtl", fontSize:"1rem",
-            color:"white", lineHeight:2.2, textAlign:"center", marginBottom:12 }}>
-            وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا لِّتَسْكُنُوْٓا اِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَّرَحْمَةً
+            textTransform:"uppercase", textAlign:"center", marginBottom:12 }}>Doa Pagi</p>
+
+          {/* ✅ Teks arab doa pagi */}
+          <p style={{ fontFamily:"'Amiri',serif", direction:"rtl", fontSize:"1.05rem",
+            color:"white", lineHeight:2.3, textAlign:"center", marginBottom:12 }}>
+            اَللّٰهُمَّ إِنِّى أَعُوْذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ، وَأَعُوْذُ بِكَ مِنَ الْعَجْزِ وَالْكَسَلِ، وَأَعُوْذُ بِكَ مِنَ الْجُبْنِ وَالْبُخْلِ، وَأَعُوْذُ بِكَ مِنْ غَلَبَةِ الدَّيْنِ وَقَهْرِ الرِّجَالِ
           </p>
+
           <div style={{ height:1, background:`linear-gradient(90deg,transparent,rgba(196,164,90,0.3),transparent)`,
             margin:"10px 0" }} />
-          <p style={{ color:"rgba(255,255,255,0.45)", fontSize:"0.75rem", lineHeight:1.8,
+
+          <p style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.72rem", lineHeight:1.8,
+            textAlign:"center", fontStyle:"italic", marginBottom:8 }}>
+            Allāhumma innī a'ūdhu bika minal hammi wal ḥazan, wa a'ūdhu bika minal 'ajzi wal kasal, wa a'ūdhu bika minal jubni wal bukhl, wa a'ūdhu bika min ghalabatid daini wa qahrir rijāl.
+          </p>
+
+          <div style={{ height:1, background:`linear-gradient(90deg,transparent,rgba(196,164,90,0.15),transparent)`,
+            margin:"8px 0" }} />
+
+          <p style={{ color:"rgba(255,255,255,0.45)", fontSize:"0.73rem", lineHeight:1.85,
             textAlign:"center", fontStyle:"italic" }}>
-            "Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang."
+            "Ya Allah, sesungguhnya aku berlindung kepada-Mu dari kedukaan dan kesedihan, dari kelemahan dan kemalasan, dari sifat pengecut dan kikir, dan aku berlindung kepada-Mu dari lilitan utang dan penindasan orang lain."
           </p>
         </div>
 
         {loading ? (
           <div style={{ textAlign:"center", padding:"48px 0", color:"rgba(255,255,255,0.3)" }}>
-            <div style={{ width:32, height:32, borderRadius:"50%", border:`2px solid ${gold}`,
-              borderTopColor:"transparent", animation:"spin 0.8s linear infinite", margin:"0 auto 12px" }} />
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            <div style={{ width:28, height:28, borderRadius:"50%", border:`2px solid ${gold}`,
+              borderTopColor:"transparent", animation:"spin 0.8s linear infinite",
+              margin:"0 auto 12px" }} />
             Memuat data...
           </div>
         ) : (
           <>
             {/* ── STAT CARDS ───────────────────────────── */}
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:14 }}>
-              <StatCard label="Total Budget" value={fmt(totalBudget,false)} color={gold} hide={hideBalance} />
-              <StatCard label="Terpakai"     value={fmt(totalSpent,false)}  color="#60A5FA" hide={hideBalance} />
-              <StatCard label="Sisa Dana"    value={fmt(totalBudget-totalSpent,false)} color="#4ADE80" hide={hideBalance} />
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr",
+              gap:10, marginBottom:14 }}>
+              <StatCard label="Total Budget" value={fmtRp(totalBudget)} color={gold}      hide={hideBalance} />
+              <StatCard label="Terpakai"     value={fmtRp(totalSpent)}  color="#60A5FA"   hide={hideBalance} />
+              <StatCard label="Sisa Dana"    value={fmtRp(totalBudget-totalSpent)} color="#4ADE80" hide={hideBalance} />
               <StatCard label="Total Tamu"   value={totalGuests} sub={`${hadir} hadir`} color="#F472B6" hide={false} />
             </div>
 
             {/* ── MONITORING DANA ──────────────────────── */}
             <div style={{ ...cardStyle, marginBottom:14 }}>
               <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
-                letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:12 }}>
-                Monitoring Dana
-              </p>
+                letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:12 }}>Monitoring Dana</p>
+
               <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:12 }}>
                 <label style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer",
                   padding:"12px 14px", borderRadius:12,
                   background:showSudahDipakai?"rgba(239,68,68,0.06)":"rgba(255,255,255,0.02)",
                   border:showSudahDipakai?"1px solid rgba(239,68,68,0.2)":"1px solid rgba(255,255,255,0.06)" }}>
                   <input type="checkbox" checked={showSudahDipakai}
-                    onChange={()=>setShowSudahDipakai(!showSudahDipakai)}
+                    onChange={()=>setShowSudahDipakai(p=>!p)}
                     style={{ accentColor:"#EF4444", width:16, height:16 }} />
-                  <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ flex:1 }}>
                     <p style={{ color:"#FCA5A5", fontSize:"0.78rem", fontWeight:600, margin:0 }}>Sudah Dipakai</p>
-                    <p style={{ color:"#EF4444", fontSize:"0.72rem", margin:0, fontWeight:700 }}>
-                      {hideBalance ? "Rp ••••••" : fmt(totalSudahDipakai,false)}
+                    <p style={{ color:"#EF4444", fontSize:"0.72rem", fontWeight:700, margin:0 }}>
+                      {hideBalance ? "Rp ••••••" : fmtRp(totalSudahDipakai)}
                     </p>
                   </div>
                 </label>
@@ -365,12 +382,12 @@ export default function Dashboard() {
                   background:showBankBSI?"rgba(74,222,128,0.06)":"rgba(255,255,255,0.02)",
                   border:showBankBSI?"1px solid rgba(74,222,128,0.2)":"1px solid rgba(255,255,255,0.06)" }}>
                   <input type="checkbox" checked={showBankBSI}
-                    onChange={()=>setShowBankBSI(!showBankBSI)}
+                    onChange={()=>setShowBankBSI(p=>!p)}
                     style={{ accentColor:"#4ADE80", width:16, height:16 }} />
-                  <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ flex:1 }}>
                     <p style={{ color:"#86EFAC", fontSize:"0.78rem", fontWeight:600, margin:0 }}>Dana di Bank BSI</p>
-                    <p style={{ color:"#4ADE80", fontSize:"0.72rem", margin:0, fontWeight:700 }}>
-                      {hideBalance ? "Rp ••••••" : fmt(totalBankBSI,false)}
+                    <p style={{ color:"#4ADE80", fontSize:"0.72rem", fontWeight:700, margin:0 }}>
+                      {hideBalance ? "Rp ••••••" : fmtRp(totalBankBSI)}
                     </p>
                   </div>
                 </label>
@@ -394,20 +411,24 @@ export default function Dashboard() {
 
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center",
                 paddingTop:10, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-                <div style={{ display:"flex", gap:12 }}>
-                  {showSudahDipakai && <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                    <div style={{ width:8, height:8, borderRadius:"50%", background:"#EF4444" }} />
-                    <span style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.35)" }}>Dipakai</span>
-                  </div>}
-                  {showBankBSI && <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                    <div style={{ width:8, height:8, borderRadius:"50%", background:"#4ADE80" }} />
-                    <span style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.35)" }}>Bank BSI</span>
-                  </div>}
+                <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                  {showSudahDipakai && (
+                    <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                      <div style={{ width:8, height:8, borderRadius:"50%", background:"#EF4444" }} />
+                      <span style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.35)" }}>Dipakai</span>
+                    </div>
+                  )}
+                  {showBankBSI && (
+                    <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                      <div style={{ width:8, height:8, borderRadius:"50%", background:"#4ADE80" }} />
+                      <span style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.35)" }}>Bank BSI</span>
+                    </div>
+                  )}
                 </div>
                 <div style={{ textAlign:"right" }}>
                   <p style={{ fontSize:"0.6rem", color:"rgba(255,255,255,0.25)", margin:0 }}>Total</p>
                   <p style={{ fontSize:"1rem", fontWeight:700, color:gold, margin:0 }}>
-                    {hideBalance ? "Rp ••••••" : fmt(monitoringTotal,false)}
+                    {hideBalance ? "Rp ••••••" : fmtRp(monitoringTotal)}
                   </p>
                 </div>
               </div>
@@ -446,20 +467,19 @@ export default function Dashboard() {
                     transition:"width 0.8s" }} />
                 </div>
                 <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.2)", marginTop:6 }}>
-                  {hideBalance ? "•••" : fmt(totalSpent,false)}
+                  {hideBalance ? "•••" : fmtRp(totalSpent)}
                 </p>
               </div>
             </div>
 
-            {/* ── KATEGORI TABLE ───────────────────────── */}
+            {/* ── KATEGORI ─────────────────────────────── */}
             {categoryStats.length > 0 && (
-              <div style={{ ...cardStyle }}>
+              <div style={cardStyle}>
                 <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
                   letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:14 }}>
                   Budget per Kategori
                 </p>
 
-                {/* Bar chart sederhana */}
                 <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:16 }}>
                   {categoryStats.map(c => {
                     const col = getColor(c.cat);
@@ -469,7 +489,8 @@ export default function Dashboard() {
                         <div style={{ display:"flex", justifyContent:"space-between",
                           alignItems:"center", marginBottom:5 }}>
                           <div style={{ display:"flex", alignItems:"center", gap:7 }}>
-                            <div style={{ width:8, height:8, borderRadius:2, background:col.bar, flexShrink:0 }} />
+                            <div style={{ width:8, height:8, borderRadius:2,
+                              background:col.bar, flexShrink:0 }} />
                             <span style={{ fontSize:"0.75rem", color:"rgba(255,255,255,0.65)" }}>{c.cat}</span>
                           </div>
                           <span style={{ fontSize:"0.72rem", fontWeight:700,
@@ -490,68 +511,67 @@ export default function Dashboard() {
                   })}
                 </div>
 
-                {/* Tabel ringkasan */}
                 <div style={{ overflowX:"auto" }}>
-                  <table style={{ width:"100%", fontSize:"0.7rem", borderCollapse:"collapse", minWidth:400 }}>
+                  <table style={{ width:"100%", fontSize:"0.68rem",
+                    borderCollapse:"collapse", minWidth:380 }}>
                     <thead>
                       <tr style={{ borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
-                        {["Kategori","Budget","Dipakai","BSI","Sisa","%"].map(h => (
+                        {["Kategori","Budget","Dipakai","BSI","Sisa","%"].map(h=>(
                           <th key={h} style={{ textAlign:h==="Kategori"?"left":"right",
-                            padding:"6px 8px", color:"rgba(255,255,255,0.25)",
-                            fontWeight:500, letterSpacing:"0.1em", textTransform:"uppercase",
-                            fontSize:"0.6rem" }}>{h}</th>
+                            padding:"6px 6px", color:"rgba(255,255,255,0.25)",
+                            fontWeight:500, fontSize:"0.58rem",
+                            letterSpacing:"0.1em", textTransform:"uppercase" }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {categoryStats.map(c => (
+                      {categoryStats.map(c=>(
                         <tr key={c.cat} style={{ borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-                          <td style={{ padding:"8px 8px", color:"rgba(255,255,255,0.65)" }}>
-                            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                              <div style={{ width:6, height:6, borderRadius:2,
+                          <td style={{ padding:"7px 6px", color:"rgba(255,255,255,0.6)" }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                              <div style={{ width:6, height:6, borderRadius:1,
                                 background:getColor(c.cat).bar, flexShrink:0 }} />
                               <span style={{ overflow:"hidden", textOverflow:"ellipsis",
-                                whiteSpace:"nowrap", maxWidth:80 }}>{c.cat}</span>
+                                whiteSpace:"nowrap", maxWidth:70 }}>{c.cat}</span>
                             </div>
                           </td>
-                          <td style={{ textAlign:"right", padding:"8px 8px",
-                            color:"rgba(255,255,255,0.4)" }}>
-                            {hideBalance?"•••":fmt(c.budget,false).replace("Rp ","")}
+                          <td style={{ textAlign:"right", padding:"7px 6px", color:"rgba(255,255,255,0.35)" }}>
+                            {hideBalance?"•••":fmtRp(c.budget).replace("Rp ","")}
                           </td>
-                          <td style={{ textAlign:"right", padding:"8px 8px",
+                          <td style={{ textAlign:"right", padding:"7px 6px",
                             color:c.sudahDipakai>0?"#FCA5A5":"rgba(255,255,255,0.2)" }}>
-                            {hideBalance?"•••":fmt(c.sudahDipakai,false).replace("Rp ","")}
+                            {hideBalance?"•••":fmtRp(c.sudahDipakai).replace("Rp ","")}
                           </td>
-                          <td style={{ textAlign:"right", padding:"8px 8px",
+                          <td style={{ textAlign:"right", padding:"7px 6px",
                             color:c.bankBSI>0?"#86EFAC":"rgba(255,255,255,0.2)" }}>
-                            {hideBalance?"•••":fmt(c.bankBSI,false).replace("Rp ","")}
+                            {hideBalance?"•••":fmtRp(c.bankBSI).replace("Rp ","")}
                           </td>
-                          <td style={{ textAlign:"right", padding:"8px 8px",
+                          <td style={{ textAlign:"right", padding:"7px 6px",
                             color:c.budget-c.spent<0?"#EF4444":"#4ADE80" }}>
-                            {hideBalance?"•••":fmt(c.budget-c.spent,false).replace("Rp ","")}
+                            {hideBalance?"•••":fmtRp(c.budget-c.spent).replace("Rp ","")}
                           </td>
-                          <td style={{ textAlign:"right", padding:"8px 8px", fontWeight:700,
+                          <td style={{ textAlign:"right", padding:"7px 6px", fontWeight:700,
                             color:c.realisasi>100?"#EF4444":c.realisasi>80?"#FBBF24":gold }}>
                             {c.realisasi}%
                           </td>
                         </tr>
                       ))}
                       <tr style={{ borderTop:`1px solid rgba(196,164,90,0.2)` }}>
-                        <td style={{ padding:"8px 8px", color:gold, fontWeight:700 }}>Total</td>
-                        <td style={{ textAlign:"right", padding:"8px 8px", color:gold, fontWeight:700 }}>
-                          {hideBalance?"•••":fmt(grandBudget,false).replace("Rp ","")}
+                        <td style={{ padding:"7px 6px", color:gold, fontWeight:700 }}>Total</td>
+                        <td style={{ textAlign:"right", padding:"7px 6px", color:gold, fontWeight:700 }}>
+                          {hideBalance?"•••":fmtRp(grandBudget).replace("Rp ","")}
                         </td>
-                        <td style={{ textAlign:"right", padding:"8px 8px", color:"#FCA5A5", fontWeight:700 }}>
-                          {hideBalance?"•••":fmt(grandSudahDipakai,false).replace("Rp ","")}
+                        <td style={{ textAlign:"right", padding:"7px 6px", color:"#FCA5A5", fontWeight:700 }}>
+                          {hideBalance?"•••":fmtRp(grandSudahDipakai).replace("Rp ","")}
                         </td>
-                        <td style={{ textAlign:"right", padding:"8px 8px", color:"#86EFAC", fontWeight:700 }}>
-                          {hideBalance?"•••":fmt(grandBankBSI,false).replace("Rp ","")}
+                        <td style={{ textAlign:"right", padding:"7px 6px", color:"#86EFAC", fontWeight:700 }}>
+                          {hideBalance?"•••":fmtRp(grandBankBSI).replace("Rp ","")}
                         </td>
-                        <td style={{ textAlign:"right", padding:"8px 8px",
-                          color:grandBudget-grandSpent<0?"#EF4444":"#4ADE80", fontWeight:700 }}>
-                          {hideBalance?"•••":fmt(grandBudget-grandSpent,false).replace("Rp ","")}
+                        <td style={{ textAlign:"right", padding:"7px 6px", fontWeight:700,
+                          color:grandBudget-grandSpent<0?"#EF4444":"#4ADE80" }}>
+                          {hideBalance?"•••":fmtRp(grandBudget-grandSpent).replace("Rp ","")}
                         </td>
-                        <td style={{ textAlign:"right", padding:"8px 8px", fontWeight:700,
+                        <td style={{ textAlign:"right", padding:"7px 6px", fontWeight:700,
                           color:persen>100?"#EF4444":persen>80?"#FBBF24":gold }}>
                           {persen}%
                         </td>
@@ -560,7 +580,6 @@ export default function Dashboard() {
                   </table>
                 </div>
 
-                {/* Legend */}
                 <div style={{ display:"flex", gap:12, marginTop:12, flexWrap:"wrap" }}>
                   {[["#FCA5A5","Sudah Dipakai"],["#86EFAC","Bank BSI"],[gold,"Total"]].map(([c,l])=>(
                     <div key={l} style={{ display:"flex", alignItems:"center", gap:5 }}>
