@@ -5,20 +5,24 @@ import { supabase } from "../lib/supabase";
 const DASHBOARD_MUSIC = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/public/wedding-music/Terpukau.mp3";
 
 const CAT_COLORS = {
-  "Venue":              { bar: "#0284C7", light: "#DBEAFE" },
-  "Catering":           { bar: "#0EA5E9", light: "#E0F2FE" },
-  "Dekorasi":           { bar: "#38BDF8", light: "#F0F9FF" },
-  "Fotografer":         { bar: "#7C3AED", light: "#EDE9FE" },
-  "Busana & Seserahan": { bar: "#EC4899", light: "#FCE7F3" },
-  "Undangan":           { bar: "#0369A1", light: "#DBEAFE" },
-  "Rukun Nikah":        { bar: "#D97706", light: "#FEF3C7" },
-  "Transportasi":       { bar: "#059669", light: "#D1FAE5" },
-  "KUA":                { bar: "#6366F1", light: "#EEF2FF" },
-  "Lainnya":            { bar: "#94A3B8", light: "#F1F5F9" },
+  "Venue":              { bar: "#C4A45A", light: "rgba(196,164,90,0.1)" },
+  "Catering":           { bar: "#4ADE80", light: "rgba(74,222,128,0.1)" },
+  "Dekorasi":           { bar: "#60A5FA", light: "rgba(96,165,250,0.1)" },
+  "Fotografer":         { bar: "#A78BFA", light: "rgba(167,139,250,0.1)" },
+  "Busana & Seserahan": { bar: "#F472B6", light: "rgba(244,114,182,0.1)" },
+  "Undangan":           { bar: "#FB923C", light: "rgba(251,146,60,0.1)"  },
+  "Rukun Nikah":        { bar: "#FBBF24", light: "rgba(251,191,36,0.1)"  },
+  "Transportasi":       { bar: "#34D399", light: "rgba(52,211,153,0.1)"  },
+  "KUA":                { bar: "#E879F9", light: "rgba(232,121,249,0.1)" },
+  "Lainnya":            { bar: "#94A3B8", light: "rgba(148,163,184,0.1)" },
 };
 
-const getColor = (cat) => CAT_COLORS[cat] || { bar: "#0284C7", light: "#E0F2FE" };
+const getColor = (cat) => CAT_COLORS[cat] || { bar:"#C4A45A", light:"rgba(196,164,90,0.1)" };
+const gold = "#C4A45A";
+const goldLight = "#E8CC8A";
+const fmt = (num, hide) => hide ? "Rp ••••••" : `Rp ${num.toLocaleString("id-ID")}`;
 
+// ── Floating Music ────────────────────────────────────────
 function FloatingMusic() {
   const audioRef              = useRef(null);
   const [playing, setPlaying] = useState(false);
@@ -30,13 +34,11 @@ function FloatingMusic() {
     const tryPlay = () => {
       if (audioRef.current && !started) {
         audioRef.current.volume = volume;
-        audioRef.current.play()
-          .then(() => { setPlaying(true); setStarted(true); })
-          .catch(() => {});
+        audioRef.current.play().then(() => { setPlaying(true); setStarted(true); }).catch(() => {});
       }
     };
-    document.addEventListener("touchstart", tryPlay, { once: true });
-    document.addEventListener("click",      tryPlay, { once: true });
+    document.addEventListener("touchstart", tryPlay, { once:true });
+    document.addEventListener("click",      tryPlay, { once:true });
     return () => {
       document.removeEventListener("touchstart", tryPlay);
       document.removeEventListener("click",      tryPlay);
@@ -47,47 +49,39 @@ function FloatingMusic() {
     e.stopPropagation();
     if (!audioRef.current) return;
     if (playing) { audioRef.current.pause(); setPlaying(false); }
-    else { audioRef.current.play().then(() => setPlaying(true)).catch(() => {}); }
+    else { audioRef.current.play().then(()=>setPlaying(true)).catch(()=>{}); }
     setStarted(true);
-  };
-
-  const handleVolume = (e) => {
-    const val = parseFloat(e.target.value);
-    setVolume(val);
-    if (audioRef.current) audioRef.current.volume = val;
   };
 
   const handleEnded = () => {
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
-      audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
+      audioRef.current.play().then(()=>setPlaying(true)).catch(()=>{});
     }
   };
 
   return (
-    <div style={{ position:"fixed", bottom:24, right:16, zIndex:50, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:8 }}>
+    <div style={{ position:"fixed", bottom:24, right:16, zIndex:50,
+      display:"flex", flexDirection:"column", alignItems:"flex-end", gap:8 }}>
       <audio ref={audioRef} src={DASHBOARD_MUSIC} preload="auto" onEnded={handleEnded} />
       {showVol && (
-        <div style={{
-          background:"rgba(255,255,255,0.97)", borderRadius:16,
-          padding:"12px 10px", border:"1px solid #BAE6FD",
-          boxShadow:"0 8px 32px rgba(12,74,110,0.15)",
-          display:"flex", flexDirection:"column", alignItems:"center", gap:4
-        }}>
-          <span style={{ fontSize:"0.65rem", color:"#94A3B8" }}>🔊</span>
-          <input type="range" min={0} max={1} step={0.01} value={volume} onChange={handleVolume}
-            style={{ writingMode:"vertical-lr", direction:"rtl", height:72, accentColor:"#0284C7" }} />
-          <span style={{ fontSize:"0.65rem", color:"#94A3B8" }}>🔈</span>
+        <div style={{ background:"rgba(15,23,42,0.95)", borderRadius:14,
+          padding:"12px 10px", border:`1px solid rgba(196,164,90,0.2)`,
+          boxShadow:"0 8px 24px rgba(0,0,0,0.4)",
+          display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
+          <span style={{ fontSize:"0.6rem", color:gold }}>🔊</span>
+          <input type="range" min={0} max={1} step={0.01} value={volume}
+            onChange={e => { setVolume(parseFloat(e.target.value)); if(audioRef.current) audioRef.current.volume=parseFloat(e.target.value); }}
+            style={{ writingMode:"vertical-lr", direction:"rtl", height:70, accentColor:gold }} />
+          <span style={{ fontSize:"0.6rem", color:gold }}>🔈</span>
         </div>
       )}
       <div style={{ display:"flex", gap:8, alignItems:"center" }}>
         {playing && (
           <div style={{ display:"flex", gap:2, alignItems:"flex-end", height:20 }}>
-            {[1,2,3,4].map((i) => (
-              <div key={i} style={{
-                width:3, borderRadius:2, background:"#0284C7",
-                animation:`pulse${i} ${0.4+i*0.1}s ease-in-out infinite alternate`,
-              }} />
+            {[1,2,3,4].map(i => (
+              <div key={i} style={{ width:3, borderRadius:2, background:gold,
+                animation:`pulse${i} ${0.4+i*0.1}s ease-in-out infinite alternate` }} />
             ))}
             <style>{`
               @keyframes pulse1{from{height:4px}to{height:16px}}
@@ -97,22 +91,25 @@ function FloatingMusic() {
             `}</style>
           </div>
         )}
-        <button onClick={(e) => { e.stopPropagation(); setShowVol(!showVol); }}
-          style={{ width:36, height:36, borderRadius:"50%", background:"rgba(255,255,255,0.97)",
-            border:"1px solid #BAE6FD", boxShadow:"0 4px 16px rgba(12,74,110,0.12)",
-            display:"flex", alignItems:"center", justifyContent:"center", fontSize:"0.9rem", cursor:"pointer" }}>🎚</button>
+        <button onClick={e=>{e.stopPropagation();setShowVol(!showVol)}}
+          style={{ width:36, height:36, borderRadius:"50%",
+            background:"rgba(196,164,90,0.15)", border:`1px solid rgba(196,164,90,0.3)`,
+            display:"flex", alignItems:"center", justifyContent:"center",
+            cursor:"pointer", fontSize:"0.9rem" }}>🎚</button>
         <button onClick={togglePlay}
-          style={{ width:46, height:46, borderRadius:"50%", background:"linear-gradient(135deg,#0284C7,#38BDF8)",
-            boxShadow:"0 4px 20px rgba(2,132,199,0.4)", display:"flex", alignItems:"center",
-            justifyContent:"center", fontSize:"1rem", color:"white", cursor:"pointer", border:"none" }}>
+          style={{ width:46, height:46, borderRadius:"50%",
+            background:`linear-gradient(135deg,${gold},${goldLight})`,
+            boxShadow:`0 4px 16px rgba(196,164,90,0.4)`, border:"none",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            fontSize:"1rem", color:"#0F172A", cursor:"pointer" }}>
           {playing ? "⏸" : "▶"}
         </button>
       </div>
       {started && (
-        <div style={{ background:"rgba(255,255,255,0.95)", borderRadius:20, padding:"4px 12px",
-          border:"1px solid #BAE6FD", boxShadow:"0 2px 8px rgba(12,74,110,0.1)" }}>
-          <p style={{ fontSize:"0.6rem", color:"#0284C7", fontWeight:600 }}>🎵 Terpukau</p>
-          <p style={{ fontSize:"0.55rem", color:"#94A3B8" }}>Wedding Playlist</p>
+        <div style={{ background:"rgba(15,23,42,0.9)", borderRadius:20,
+          padding:"4px 12px", border:`1px solid rgba(196,164,90,0.2)` }}>
+          <p style={{ fontSize:"0.58rem", color:gold, fontWeight:600, margin:0 }}>🎵 Terpukau</p>
+          <p style={{ fontSize:"0.52rem", color:"rgba(255,255,255,0.35)", margin:0 }}>Wedding Playlist</p>
         </div>
       )}
     </div>
@@ -121,435 +118,456 @@ function FloatingMusic() {
 
 function StatCard({ label, value, sub, color, hide }) {
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border border-sky-100">
-      <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-lg md:text-xl font-bold truncate" style={{ color }}>{hide ? "Rp ••••••" : value}</p>
-      {sub && <p className="text-xs text-slate-400 mt-1">{hide ? "•••" : sub}</p>}
-    </div>
-  );
-}
-
-function DonutChart({ stats, totalBudget }) {
-  const [hovered, setHovered] = useState(null);
-  if (!stats.length || totalBudget === 0) return null;
-  const size = 140, cx = 70, cy = 70, radius = 52, stroke = 22;
-  let cumulative = 0;
-  const slices = stats.map((c) => {
-    const pct = c.budget / totalBudget;
-    const start = cumulative;
-    cumulative += pct;
-    return { ...c, pct, start, end: cumulative };
-  });
-  const describeArc = (startPct, endPct) => {
-    const s = startPct * 2 * Math.PI - Math.PI / 2;
-    const e = endPct   * 2 * Math.PI - Math.PI / 2;
-    const x1 = cx + radius * Math.cos(s), y1 = cy + radius * Math.sin(s);
-    const x2 = cx + radius * Math.cos(e), y2 = cy + radius * Math.sin(e);
-    return `M ${x1} ${y1} A ${radius} ${radius} 0 ${endPct - startPct > 0.5 ? 1 : 0} 1 ${x2} ${y2}`;
-  };
-  const active = hovered ? stats.find((s) => s.cat === hovered) : null;
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size}>
-          {slices.map((s) => (
-            <path key={s.cat} d={describeArc(s.start, s.end)} fill="none"
-              stroke={hovered === s.cat ? getColor(s.cat).bar : getColor(s.cat).bar + "CC"}
-              strokeWidth={hovered === s.cat ? stroke + 4 : stroke} strokeLinecap="round"
-              style={{ transition:"all 0.2s", cursor:"pointer" }}
-              onMouseEnter={() => setHovered(s.cat)} onMouseLeave={() => setHovered(null)} />
-          ))}
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          {active ? (
-            <>
-              <p className="text-xs font-bold text-sky-900 text-center leading-tight">{active.cat}</p>
-              <p className="text-sm font-bold text-sky-600">{(active.pct * 100).toFixed(1)}%</p>
-            </>
-          ) : (
-            <>
-              <p className="text-xs text-slate-400">Total</p>
-              <p className="text-sm font-bold text-sky-900">{stats.length} cat</p>
-            </>
-          )}
-        </div>
-      </div>
-      <div className="mt-3 space-y-1 w-full">
-        {slices.map((s) => (
-          <div key={s.cat}
-            className="flex items-center justify-between text-xs cursor-pointer px-2 py-0.5 rounded-lg transition"
-            style={{ background: hovered === s.cat ? getColor(s.cat).light : "transparent" }}
-            onMouseEnter={() => setHovered(s.cat)} onMouseLeave={() => setHovered(null)}>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: getColor(s.cat).bar }} />
-              <span className="text-slate-600 truncate max-w-[90px]">{s.cat}</span>
-            </div>
-            <span className="font-semibold text-slate-700">{(s.pct * 100).toFixed(1)}%</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function CategoryChart({ stats, hide }) {
-  const [tooltip, setTooltip] = useState(null);
-  if (!stats.length) return <div className="text-center py-8 text-slate-400 text-sm">Belum ada data</div>;
-  return (
-    <div className="space-y-4">
-      {stats.map((c) => {
-        const spentPct = c.budget > 0 ? Math.min((c.spent / c.budget) * 100, 100) : 0;
-        const col = getColor(c.cat);
-        return (
-          <div key={c.cat} className="relative"
-            onMouseEnter={() => setTooltip(c.cat)} onMouseLeave={() => setTooltip(null)}>
-            <div className="flex justify-between items-center mb-1.5">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-sm" style={{ background: col.bar }} />
-                <span className="text-xs font-medium text-slate-700">{c.cat}</span>
-                {c.spent > c.budget && <span className="text-xs text-red-500">⚠ Melebihi</span>}
-              </div>
-              <span className={`text-xs font-bold ${c.realisasi > 100 ? "text-red-500" : c.realisasi > 80 ? "text-amber-500" : "text-sky-600"}`}>
-                {c.realisasi}%
-              </span>
-            </div>
-            <div className="relative h-6 rounded-lg overflow-hidden" style={{ background: col.light }}>
-              <div className="absolute inset-0 flex items-center px-2">
-                <span className="text-xs text-slate-400 z-10 relative">
-                  {hide ? "••••••" : `Rp ${c.budget.toLocaleString("id-ID")}`}
-                </span>
-              </div>
-              <div className="absolute top-0 left-0 h-full rounded-lg flex items-center px-2 transition-all duration-700"
-                style={{
-                  width: `${spentPct}%`,
-                  background: c.realisasi > 100 ? "linear-gradient(90deg,#EF4444,#F87171)"
-                    : c.realisasi > 80 ? "linear-gradient(90deg,#F59E0B,#FCD34D)"
-                    : `linear-gradient(90deg, ${col.bar}, ${col.bar}cc)`,
-                  minWidth: c.spent > 0 ? "2px" : "0",
-                }}>
-                {spentPct > 25 && (
-                  <span className="text-xs text-white font-medium truncate">
-                    {hide ? "••••••" : `Rp ${c.spent.toLocaleString("id-ID")}`}
-                  </span>
-                )}
-              </div>
-            </div>
-            {tooltip === c.cat && !hide && (
-              <div className="absolute right-0 top-full mt-1 z-20 bg-white rounded-xl shadow-xl border border-sky-100 p-3 min-w-[220px]">
-                <p className="font-semibold text-sky-900 text-sm mb-2">{c.cat}</p>
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between"><span className="text-slate-400">Budget</span><span>Rp {c.budget.toLocaleString("id-ID")}</span></div>
-                  <div className="flex justify-between"><span className="text-red-400">Sudah Dipakai</span><span className="text-red-500 font-medium">Rp {c.sudahDipakai.toLocaleString("id-ID")}</span></div>
-                  <div className="flex justify-between"><span className="text-green-600">Bank BSI</span><span className="text-green-600 font-medium">Rp {c.bankBSI.toLocaleString("id-ID")}</span></div>
-                  <div className="flex justify-between pt-1 border-t border-slate-100">
-                    <span className="text-slate-400">Sisa</span>
-                    <span className={c.budget - c.spent < 0 ? "text-red-500 font-medium" : "text-green-600 font-medium"}>
-                      Rp {(c.budget - c.spent).toLocaleString("id-ID")}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
+    <div style={{ background:"rgba(255,255,255,0.04)", borderRadius:16,
+      padding:"16px 14px", border:"1px solid rgba(255,255,255,0.08)" }}>
+      <p style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.62rem",
+        letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:6 }}>{label}</p>
+      <p style={{ fontSize:"1rem", fontWeight:700, color:color||gold, margin:0,
+        overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+        {hide ? "Rp ••••••" : value}
+      </p>
+      {sub && <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.25)", marginTop:4 }}>
+        {hide ? "•••" : sub}
+      </p>}
     </div>
   );
 }
 
 export default function Dashboard() {
-  const [groom, setGroom]                     = useState("");
-  const [bride, setBride]                     = useState("");
-  const [photoUrl, setPhotoUrl]               = useState("");
-  const [dashboardPhoto, setDashboardPhoto]   = useState(""); // ✅ foto couple-story
-  const [weddingDate, setWeddingDate]         = useState("");
-  const [weddingTime, setWeddingTime]         = useState("");
+  const [groom, setGroom]                   = useState("");
+  const [bride, setBride]                   = useState("");
+  const [photoUrl, setPhotoUrl]             = useState("");
+  const [dashboardPhoto, setDashboardPhoto] = useState("");
+  const [weddingDate, setWeddingDate]       = useState("");
+  const [weddingTime, setWeddingTime]       = useState("");
   const [weddingLocation, setWeddingLocation] = useState("");
-  const [totalBudget, setTotalBudget]         = useState(0);
-  const [totalSpent, setTotalSpent]           = useState(0);
-  const [totalGuests, setTotalGuests]         = useState(0);
-  const [planningDone, setPlanningDone]       = useState(0);
-  const [planningTotal, setPlanningTotal]     = useState(0);
-  const [hadir, setHadir]                     = useState(0);
-  const [categoryStats, setCategoryStats]     = useState([]);
-  const [loading, setLoading]                 = useState(true);
+  const [totalBudget, setTotalBudget]       = useState(0);
+  const [totalSpent, setTotalSpent]         = useState(0);
+  const [totalGuests, setTotalGuests]       = useState(0);
+  const [planningDone, setPlanningDone]     = useState(0);
+  const [planningTotal, setPlanningTotal]   = useState(0);
+  const [hadir, setHadir]                   = useState(0);
+  const [categoryStats, setCategoryStats]   = useState([]);
+  const [loading, setLoading]               = useState(true);
   const [totalSudahDipakai, setTotalSudahDipakai] = useState(0);
   const [totalBankBSI, setTotalBankBSI]           = useState(0);
   const [showSudahDipakai, setShowSudahDipakai]   = useState(true);
   const [showBankBSI, setShowBankBSI]             = useState(true);
   const [hideBalance, setHideBalance]             = useState(false);
+  const [guestSlug, setGuestSlug]                 = useState("");
 
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
     setLoading(true);
     const [settingsRes, rabRes, guestsRes, planningRes, rsvpRes] = await Promise.all([
-      supabase.from("settings").select("groom, bride, photo_url, dashboard_photo_url, wedding_date, wedding_time, wedding_location").eq("id", 1).single(),
+      supabase.from("settings").select("groom, bride, photo_url, dashboard_photo_url, wedding_date, wedding_time, wedding_location").eq("id",1).single(),
       supabase.from("rab").select("budget, spent, category, status_dana"),
-      supabase.from("guests").select("id"),
+      supabase.from("guests").select("id, slug"),
       supabase.from("planning").select("done"),
       supabase.from("rsvp").select("attendance"),
     ]);
 
     if (!settingsRes.error && settingsRes.data) {
       const d = settingsRes.data;
-      setGroom(d.groom || "");
-      setBride(d.bride || "");
-      setPhotoUrl(d.photo_url || "");
-      setDashboardPhoto(d.dashboard_photo_url || ""); // ✅ set foto dashboard
-      setWeddingDate(d.wedding_date || "");
-      setWeddingTime(d.wedding_time || "");
-      setWeddingLocation(d.wedding_location || "");
+      setGroom(d.groom||""); setBride(d.bride||"");
+      setPhotoUrl(d.photo_url||""); setDashboardPhoto(d.dashboard_photo_url||"");
+      setWeddingDate(d.wedding_date||""); setWeddingTime(d.wedding_time||"");
+      setWeddingLocation(d.wedding_location||"");
     }
 
     if (!rabRes.error && rabRes.data) {
       const rows = rabRes.data;
-      setTotalBudget(rows.reduce((s, r) => s + (parseFloat(r.budget) || 0), 0));
-      setTotalSpent(rows.reduce((s, r) => s + (parseFloat(r.spent) || 0), 0));
-      setTotalSudahDipakai(rows.filter((r) => !r.status_dana || r.status_dana === "Sudah Dipakai").reduce((s, r) => s + (parseFloat(r.spent) || 0), 0));
-      setTotalBankBSI(rows.filter((r) => r.status_dana === "Dana di Bank BSI").reduce((s, r) => s + (parseFloat(r.spent) || 0), 0));
+      setTotalBudget(rows.reduce((s,r)=>s+(parseFloat(r.budget)||0),0));
+      setTotalSpent(rows.reduce((s,r)=>s+(parseFloat(r.spent)||0),0));
+      setTotalSudahDipakai(rows.filter(r=>!r.status_dana||r.status_dana==="Sudah Dipakai").reduce((s,r)=>s+(parseFloat(r.spent)||0),0));
+      setTotalBankBSI(rows.filter(r=>r.status_dana==="Dana di Bank BSI").reduce((s,r)=>s+(parseFloat(r.spent)||0),0));
       const catMap = {};
-      rows.forEach((r) => {
-        const cat = r.category || "Lainnya";
-        if (!catMap[cat]) catMap[cat] = { budget: 0, spent: 0, sudahDipakai: 0, bankBSI: 0 };
-        catMap[cat].budget += parseFloat(r.budget) || 0;
-        catMap[cat].spent  += parseFloat(r.spent)  || 0;
-        if (!r.status_dana || r.status_dana === "Sudah Dipakai") catMap[cat].sudahDipakai += parseFloat(r.spent) || 0;
-        else if (r.status_dana === "Dana di Bank BSI") catMap[cat].bankBSI += parseFloat(r.spent) || 0;
+      rows.forEach(r => {
+        const cat = r.category||"Lainnya";
+        if (!catMap[cat]) catMap[cat] = { budget:0, spent:0, sudahDipakai:0, bankBSI:0 };
+        catMap[cat].budget += parseFloat(r.budget)||0;
+        catMap[cat].spent  += parseFloat(r.spent)||0;
+        if (!r.status_dana||r.status_dana==="Sudah Dipakai") catMap[cat].sudahDipakai += parseFloat(r.spent)||0;
+        else if (r.status_dana==="Dana di Bank BSI") catMap[cat].bankBSI += parseFloat(r.spent)||0;
       });
       setCategoryStats(Object.entries(catMap)
-        .map(([cat, val]) => ({ cat, ...val, realisasi: val.budget > 0 ? Math.round((val.spent / val.budget) * 100) : 0 }))
-        .sort((a, b) => b.budget - a.budget));
+        .map(([cat,val])=>({cat,...val,realisasi:val.budget>0?Math.round((val.spent/val.budget)*100):0}))
+        .sort((a,b)=>b.budget-a.budget));
     }
 
-    if (!guestsRes.error) setTotalGuests(guestsRes.data?.length || 0);
+    if (!guestsRes.error && guestsRes.data) {
+      setTotalGuests(guestsRes.data.length);
+      if (guestsRes.data.length > 0) setGuestSlug(guestsRes.data[0].slug||"tamu");
+    }
     if (!planningRes.error && planningRes.data) {
       setPlanningTotal(planningRes.data.length);
-      setPlanningDone(planningRes.data.filter((t) => t.done).length);
+      setPlanningDone(planningRes.data.filter(t=>t.done).length);
     }
-    if (!rsvpRes.error && rsvpRes.data) setHadir(rsvpRes.data.filter((r) => r.attendance === "Hadir").length);
+    if (!rsvpRes.error && rsvpRes.data) setHadir(rsvpRes.data.filter(r=>r.attendance==="Hadir").length);
     setLoading(false);
   };
 
-  const persen           = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
-  const progressPlanning = planningTotal > 0 ? Math.round((planningDone / planningTotal) * 100) : 0;
-  const hariLagi         = weddingDate ? Math.max(0, Math.floor((new Date(weddingDate) - new Date()) / 86400000)) : 0;
-  const monitoringTotal  = (showSudahDipakai ? totalSudahDipakai : 0) + (showBankBSI ? totalBankBSI : 0);
+  const persen           = totalBudget > 0 ? Math.round((totalSpent/totalBudget)*100) : 0;
+  const progressPlanning = planningTotal > 0 ? Math.round((planningDone/planningTotal)*100) : 0;
+  const hariLagi         = weddingDate ? Math.max(0,Math.floor((new Date(weddingDate)-new Date())/86400000)) : 0;
+  const monitoringTotal  = (showSudahDipakai?totalSudahDipakai:0)+(showBankBSI?totalBankBSI:0);
+  const heroPic          = dashboardPhoto||photoUrl;
 
   const formatDate = (d) => {
     if (!d) return "Tanggal belum diatur";
-    return new Date(d).toLocaleDateString("id-ID", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+    return new Date(d).toLocaleDateString("id-ID",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
   };
 
-  const grandSudahDipakai = categoryStats.reduce((s, c) => s + c.sudahDipakai, 0);
-  const grandBankBSI      = categoryStats.reduce((s, c) => s + c.bankBSI, 0);
-  const grandSpent        = categoryStats.reduce((s, c) => s + c.spent, 0);
-  const grandBudget       = categoryStats.reduce((s, c) => s + c.budget, 0);
+  const grandSudahDipakai = categoryStats.reduce((s,c)=>s+c.sudahDipakai,0);
+  const grandBankBSI      = categoryStats.reduce((s,c)=>s+c.bankBSI,0);
+  const grandSpent        = categoryStats.reduce((s,c)=>s+c.spent,0);
+  const grandBudget       = categoryStats.reduce((s,c)=>s+c.budget,0);
 
-  // Foto yang ditampilkan di hero — prioritas dashboard_photo_url
-  const heroPic = dashboardPhoto || photoUrl;
+  const cardStyle = {
+    background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)",
+    borderRadius:16, padding:"16px",
+  };
 
   return (
-    <div className="flex min-h-screen" style={{ background:"#F0F9FF", fontFamily:"'Inter',sans-serif" }}>
+    <div style={{ display:"flex", minHeight:"100vh", background:"#0F172A",
+      fontFamily:"'Inter',sans-serif", maxWidth:"100vw", overflow:"hidden" }}>
       <Sidebar />
       <FloatingMusic />
-      <main className="flex-1 pt-16 md:pt-0 p-4 md:p-8 overflow-x-hidden">
 
-        {/* Hero */}
-        <div className="rounded-2xl md:rounded-3xl overflow-hidden mb-5 relative"
-          style={{ background:"linear-gradient(135deg,#0C4A6E 0%,#0284C7 60%,#38BDF8 100%)", minHeight:"130px" }}>
-          <div className="absolute inset-0 opacity-5"
-            style={{ backgroundImage:"radial-gradient(circle,white 1px,transparent 1px)", backgroundSize:"20px 20px" }} />
-          <div className="relative z-10 flex items-center gap-4 p-5 md:p-8">
-            {/* ✅ Foto couple-story di hero */}
-            {heroPic ? (
-              <img src={heroPic} alt="Foto Pasangan"
-                className="w-16 h-16 md:w-28 md:h-28 object-cover rounded-xl md:rounded-2xl border-4 shadow-xl flex-shrink-0"
-                style={{ borderColor:"rgba(255,255,255,0.3)" }} />
-            ) : (
-              <div className="w-16 h-16 md:w-28 md:h-28 rounded-xl md:rounded-2xl flex items-center justify-center flex-shrink-0"
-                style={{ background:"rgba(255,255,255,0.15)", border:"2px dashed rgba(255,255,255,0.3)" }}>
-                <span className="text-2xl md:text-4xl">💑</span>
+      <main style={{ flex:1, minWidth:0, width:0, padding:"68px 14px 32px",
+        overflowX:"hidden", boxSizing:"border-box" }}>
+
+        {/* ── HERO ─────────────────────────────────────── */}
+        <div style={{ borderRadius:20, overflow:"hidden", marginBottom:16,
+          background:`linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#2D3748 100%)`,
+          border:`1px solid rgba(196,164,90,0.2)`,
+          boxShadow:`0 8px 32px rgba(0,0,0,0.4)` }}>
+          <div style={{ position:"relative" }}>
+            <div style={{ position:"absolute", inset:0, opacity:0.04,
+              backgroundImage:"radial-gradient(circle,white 1px,transparent 1px)",
+              backgroundSize:"20px 20px" }} />
+            <div style={{ position:"relative", display:"flex", alignItems:"center",
+              gap:14, padding:"18px 16px" }}>
+              {heroPic ? (
+                <img src={heroPic} alt="Foto"
+                  style={{ width:56, height:56, objectFit:"cover", borderRadius:14, flexShrink:0,
+                    border:`2px solid rgba(196,164,90,0.4)`,
+                    boxShadow:`0 4px 16px rgba(196,164,90,0.2)` }} />
+              ) : (
+                <div style={{ width:56, height:56, borderRadius:14, flexShrink:0,
+                  background:"rgba(196,164,90,0.1)", border:`2px dashed rgba(196,164,90,0.3)`,
+                  display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.5rem" }}>💑</div>
+              )}
+              <div style={{ flex:1, minWidth:0 }}>
+                <p style={{ color:"rgba(196,164,90,0.7)", fontSize:"0.58rem",
+                  letterSpacing:"0.25em", textTransform:"uppercase", marginBottom:3 }}>Wedding Dashboard</p>
+                <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem",
+                  fontWeight:600, color:"white", margin:0, lineHeight:1.2,
+                  overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                  {groom&&bride ? `${groom.split(" ")[0]} & ${bride.split(" ")[0]}` : "Wedding Planner"}
+                </h1>
+                <p style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.68rem", marginTop:3,
+                  overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                  {formatDate(weddingDate)}{weddingTime?` • ${weddingTime}`:""}
+                </p>
               </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sky-200 text-xs uppercase tracking-widest mb-0.5">Wedding Dashboard</p>
-              <h1 style={{ fontFamily:"'Cormorant Garamond',serif" }}
-                className="text-xl md:text-3xl font-semibold text-white leading-tight truncate">
-                {groom && bride ? `${groom.split(" ")[0]} & ${bride.split(" ")[0]}` : "Wedding Planner"}
-              </h1>
-              <p className="text-sky-200 text-xs mt-1">
-                {formatDate(weddingDate)}{weddingTime ? ` • ${weddingTime}` : ""}{weddingLocation ? ` • ${weddingLocation}` : ""}
-              </p>
+              <div style={{ textAlign:"center", flexShrink:0 }}>
+                <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"2rem",
+                  fontWeight:700, color:"white", margin:0, lineHeight:1 }}>{hariLagi}</p>
+                <p style={{ color:"rgba(196,164,90,0.7)", fontSize:"0.55rem",
+                  letterSpacing:"0.15em", textTransform:"uppercase", margin:0 }}>Hari Lagi</p>
+              </div>
             </div>
-            <div className="flex flex-col items-center gap-2 flex-shrink-0">
-              <div className="text-center">
-                <p className="text-2xl md:text-5xl font-bold text-white">{hariLagi}</p>
-                <p className="text-sky-200 text-xs uppercase tracking-widest mt-0.5">Hari Lagi</p>
-              </div>
-              <button onClick={() => setHideBalance(!hideBalance)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition"
-                style={{ background:"rgba(255,255,255,0.15)", color:"#BAE6FD" }}>
+
+            {/* Tombol aksi */}
+            <div style={{ padding:"0 16px 16px", display:"flex", gap:8, flexWrap:"wrap" }}>
+              {/* ✅ Tombol Review Undangan */}
+              <a href={`/invitation/${guestSlug||"preview"}`} target="_blank" rel="noreferrer"
+                style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 16px",
+                  borderRadius:10, textDecoration:"none", flexShrink:0,
+                  background:`linear-gradient(135deg,${gold},${goldLight})`,
+                  boxShadow:`0 4px 14px rgba(196,164,90,0.35)`,
+                  color:"#0F172A", fontSize:"0.78rem", fontWeight:700 }}>
+                👁 Lihat Undangan
+              </a>
+              <button onClick={()=>setHideBalance(!hideBalance)}
+                style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 14px",
+                  borderRadius:10, border:`1px solid rgba(196,164,90,0.2)`,
+                  background:"rgba(196,164,90,0.08)", cursor:"pointer",
+                  color:"rgba(196,164,90,0.8)", fontSize:"0.78rem", fontWeight:600 }}>
                 {hideBalance ? "👁 Tampilkan" : "🙈 Sembunyikan"}
               </button>
             </div>
           </div>
         </div>
 
+        {/* ── AYAT AL-QURAN ────────────────────────────── */}
+        <div style={{ ...cardStyle, marginBottom:16,
+          background:"linear-gradient(135deg,rgba(196,164,90,0.08),rgba(196,164,90,0.02))",
+          border:`1px solid rgba(196,164,90,0.2)`, position:"relative", overflow:"hidden" }}>
+          <div style={{ position:"absolute", top:-20, right:-20, width:80, height:80,
+            borderRadius:"50%", background:`radial-gradient(circle,rgba(196,164,90,0.08),transparent)` }} />
+          <p style={{ color:gold, fontSize:"0.58rem", letterSpacing:"0.22em",
+            textTransform:"uppercase", textAlign:"center", marginBottom:10 }}>Q.S. Ar-Rum : 21</p>
+          <p style={{ fontFamily:"'Amiri',serif", direction:"rtl", fontSize:"1rem",
+            color:"white", lineHeight:2.2, textAlign:"center", marginBottom:12 }}>
+            وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا لِّتَسْكُنُوْٓا اِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَّرَحْمَةً
+          </p>
+          <div style={{ height:1, background:`linear-gradient(90deg,transparent,rgba(196,164,90,0.3),transparent)`,
+            margin:"10px 0" }} />
+          <p style={{ color:"rgba(255,255,255,0.45)", fontSize:"0.75rem", lineHeight:1.8,
+            textAlign:"center", fontStyle:"italic" }}>
+            "Dan di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu dari jenismu sendiri, agar kamu cenderung dan merasa tenteram kepadanya, dan Dia menjadikan di antaramu rasa kasih dan sayang."
+          </p>
+        </div>
+
         {loading ? (
-          <div className="flex items-center gap-2 text-sky-400 py-8 justify-center">
-            <div className="w-4 h-4 rounded-full border-2 border-sky-400 border-t-transparent animate-spin" />
+          <div style={{ textAlign:"center", padding:"48px 0", color:"rgba(255,255,255,0.3)" }}>
+            <div style={{ width:32, height:32, borderRadius:"50%", border:`2px solid ${gold}`,
+              borderTopColor:"transparent", animation:"spin 0.8s linear infinite", margin:"0 auto 12px" }} />
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
             Memuat data...
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-              <StatCard label="Total Budget" value={`Rp ${totalBudget.toLocaleString("id-ID")}`} color="#0284C7" hide={hideBalance} />
-              <StatCard label="Terpakai"     value={`Rp ${totalSpent.toLocaleString("id-ID")}`}  color="#0EA5E9" hide={hideBalance} />
-              <StatCard label="Sisa Dana"    value={`Rp ${(totalBudget-totalSpent).toLocaleString("id-ID")}`} color="#0C4A6E" hide={hideBalance} />
-              <StatCard label="Total Tamu"   value={totalGuests} sub={`${hadir} hadir`} color="#0284C7" hide={false} />
+            {/* ── STAT CARDS ───────────────────────────── */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:14 }}>
+              <StatCard label="Total Budget" value={fmt(totalBudget,false)} color={gold} hide={hideBalance} />
+              <StatCard label="Terpakai"     value={fmt(totalSpent,false)}  color="#60A5FA" hide={hideBalance} />
+              <StatCard label="Sisa Dana"    value={fmt(totalBudget-totalSpent,false)} color="#4ADE80" hide={hideBalance} />
+              <StatCard label="Total Tamu"   value={totalGuests} sub={`${hadir} hadir`} color="#F472B6" hide={false} />
             </div>
 
-            {/* Monitoring Dana */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-sky-100 mb-4">
-              <p className="text-xs text-slate-400 uppercase tracking-widest mb-4">Monitoring Dana Terpakai</p>
-              <div className="flex flex-col md:flex-row gap-3 mb-4">
-                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl border transition flex-1"
-                  style={{ borderColor:showSudahDipakai?"#EF4444":"#E2E8F0", background:showSudahDipakai?"#FEF2F2":"#F8FAFC" }}>
-                  <input type="checkbox" checked={showSudahDipakai} onChange={() => setShowSudahDipakai(!showSudahDipakai)} className="w-4 h-4 accent-red-500" />
-                  <div>
-                    <p className="text-sm font-medium text-red-600">Sudah Dipakai</p>
-                    <p className="text-xs font-bold text-red-500">{hideBalance ? "Rp ••••••" : `Rp ${totalSudahDipakai.toLocaleString("id-ID")}`}</p>
+            {/* ── MONITORING DANA ──────────────────────── */}
+            <div style={{ ...cardStyle, marginBottom:14 }}>
+              <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
+                letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:12 }}>
+                Monitoring Dana
+              </p>
+              <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:12 }}>
+                <label style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer",
+                  padding:"12px 14px", borderRadius:12,
+                  background:showSudahDipakai?"rgba(239,68,68,0.06)":"rgba(255,255,255,0.02)",
+                  border:showSudahDipakai?"1px solid rgba(239,68,68,0.2)":"1px solid rgba(255,255,255,0.06)" }}>
+                  <input type="checkbox" checked={showSudahDipakai}
+                    onChange={()=>setShowSudahDipakai(!showSudahDipakai)}
+                    style={{ accentColor:"#EF4444", width:16, height:16 }} />
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ color:"#FCA5A5", fontSize:"0.78rem", fontWeight:600, margin:0 }}>Sudah Dipakai</p>
+                    <p style={{ color:"#EF4444", fontSize:"0.72rem", margin:0, fontWeight:700 }}>
+                      {hideBalance ? "Rp ••••••" : fmt(totalSudahDipakai,false)}
+                    </p>
                   </div>
                 </label>
-                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl border transition flex-1"
-                  style={{ borderColor:showBankBSI?"#16A34A":"#E2E8F0", background:showBankBSI?"#F0FDF4":"#F8FAFC" }}>
-                  <input type="checkbox" checked={showBankBSI} onChange={() => setShowBankBSI(!showBankBSI)} className="w-4 h-4 accent-green-600" />
-                  <div>
-                    <p className="text-sm font-medium text-green-700">Dana di Bank BSI</p>
-                    <p className="text-xs font-bold text-green-600">{hideBalance ? "Rp ••••••" : `Rp ${totalBankBSI.toLocaleString("id-ID")}`}</p>
+                <label style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer",
+                  padding:"12px 14px", borderRadius:12,
+                  background:showBankBSI?"rgba(74,222,128,0.06)":"rgba(255,255,255,0.02)",
+                  border:showBankBSI?"1px solid rgba(74,222,128,0.2)":"1px solid rgba(255,255,255,0.06)" }}>
+                  <input type="checkbox" checked={showBankBSI}
+                    onChange={()=>setShowBankBSI(!showBankBSI)}
+                    style={{ accentColor:"#4ADE80", width:16, height:16 }} />
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ color:"#86EFAC", fontSize:"0.78rem", fontWeight:600, margin:0 }}>Dana di Bank BSI</p>
+                    <p style={{ color:"#4ADE80", fontSize:"0.72rem", margin:0, fontWeight:700 }}>
+                      {hideBalance ? "Rp ••••••" : fmt(totalBankBSI,false)}
+                    </p>
                   </div>
                 </label>
               </div>
+
               {totalSpent > 0 && (
-                <div className="mb-4">
-                  <div className="w-full h-5 bg-slate-100 rounded-full overflow-hidden flex">
-                    {showSudahDipakai && totalSudahDipakai > 0 && (
-                      <div className="h-full flex items-center justify-center transition-all duration-700"
-                        style={{ width:`${(totalSudahDipakai/totalSpent)*100}%`, background:"linear-gradient(90deg,#EF4444,#F87171)", minWidth:"2px" }}>
-                        {(totalSudahDipakai/totalSpent) > 0.15 && <span className="text-white text-xs font-medium px-1">{Math.round((totalSudahDipakai/totalSpent)*100)}%</span>}
-                      </div>
-                    )}
-                    {showBankBSI && totalBankBSI > 0 && (
-                      <div className="h-full flex items-center justify-center transition-all duration-700"
-                        style={{ width:`${(totalBankBSI/totalSpent)*100}%`, background:"linear-gradient(90deg,#16A34A,#4ADE80)", minWidth:"2px" }}>
-                        {(totalBankBSI/totalSpent) > 0.15 && <span className="text-white text-xs font-medium px-1">{Math.round((totalBankBSI/totalSpent)*100)}%</span>}
-                      </div>
-                    )}
-                  </div>
+                <div style={{ height:8, background:"rgba(255,255,255,0.06)",
+                  borderRadius:99, overflow:"hidden", display:"flex", marginBottom:12 }}>
+                  {showSudahDipakai && totalSudahDipakai>0 && (
+                    <div style={{ width:`${(totalSudahDipakai/totalSpent)*100}%`,
+                      background:"linear-gradient(90deg,#EF4444,#F87171)",
+                      height:"100%", minWidth:2, transition:"width 0.6s" }} />
+                  )}
+                  {showBankBSI && totalBankBSI>0 && (
+                    <div style={{ width:`${(totalBankBSI/totalSpent)*100}%`,
+                      background:"linear-gradient(90deg,#16A34A,#4ADE80)",
+                      height:"100%", minWidth:2, transition:"width 0.6s" }} />
+                  )}
                 </div>
               )}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                <div className="flex gap-3">
-                  {showSudahDipakai && <div className="flex items-center gap-1.5 text-xs"><div className="w-3 h-3 rounded-full bg-red-400" /><span className="text-slate-500">Dipakai</span></div>}
-                  {showBankBSI && <div className="flex items-center gap-1.5 text-xs"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-slate-500">Bank BSI</span></div>}
+
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center",
+                paddingTop:10, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ display:"flex", gap:12 }}>
+                  {showSudahDipakai && <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                    <div style={{ width:8, height:8, borderRadius:"50%", background:"#EF4444" }} />
+                    <span style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.35)" }}>Dipakai</span>
+                  </div>}
+                  {showBankBSI && <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                    <div style={{ width:8, height:8, borderRadius:"50%", background:"#4ADE80" }} />
+                    <span style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.35)" }}>Bank BSI</span>
+                  </div>}
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-slate-400">Total Monitoring</p>
-                  <p className="text-lg font-bold text-sky-900">{hideBalance ? "Rp ••••••" : `Rp ${monitoringTotal.toLocaleString("id-ID")}`}</p>
+                <div style={{ textAlign:"right" }}>
+                  <p style={{ fontSize:"0.6rem", color:"rgba(255,255,255,0.25)", margin:0 }}>Total</p>
+                  <p style={{ fontSize:"1rem", fontWeight:700, color:gold, margin:0 }}>
+                    {hideBalance ? "Rp ••••••" : fmt(monitoringTotal,false)}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Progress */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-sky-100">
-                <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Persiapan</p>
-                <h2 className="font-semibold text-sky-900 mb-3 text-sm">Progress Planning</h2>
-                <div className="flex justify-between text-xs text-slate-500 mb-2"><span>{planningDone} selesai</span><span>{planningTotal} total</span></div>
-                <div className="w-full bg-sky-100 rounded-full h-2.5">
-                  <div className="h-2.5 rounded-full" style={{ width:`${progressPlanning}%`, background:"linear-gradient(90deg,#0284C7,#38BDF8)" }} />
+            {/* ── PROGRESS ─────────────────────────────── */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:14 }}>
+              <div style={cardStyle}>
+                <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
+                  letterSpacing:"0.15em", textTransform:"uppercase", marginBottom:8 }}>Planning</p>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                  <span style={{ fontSize:"0.72rem", color:"rgba(255,255,255,0.4)" }}>{planningDone} selesai</span>
+                  <span style={{ fontSize:"0.72rem", color:gold, fontWeight:700 }}>{progressPlanning}%</span>
                 </div>
-                <p className="text-right text-xs mt-1 text-sky-600 font-medium">{progressPlanning}%</p>
+                <div style={{ height:6, background:"rgba(255,255,255,0.06)", borderRadius:99, overflow:"hidden" }}>
+                  <div style={{ height:"100%", width:`${progressPlanning}%`, borderRadius:99,
+                    background:`linear-gradient(90deg,${gold},${goldLight})`, transition:"width 0.8s" }} />
+                </div>
+                <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.2)", marginTop:6 }}>
+                  {planningTotal} total tugas
+                </p>
               </div>
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-sky-100">
-                <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Keuangan</p>
-                <h2 className="font-semibold text-sky-900 mb-3 text-sm">Total Realisasi Budget</h2>
-                <div className="flex justify-between text-xs text-slate-500 mb-2">
-                  <span>{hideBalance ? "••••••" : `Rp ${totalSpent.toLocaleString("id-ID")}`}</span>
-                  <span>{hideBalance ? "••••••" : `Rp ${totalBudget.toLocaleString("id-ID")}`}</span>
+              <div style={cardStyle}>
+                <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
+                  letterSpacing:"0.15em", textTransform:"uppercase", marginBottom:8 }}>Budget</p>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                  <span style={{ fontSize:"0.72rem", color:"rgba(255,255,255,0.4)" }}>Realisasi</span>
+                  <span style={{ fontSize:"0.72rem", fontWeight:700,
+                    color:persen>90?"#EF4444":persen>70?"#FBBF24":gold }}>{persen}%</span>
                 </div>
-                <div className="w-full bg-sky-100 rounded-full h-2.5">
-                  <div className="h-2.5 rounded-full" style={{ width:`${Math.min(persen,100)}%`, background:persen>90?"linear-gradient(90deg,#EF4444,#F87171)":"linear-gradient(90deg,#0284C7,#38BDF8)" }} />
+                <div style={{ height:6, background:"rgba(255,255,255,0.06)", borderRadius:99, overflow:"hidden" }}>
+                  <div style={{ height:"100%", width:`${Math.min(persen,100)}%`, borderRadius:99,
+                    background:persen>90?"linear-gradient(90deg,#EF4444,#F87171)":
+                      persen>70?"linear-gradient(90deg,#FBBF24,#FCD34D)":
+                      `linear-gradient(90deg,${gold},${goldLight})`,
+                    transition:"width 0.8s" }} />
                 </div>
-                <p className="text-right text-xs mt-1 font-medium" style={{ color:persen>90?"#EF4444":"#0284C7" }}>{persen}%</p>
+                <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.2)", marginTop:6 }}>
+                  {hideBalance ? "•••" : fmt(totalSpent,false)}
+                </p>
               </div>
             </div>
 
-            {/* Chart */}
+            {/* ── KATEGORI TABLE ───────────────────────── */}
             {categoryStats.length > 0 && (
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-sky-100">
-                <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">Analisis Anggaran</p>
-                <h2 className="font-semibold text-sky-900 mb-5 text-sm">Budget vs Realisasi per Kategori</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <div className="md:col-span-1 flex flex-col items-center">
-                    <p className="text-xs text-slate-400 mb-3 uppercase tracking-widest">Proporsi Budget</p>
-                    <DonutChart stats={categoryStats} totalBudget={totalBudget} />
-                  </div>
-                  <div className="md:col-span-2">
-                    <p className="text-xs text-slate-400 mb-3 uppercase tracking-widest">Realisasi</p>
-                    <CategoryChart stats={categoryStats} hide={hideBalance} />
-                  </div>
+              <div style={{ ...cardStyle }}>
+                <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
+                  letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:14 }}>
+                  Budget per Kategori
+                </p>
+
+                {/* Bar chart sederhana */}
+                <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:16 }}>
+                  {categoryStats.map(c => {
+                    const col = getColor(c.cat);
+                    const pct = c.budget>0 ? Math.min((c.spent/c.budget)*100,100) : 0;
+                    return (
+                      <div key={c.cat}>
+                        <div style={{ display:"flex", justifyContent:"space-between",
+                          alignItems:"center", marginBottom:5 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:7 }}>
+                            <div style={{ width:8, height:8, borderRadius:2, background:col.bar, flexShrink:0 }} />
+                            <span style={{ fontSize:"0.75rem", color:"rgba(255,255,255,0.65)" }}>{c.cat}</span>
+                          </div>
+                          <span style={{ fontSize:"0.72rem", fontWeight:700,
+                            color:c.realisasi>100?"#EF4444":c.realisasi>80?"#FBBF24":col.bar }}>
+                            {c.realisasi}%
+                          </span>
+                        </div>
+                        <div style={{ height:5, background:"rgba(255,255,255,0.05)",
+                          borderRadius:99, overflow:"hidden" }}>
+                          <div style={{ height:"100%", width:`${pct}%`, borderRadius:99,
+                            background:c.realisasi>100?"linear-gradient(90deg,#EF4444,#F87171)":
+                              c.realisasi>80?"linear-gradient(90deg,#FBBF24,#FCD34D)":
+                              `linear-gradient(90deg,${col.bar},${col.bar}99)`,
+                            transition:"width 0.8s" }} />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs min-w-[560px]">
+
+                {/* Tabel ringkasan */}
+                <div style={{ overflowX:"auto" }}>
+                  <table style={{ width:"100%", fontSize:"0.7rem", borderCollapse:"collapse", minWidth:400 }}>
                     <thead>
-                      <tr>
-                        <th rowSpan={2} className="text-left pb-2 font-medium text-slate-400 uppercase tracking-widest border-b border-sky-100 pr-3">Kategori</th>
-                        <th rowSpan={2} className="text-right pb-2 font-medium text-slate-400 uppercase tracking-widest border-b border-sky-100 px-3">Budget</th>
-                        <th colSpan={2} className="text-center pb-1 font-medium text-slate-400 uppercase tracking-widest px-3">Terpakai</th>
-                        <th rowSpan={2} className="text-right pb-2 font-medium text-slate-400 uppercase tracking-widest border-b border-sky-100 px-3">Total</th>
-                        <th rowSpan={2} className="text-right pb-2 font-medium text-slate-400 uppercase tracking-widest border-b border-sky-100 px-3">Sisa</th>
-                        <th rowSpan={2} className="text-right pb-2 font-medium text-slate-400 uppercase tracking-widest border-b border-sky-100 pl-3">%</th>
-                      </tr>
-                      <tr>
-                        <th className="text-right pb-2 font-medium text-red-400 uppercase tracking-widest border-b border-sky-100 px-3">Sudah Dipakai</th>
-                        <th className="text-right pb-2 font-medium text-green-600 uppercase tracking-widest border-b border-sky-100 px-3">Bank BSI</th>
+                      <tr style={{ borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+                        {["Kategori","Budget","Dipakai","BSI","Sisa","%"].map(h => (
+                          <th key={h} style={{ textAlign:h==="Kategori"?"left":"right",
+                            padding:"6px 8px", color:"rgba(255,255,255,0.25)",
+                            fontWeight:500, letterSpacing:"0.1em", textTransform:"uppercase",
+                            fontSize:"0.6rem" }}>{h}</th>
+                        ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-sky-50">
-                      {categoryStats.map((c) => (
-                        <tr key={c.cat} className="hover:bg-sky-50 transition">
-                          <td className="py-2 font-medium text-slate-700 pr-3">
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background:getColor(c.cat).bar }} />
-                              {c.cat}
+                    <tbody>
+                      {categoryStats.map(c => (
+                        <tr key={c.cat} style={{ borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
+                          <td style={{ padding:"8px 8px", color:"rgba(255,255,255,0.65)" }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                              <div style={{ width:6, height:6, borderRadius:2,
+                                background:getColor(c.cat).bar, flexShrink:0 }} />
+                              <span style={{ overflow:"hidden", textOverflow:"ellipsis",
+                                whiteSpace:"nowrap", maxWidth:80 }}>{c.cat}</span>
                             </div>
                           </td>
-                          <td className="py-2 text-right text-slate-500 px-3">{hideBalance ? "••••••" : `Rp ${c.budget.toLocaleString("id-ID")}`}</td>
-                          <td className="py-2 text-right px-3"><span className={c.sudahDipakai>0?"text-red-500 font-medium":"text-slate-300"}>{hideBalance ? "••••••" : `Rp ${c.sudahDipakai.toLocaleString("id-ID")}`}</span></td>
-                          <td className="py-2 text-right px-3"><span className={c.bankBSI>0?"text-green-600 font-medium":"text-slate-300"}>{hideBalance ? "••••••" : `Rp ${c.bankBSI.toLocaleString("id-ID")}`}</span></td>
-                          <td className="py-2 text-right text-sky-600 font-medium px-3">{hideBalance ? "••••••" : `Rp ${c.spent.toLocaleString("id-ID")}`}</td>
-                          <td className={`py-2 text-right font-medium px-3 ${c.budget-c.spent<0?"text-red-500":"text-green-600"}`}>{hideBalance ? "••••••" : `Rp ${(c.budget-c.spent).toLocaleString("id-ID")}`}</td>
-                          <td className={`py-2 text-right font-bold pl-3 ${c.realisasi>100?"text-red-500":c.realisasi>80?"text-amber-500":"text-sky-600"}`}>{c.realisasi}%</td>
+                          <td style={{ textAlign:"right", padding:"8px 8px",
+                            color:"rgba(255,255,255,0.4)" }}>
+                            {hideBalance?"•••":fmt(c.budget,false).replace("Rp ","")}
+                          </td>
+                          <td style={{ textAlign:"right", padding:"8px 8px",
+                            color:c.sudahDipakai>0?"#FCA5A5":"rgba(255,255,255,0.2)" }}>
+                            {hideBalance?"•••":fmt(c.sudahDipakai,false).replace("Rp ","")}
+                          </td>
+                          <td style={{ textAlign:"right", padding:"8px 8px",
+                            color:c.bankBSI>0?"#86EFAC":"rgba(255,255,255,0.2)" }}>
+                            {hideBalance?"•••":fmt(c.bankBSI,false).replace("Rp ","")}
+                          </td>
+                          <td style={{ textAlign:"right", padding:"8px 8px",
+                            color:c.budget-c.spent<0?"#EF4444":"#4ADE80" }}>
+                            {hideBalance?"•••":fmt(c.budget-c.spent,false).replace("Rp ","")}
+                          </td>
+                          <td style={{ textAlign:"right", padding:"8px 8px", fontWeight:700,
+                            color:c.realisasi>100?"#EF4444":c.realisasi>80?"#FBBF24":gold }}>
+                            {c.realisasi}%
+                          </td>
                         </tr>
                       ))}
-                      <tr className="font-semibold text-sky-900 border-t-2 border-sky-200 bg-sky-50">
-                        <td className="pt-3 pb-2 pr-3">Total</td>
-                        <td className="pt-3 pb-2 text-right px-3">{hideBalance ? "••••••" : `Rp ${grandBudget.toLocaleString("id-ID")}`}</td>
-                        <td className="pt-3 pb-2 text-right px-3 text-red-500">{hideBalance ? "••••••" : `Rp ${grandSudahDipakai.toLocaleString("id-ID")}`}</td>
-                        <td className="pt-3 pb-2 text-right px-3 text-green-600">{hideBalance ? "••••••" : `Rp ${grandBankBSI.toLocaleString("id-ID")}`}</td>
-                        <td className="pt-3 pb-2 text-right px-3 text-sky-600">{hideBalance ? "••••••" : `Rp ${grandSpent.toLocaleString("id-ID")}`}</td>
-                        <td className={`pt-3 pb-2 text-right px-3 ${grandBudget-grandSpent<0?"text-red-500":"text-green-600"}`}>{hideBalance ? "••••••" : `Rp ${(grandBudget-grandSpent).toLocaleString("id-ID")}`}</td>
-                        <td className={`pt-3 pb-2 text-right pl-3 ${persen>100?"text-red-500":persen>80?"text-amber-500":"text-sky-600"}`}>{persen}%</td>
+                      <tr style={{ borderTop:`1px solid rgba(196,164,90,0.2)` }}>
+                        <td style={{ padding:"8px 8px", color:gold, fontWeight:700 }}>Total</td>
+                        <td style={{ textAlign:"right", padding:"8px 8px", color:gold, fontWeight:700 }}>
+                          {hideBalance?"•••":fmt(grandBudget,false).replace("Rp ","")}
+                        </td>
+                        <td style={{ textAlign:"right", padding:"8px 8px", color:"#FCA5A5", fontWeight:700 }}>
+                          {hideBalance?"•••":fmt(grandSudahDipakai,false).replace("Rp ","")}
+                        </td>
+                        <td style={{ textAlign:"right", padding:"8px 8px", color:"#86EFAC", fontWeight:700 }}>
+                          {hideBalance?"•••":fmt(grandBankBSI,false).replace("Rp ","")}
+                        </td>
+                        <td style={{ textAlign:"right", padding:"8px 8px",
+                          color:grandBudget-grandSpent<0?"#EF4444":"#4ADE80", fontWeight:700 }}>
+                          {hideBalance?"•••":fmt(grandBudget-grandSpent,false).replace("Rp ","")}
+                        </td>
+                        <td style={{ textAlign:"right", padding:"8px 8px", fontWeight:700,
+                          color:persen>100?"#EF4444":persen>80?"#FBBF24":gold }}>
+                          {persen}%
+                        </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-                <div className="flex flex-wrap gap-4 mt-4 pt-3 border-t border-sky-50 text-xs text-slate-500">
-                  <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-red-400" />Sudah Dipakai</div>
-                  <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-green-500" />Dana di Bank BSI</div>
-                  <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-sky-500" />Total Terpakai</div>
+
+                {/* Legend */}
+                <div style={{ display:"flex", gap:12, marginTop:12, flexWrap:"wrap" }}>
+                  {[["#FCA5A5","Sudah Dipakai"],["#86EFAC","Bank BSI"],[gold,"Total"]].map(([c,l])=>(
+                    <div key={l} style={{ display:"flex", alignItems:"center", gap:5 }}>
+                      <div style={{ width:8, height:8, borderRadius:2, background:c }} />
+                      <span style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.3)" }}>{l}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
