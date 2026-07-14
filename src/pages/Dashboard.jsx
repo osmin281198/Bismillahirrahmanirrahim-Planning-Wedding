@@ -36,10 +36,10 @@ function FloatingMusic() {
       }
     };
     document.addEventListener("touchstart", tryPlay, {once:true});
-    document.addEventListener("click",      tryPlay, {once:true});
+    document.addEventListener("click", tryPlay, {once:true});
     return () => {
       document.removeEventListener("touchstart", tryPlay);
-      document.removeEventListener("click",      tryPlay);
+      document.removeEventListener("click", tryPlay);
     };
   }, [started]);
 
@@ -69,7 +69,7 @@ function FloatingMusic() {
           display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
           <span style={{ fontSize:"0.6rem", color:gold }}>🔊</span>
           <input type="range" min={0} max={1} step={0.01} value={volume}
-            onChange={e => { const v=parseFloat(e.target.value); setVolume(v); if(audioRef.current) audioRef.current.volume=v; }}
+            onChange={e=>{const v=parseFloat(e.target.value);setVolume(v);if(audioRef.current)audioRef.current.volume=v;}}
             style={{ writingMode:"vertical-lr", direction:"rtl", height:70, accentColor:gold }} />
           <span style={{ fontSize:"0.6rem", color:gold }}>🔈</span>
         </div>
@@ -120,12 +120,12 @@ function StatCard({ label, value, sub, color, hide }) {
     <div style={{ background:"rgba(255,255,255,0.04)", borderRadius:16,
       padding:"16px 14px", border:"1px solid rgba(255,255,255,0.08)" }}>
       <p style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.62rem",
-        letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:6 }}>{label}</p>
+        letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:6, margin:0, marginBottom:6 }}>{label}</p>
       <p style={{ fontSize:"1rem", fontWeight:700, color:color||gold, margin:0,
         overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
         {hide ? "Rp ••••••" : value}
       </p>
-      {sub && <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.25)", marginTop:4, margin:0 }}>
+      {sub && <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.25)", marginTop:4, margin:0, marginTop:4 }}>
         {hide ? "•••" : sub}
       </p>}
     </div>
@@ -153,7 +153,7 @@ export default function Dashboard() {
   const [showSudahDipakai, setShowSudahDipakai]   = useState(true);
   const [showBankBSI, setShowBankBSI]             = useState(true);
   const [hideBalance, setHideBalance]             = useState(false);
-  const [guestSlug, setGuestSlug]                 = useState("");
+  const [guestSlug, setGuestSlug]                 = useState("preview");
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -197,13 +197,17 @@ export default function Dashboard() {
 
     if (!guestsRes.error && guestsRes.data) {
       setTotalGuests(guestsRes.data.length);
-      if (guestsRes.data.length>0) setGuestSlug(guestsRes.data[0].slug||"preview");
+      if (guestsRes.data.length>0 && guestsRes.data[0].slug) {
+        setGuestSlug(guestsRes.data[0].slug);
+      }
     }
     if (!planningRes.error && planningRes.data) {
       setPlanningTotal(planningRes.data.length);
       setPlanningDone(planningRes.data.filter(t=>t.done).length);
     }
-    if (!rsvpRes.error && rsvpRes.data) setHadir(rsvpRes.data.filter(r=>r.attendance==="Hadir").length);
+    if (!rsvpRes.error && rsvpRes.data) {
+      setHadir(rsvpRes.data.filter(r=>r.attendance==="Hadir").length);
+    }
     setLoading(false);
   };
 
@@ -230,12 +234,6 @@ export default function Dashboard() {
     borderRadius:16, padding:"16px",
   };
 
-  // ✅ Buka undangan di tab baru
-  const handleLihatUndangan = () => {
-    const slug = guestSlug || "preview";
-    window.open(`/invitation/${slug}`, "_blank");
-  };
-
   return (
     <div style={{ display:"flex", minHeight:"100vh", background:"#0F172A",
       fontFamily:"'Inter',sans-serif", maxWidth:"100vw", overflow:"hidden" }}>
@@ -245,7 +243,7 @@ export default function Dashboard() {
       <main style={{ flex:1, minWidth:0, width:0,
         padding:"68px 14px 32px", overflowX:"hidden", boxSizing:"border-box" }}>
 
-        {/* ── HERO ─────────────────────────────────────── */}
+        {/* HERO */}
         <div style={{ borderRadius:20, overflow:"hidden", marginBottom:16,
           background:"linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#2D3748 100%)",
           border:`1px solid rgba(196,164,90,0.2)`,
@@ -259,7 +257,8 @@ export default function Dashboard() {
               {heroPic ? (
                 <img src={heroPic} alt="Foto"
                   style={{ width:56, height:56, objectFit:"cover", borderRadius:14, flexShrink:0,
-                    border:`2px solid rgba(196,164,90,0.4)` }} />
+                    border:`2px solid rgba(196,164,90,0.4)` }}
+                  onError={e=>e.target.style.display="none"} />
               ) : (
                 <div style={{ width:56, height:56, borderRadius:14, flexShrink:0,
                   background:"rgba(196,164,90,0.1)", border:`2px dashed rgba(196,164,90,0.3)`,
@@ -267,13 +266,13 @@ export default function Dashboard() {
               )}
               <div style={{ flex:1, minWidth:0 }}>
                 <p style={{ color:"rgba(196,164,90,0.7)", fontSize:"0.58rem",
-                  letterSpacing:"0.25em", textTransform:"uppercase", marginBottom:3 }}>Wedding Dashboard</p>
+                  letterSpacing:"0.25em", textTransform:"uppercase", margin:"0 0 3px" }}>Wedding Dashboard</p>
                 <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1.4rem",
                   fontWeight:600, color:"white", margin:0, lineHeight:1.2,
                   overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                   {groom&&bride ? `${groom.split(" ")[0]} & ${bride.split(" ")[0]}` : "Wedding Planner"}
                 </h1>
-                <p style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.65rem", marginTop:3,
+                <p style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.65rem", margin:"3px 0 0",
                   overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
                   {formatDate(weddingDate)}{weddingTime?` • ${weddingTime}`:""}
                 </p>
@@ -286,55 +285,51 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* ✅ Tombol aksi — pakai onClick bukan href */}
-            <div style={{ padding:"0 16px 16px", display:"flex", gap:8, flexWrap:"wrap" }}>
-              <button
-                onClick={handleLihatUndangan}
-                style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 16px",
-                  borderRadius:10, border:"none", cursor:"pointer", flexShrink:0,
+            {/* ✅ Tombol — pakai div bukan form, pastikan onClick jalan */}
+            <div style={{ padding:"0 16px 16px", display:"flex", gap:8 }}>
+              <div
+                onClick={() => window.open(`/invitation/${guestSlug}`, "_blank")}
+                style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center",
+                  gap:6, padding:"10px 14px", borderRadius:10, cursor:"pointer",
                   background:`linear-gradient(135deg,${gold},${goldLight})`,
                   boxShadow:`0 4px 14px rgba(196,164,90,0.35)`,
-                  color:"#0F172A", fontSize:"0.78rem", fontWeight:700 }}>
+                  color:"#0F172A", fontSize:"0.78rem", fontWeight:700,
+                  userSelect:"none" }}>
                 👁 Lihat Undangan
-              </button>
-              <button
-                onClick={() => setHideBalance(prev => !prev)}
-                style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 14px",
-                  borderRadius:10, border:`1px solid rgba(196,164,90,0.25)`,
-                  background:"rgba(196,164,90,0.1)", cursor:"pointer",
-                  color:"rgba(196,164,90,0.9)", fontSize:"0.78rem", fontWeight:600 }}>
+              </div>
+              <div
+                onClick={() => setHideBalance(h => !h)}
+                style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center",
+                  gap:6, padding:"10px 14px", borderRadius:10, cursor:"pointer",
+                  border:`1px solid rgba(196,164,90,0.25)`,
+                  background:"rgba(196,164,90,0.1)",
+                  color:"rgba(196,164,90,0.9)", fontSize:"0.78rem", fontWeight:600,
+                  userSelect:"none" }}>
                 {hideBalance ? "👁 Tampilkan" : "🙈 Sembunyikan"}
-              </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* ── DOA / AYAT ───────────────────────────────── */}
+        {/* DOA PAGI — tanpa latin */}
         <div style={{ ...cardStyle, marginBottom:16,
           background:"linear-gradient(135deg,rgba(196,164,90,0.08),rgba(196,164,90,0.02))",
           border:`1px solid rgba(196,164,90,0.2)` }}>
           <p style={{ color:gold, fontSize:"0.58rem", letterSpacing:"0.22em",
-            textTransform:"uppercase", textAlign:"center", marginBottom:12 }}>Doa Pagi</p>
+            textTransform:"uppercase", textAlign:"center", marginBottom:14 }}>Doa Pagi</p>
 
-          {/* ✅ Teks arab doa pagi */}
-          <p style={{ fontFamily:"'Amiri',serif", direction:"rtl", fontSize:"1.05rem",
-            color:"white", lineHeight:2.3, textAlign:"center", marginBottom:12 }}>
+          {/* ✅ Arab saja, tanpa latin */}
+          <p style={{ fontFamily:"'Amiri',serif", direction:"rtl", fontSize:"1.1rem",
+            color:"white", lineHeight:2.3, textAlign:"center", marginBottom:14 }}>
             اَللّٰهُمَّ إِنِّى أَعُوْذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ، وَأَعُوْذُ بِكَ مِنَ الْعَجْزِ وَالْكَسَلِ، وَأَعُوْذُ بِكَ مِنَ الْجُبْنِ وَالْبُخْلِ، وَأَعُوْذُ بِكَ مِنْ غَلَبَةِ الدَّيْنِ وَقَهْرِ الرِّجَالِ
           </p>
 
           <div style={{ height:1, background:`linear-gradient(90deg,transparent,rgba(196,164,90,0.3),transparent)`,
-            margin:"10px 0" }} />
+            margin:"0 0 14px" }} />
 
-          <p style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.72rem", lineHeight:1.8,
-            textAlign:"center", fontStyle:"italic", marginBottom:8 }}>
-            Allāhumma innī a'ūdhu bika minal hammi wal ḥazan, wa a'ūdhu bika minal 'ajzi wal kasal, wa a'ūdhu bika minal jubni wal bukhl, wa a'ūdhu bika min ghalabatid daini wa qahrir rijāl.
-          </p>
-
-          <div style={{ height:1, background:`linear-gradient(90deg,transparent,rgba(196,164,90,0.15),transparent)`,
-            margin:"8px 0" }} />
-
-          <p style={{ color:"rgba(255,255,255,0.45)", fontSize:"0.73rem", lineHeight:1.85,
-            textAlign:"center", fontStyle:"italic" }}>
+          {/* ✅ Terjemahan saja */}
+          <p style={{ color:"rgba(255,255,255,0.5)", fontSize:"0.78rem", lineHeight:1.85,
+            textAlign:"center", fontStyle:"italic", margin:0 }}>
             "Ya Allah, sesungguhnya aku berlindung kepada-Mu dari kedukaan dan kesedihan, dari kelemahan dan kemalasan, dari sifat pengecut dan kikir, dan aku berlindung kepada-Mu dari lilitan utang dan penindasan orang lain."
           </p>
         </div>
@@ -348,49 +343,48 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            {/* ── STAT CARDS ───────────────────────────── */}
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr",
-              gap:10, marginBottom:14 }}>
-              <StatCard label="Total Budget" value={fmtRp(totalBudget)} color={gold}      hide={hideBalance} />
-              <StatCard label="Terpakai"     value={fmtRp(totalSpent)}  color="#60A5FA"   hide={hideBalance} />
+            {/* STAT CARDS */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:14 }}>
+              <StatCard label="Total Budget" value={fmtRp(totalBudget)} color={gold}    hide={hideBalance} />
+              <StatCard label="Terpakai"     value={fmtRp(totalSpent)}  color="#60A5FA" hide={hideBalance} />
               <StatCard label="Sisa Dana"    value={fmtRp(totalBudget-totalSpent)} color="#4ADE80" hide={hideBalance} />
               <StatCard label="Total Tamu"   value={totalGuests} sub={`${hadir} hadir`} color="#F472B6" hide={false} />
             </div>
 
-            {/* ── MONITORING DANA ──────────────────────── */}
+            {/* MONITORING DANA */}
             <div style={{ ...cardStyle, marginBottom:14 }}>
               <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
                 letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:12 }}>Monitoring Dana</p>
-
               <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:12 }}>
-                <label style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer",
-                  padding:"12px 14px", borderRadius:12,
-                  background:showSudahDipakai?"rgba(239,68,68,0.06)":"rgba(255,255,255,0.02)",
-                  border:showSudahDipakai?"1px solid rgba(239,68,68,0.2)":"1px solid rgba(255,255,255,0.06)" }}>
-                  <input type="checkbox" checked={showSudahDipakai}
-                    onChange={()=>setShowSudahDipakai(p=>!p)}
-                    style={{ accentColor:"#EF4444", width:16, height:16 }} />
-                  <div style={{ flex:1 }}>
-                    <p style={{ color:"#FCA5A5", fontSize:"0.78rem", fontWeight:600, margin:0 }}>Sudah Dipakai</p>
-                    <p style={{ color:"#EF4444", fontSize:"0.72rem", fontWeight:700, margin:0 }}>
-                      {hideBalance ? "Rp ••••••" : fmtRp(totalSudahDipakai)}
-                    </p>
+                {[
+                  { label:"Sudah Dipakai", val:totalSudahDipakai, checked:showSudahDipakai,
+                    toggle:()=>setShowSudahDipakai(p=>!p), textColor:"#FCA5A5", numColor:"#EF4444",
+                    bg:"rgba(239,68,68,0.06)", border:"rgba(239,68,68,0.2)", accent:"#EF4444" },
+                  { label:"Dana di Bank BSI", val:totalBankBSI, checked:showBankBSI,
+                    toggle:()=>setShowBankBSI(p=>!p), textColor:"#86EFAC", numColor:"#4ADE80",
+                    bg:"rgba(74,222,128,0.06)", border:"rgba(74,222,128,0.2)", accent:"#4ADE80" },
+                ].map(item => (
+                  <div key={item.label}
+                    onClick={item.toggle}
+                    style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer",
+                      padding:"12px 14px", borderRadius:12,
+                      background:item.checked?item.bg:"rgba(255,255,255,0.02)",
+                      border:`1px solid ${item.checked?item.border:"rgba(255,255,255,0.06)"}`,
+                      userSelect:"none" }}>
+                    <div style={{ width:18, height:18, borderRadius:4, flexShrink:0,
+                      background:item.checked?item.accent:"rgba(255,255,255,0.1)",
+                      border:`2px solid ${item.checked?item.accent:"rgba(255,255,255,0.2)"}`,
+                      display:"flex", alignItems:"center", justifyContent:"center" }}>
+                      {item.checked && <span style={{ color:"white", fontSize:"0.7rem", fontWeight:700 }}>✓</span>}
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <p style={{ color:item.textColor, fontSize:"0.78rem", fontWeight:600, margin:0 }}>{item.label}</p>
+                      <p style={{ color:item.numColor, fontSize:"0.72rem", fontWeight:700, margin:0 }}>
+                        {hideBalance ? "Rp ••••••" : fmtRp(item.val)}
+                      </p>
+                    </div>
                   </div>
-                </label>
-                <label style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer",
-                  padding:"12px 14px", borderRadius:12,
-                  background:showBankBSI?"rgba(74,222,128,0.06)":"rgba(255,255,255,0.02)",
-                  border:showBankBSI?"1px solid rgba(74,222,128,0.2)":"1px solid rgba(255,255,255,0.06)" }}>
-                  <input type="checkbox" checked={showBankBSI}
-                    onChange={()=>setShowBankBSI(p=>!p)}
-                    style={{ accentColor:"#4ADE80", width:16, height:16 }} />
-                  <div style={{ flex:1 }}>
-                    <p style={{ color:"#86EFAC", fontSize:"0.78rem", fontWeight:600, margin:0 }}>Dana di Bank BSI</p>
-                    <p style={{ color:"#4ADE80", fontSize:"0.72rem", fontWeight:700, margin:0 }}>
-                      {hideBalance ? "Rp ••••••" : fmtRp(totalBankBSI)}
-                    </p>
-                  </div>
-                </label>
+                ))}
               </div>
 
               {totalSpent > 0 && (
@@ -411,7 +405,7 @@ export default function Dashboard() {
 
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center",
                 paddingTop:10, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-                <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                <div style={{ display:"flex", gap:10 }}>
                   {showSudahDipakai && (
                     <div style={{ display:"flex", alignItems:"center", gap:5 }}>
                       <div style={{ width:8, height:8, borderRadius:"50%", background:"#EF4444" }} />
@@ -434,7 +428,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* ── PROGRESS ─────────────────────────────── */}
+            {/* PROGRESS */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:14 }}>
               <div style={cardStyle}>
                 <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
@@ -447,9 +441,7 @@ export default function Dashboard() {
                   <div style={{ height:"100%", width:`${progressPlanning}%`, borderRadius:99,
                     background:`linear-gradient(90deg,${gold},${goldLight})`, transition:"width 0.8s" }} />
                 </div>
-                <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.2)", marginTop:6 }}>
-                  {planningTotal} total tugas
-                </p>
+                <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.2)", marginTop:6 }}>{planningTotal} total</p>
               </div>
               <div style={cardStyle}>
                 <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
@@ -472,13 +464,11 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* ── KATEGORI ─────────────────────────────── */}
+            {/* KATEGORI */}
             {categoryStats.length > 0 && (
               <div style={cardStyle}>
                 <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
-                  letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:14 }}>
-                  Budget per Kategori
-                </p>
+                  letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:14 }}>Budget per Kategori</p>
 
                 <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:16 }}>
                   {categoryStats.map(c => {
@@ -489,8 +479,7 @@ export default function Dashboard() {
                         <div style={{ display:"flex", justifyContent:"space-between",
                           alignItems:"center", marginBottom:5 }}>
                           <div style={{ display:"flex", alignItems:"center", gap:7 }}>
-                            <div style={{ width:8, height:8, borderRadius:2,
-                              background:col.bar, flexShrink:0 }} />
+                            <div style={{ width:8, height:8, borderRadius:2, background:col.bar, flexShrink:0 }} />
                             <span style={{ fontSize:"0.75rem", color:"rgba(255,255,255,0.65)" }}>{c.cat}</span>
                           </div>
                           <span style={{ fontSize:"0.72rem", fontWeight:700,
@@ -498,8 +487,7 @@ export default function Dashboard() {
                             {c.realisasi}%
                           </span>
                         </div>
-                        <div style={{ height:5, background:"rgba(255,255,255,0.05)",
-                          borderRadius:99, overflow:"hidden" }}>
+                        <div style={{ height:5, background:"rgba(255,255,255,0.05)", borderRadius:99, overflow:"hidden" }}>
                           <div style={{ height:"100%", width:`${pct}%`, borderRadius:99,
                             background:c.realisasi>100?"linear-gradient(90deg,#EF4444,#F87171)":
                               c.realisasi>80?"linear-gradient(90deg,#FBBF24,#FCD34D)":
@@ -512,8 +500,7 @@ export default function Dashboard() {
                 </div>
 
                 <div style={{ overflowX:"auto" }}>
-                  <table style={{ width:"100%", fontSize:"0.68rem",
-                    borderCollapse:"collapse", minWidth:380 }}>
+                  <table style={{ width:"100%", fontSize:"0.68rem", borderCollapse:"collapse", minWidth:380 }}>
                     <thead>
                       <tr style={{ borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
                         {["Kategori","Budget","Dipakai","BSI","Sisa","%"].map(h=>(
