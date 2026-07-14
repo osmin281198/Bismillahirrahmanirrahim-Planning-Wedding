@@ -120,12 +120,12 @@ function StatCard({ label, value, sub, color, hide }) {
     <div style={{ background:"rgba(255,255,255,0.04)", borderRadius:16,
       padding:"16px 14px", border:"1px solid rgba(255,255,255,0.08)" }}>
       <p style={{ color:"rgba(255,255,255,0.35)", fontSize:"0.62rem",
-        letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:6, margin:0, marginBottom:6 }}>{label}</p>
+        letterSpacing:"0.18em", textTransform:"uppercase", margin:"0 0 6px" }}>{label}</p>
       <p style={{ fontSize:"1rem", fontWeight:700, color:color||gold, margin:0,
         overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
         {hide ? "Rp ••••••" : value}
       </p>
-      {sub && <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.25)", marginTop:4, margin:0, marginTop:4 }}>
+      {sub && <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.25)", margin:"4px 0 0" }}>
         {hide ? "•••" : sub}
       </p>}
     </div>
@@ -285,18 +285,20 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* ✅ Tombol — pakai div bukan form, pastikan onClick jalan */}
+            {/* ✅ Tombol — tag <a> untuk lihat undangan, div untuk sembunyikan */}
             <div style={{ padding:"0 16px 16px", display:"flex", gap:8 }}>
-              <div
-                onClick={() => window.open(`/invitation/${guestSlug}`, "_blank")}
+              <a
+                href={`/invitation/${guestSlug}`}
+                target="_blank"
+                rel="noreferrer"
                 style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center",
                   gap:6, padding:"10px 14px", borderRadius:10, cursor:"pointer",
                   background:`linear-gradient(135deg,${gold},${goldLight})`,
                   boxShadow:`0 4px 14px rgba(196,164,90,0.35)`,
                   color:"#0F172A", fontSize:"0.78rem", fontWeight:700,
-                  userSelect:"none" }}>
+                  textDecoration:"none", userSelect:"none" }}>
                 👁 Lihat Undangan
-              </div>
+              </a>
               <div
                 onClick={() => setHideBalance(h => !h)}
                 style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center",
@@ -311,23 +313,18 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* DOA PAGI — tanpa latin */}
+        {/* DOA PAGI */}
         <div style={{ ...cardStyle, marginBottom:16,
           background:"linear-gradient(135deg,rgba(196,164,90,0.08),rgba(196,164,90,0.02))",
           border:`1px solid rgba(196,164,90,0.2)` }}>
           <p style={{ color:gold, fontSize:"0.58rem", letterSpacing:"0.22em",
-            textTransform:"uppercase", textAlign:"center", marginBottom:14 }}>Doa Pagi</p>
-
-          {/* ✅ Arab saja, tanpa latin */}
+            textTransform:"uppercase", textAlign:"center", margin:"0 0 14px" }}>Doa Pagi</p>
           <p style={{ fontFamily:"'Amiri',serif", direction:"rtl", fontSize:"1.1rem",
-            color:"white", lineHeight:2.3, textAlign:"center", marginBottom:14 }}>
+            color:"white", lineHeight:2.3, textAlign:"center", margin:"0 0 14px" }}>
             اَللّٰهُمَّ إِنِّى أَعُوْذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ، وَأَعُوْذُ بِكَ مِنَ الْعَجْزِ وَالْكَسَلِ، وَأَعُوْذُ بِكَ مِنَ الْجُبْنِ وَالْبُخْلِ، وَأَعُوْذُ بِكَ مِنْ غَلَبَةِ الدَّيْنِ وَقَهْرِ الرِّجَالِ
           </p>
-
           <div style={{ height:1, background:`linear-gradient(90deg,transparent,rgba(196,164,90,0.3),transparent)`,
             margin:"0 0 14px" }} />
-
-          {/* ✅ Terjemahan saja */}
           <p style={{ color:"rgba(255,255,255,0.5)", fontSize:"0.78rem", lineHeight:1.85,
             textAlign:"center", fontStyle:"italic", margin:0 }}>
             "Ya Allah, sesungguhnya aku berlindung kepada-Mu dari kedukaan dan kesedihan, dari kelemahan dan kemalasan, dari sifat pengecut dan kikir, dan aku berlindung kepada-Mu dari lilitan utang dan penindasan orang lain."
@@ -354,7 +351,7 @@ export default function Dashboard() {
             {/* MONITORING DANA */}
             <div style={{ ...cardStyle, marginBottom:14 }}>
               <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
-                letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:12 }}>Monitoring Dana</p>
+                letterSpacing:"0.2em", textTransform:"uppercase", margin:"0 0 12px" }}>Monitoring Dana</p>
               <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:12 }}>
                 {[
                   { label:"Sudah Dipakai", val:totalSudahDipakai, checked:showSudahDipakai,
@@ -364,13 +361,11 @@ export default function Dashboard() {
                     toggle:()=>setShowBankBSI(p=>!p), textColor:"#86EFAC", numColor:"#4ADE80",
                     bg:"rgba(74,222,128,0.06)", border:"rgba(74,222,128,0.2)", accent:"#4ADE80" },
                 ].map(item => (
-                  <div key={item.label}
-                    onClick={item.toggle}
+                  <div key={item.label} onClick={item.toggle}
                     style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer",
-                      padding:"12px 14px", borderRadius:12,
+                      padding:"12px 14px", borderRadius:12, userSelect:"none",
                       background:item.checked?item.bg:"rgba(255,255,255,0.02)",
-                      border:`1px solid ${item.checked?item.border:"rgba(255,255,255,0.06)"}`,
-                      userSelect:"none" }}>
+                      border:`1px solid ${item.checked?item.border:"rgba(255,255,255,0.06)"}` }}>
                     <div style={{ width:18, height:18, borderRadius:4, flexShrink:0,
                       background:item.checked?item.accent:"rgba(255,255,255,0.1)",
                       border:`2px solid ${item.checked?item.accent:"rgba(255,255,255,0.2)"}`,
@@ -432,7 +427,7 @@ export default function Dashboard() {
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:14 }}>
               <div style={cardStyle}>
                 <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
-                  letterSpacing:"0.15em", textTransform:"uppercase", marginBottom:8 }}>Planning</p>
+                  letterSpacing:"0.15em", textTransform:"uppercase", margin:"0 0 8px" }}>Planning</p>
                 <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
                   <span style={{ fontSize:"0.72rem", color:"rgba(255,255,255,0.4)" }}>{planningDone} selesai</span>
                   <span style={{ fontSize:"0.72rem", color:gold, fontWeight:700 }}>{progressPlanning}%</span>
@@ -441,11 +436,11 @@ export default function Dashboard() {
                   <div style={{ height:"100%", width:`${progressPlanning}%`, borderRadius:99,
                     background:`linear-gradient(90deg,${gold},${goldLight})`, transition:"width 0.8s" }} />
                 </div>
-                <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.2)", marginTop:6 }}>{planningTotal} total</p>
+                <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.2)", margin:"6px 0 0" }}>{planningTotal} total</p>
               </div>
               <div style={cardStyle}>
                 <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
-                  letterSpacing:"0.15em", textTransform:"uppercase", marginBottom:8 }}>Budget</p>
+                  letterSpacing:"0.15em", textTransform:"uppercase", margin:"0 0 8px" }}>Budget</p>
                 <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
                   <span style={{ fontSize:"0.72rem", color:"rgba(255,255,255,0.4)" }}>Realisasi</span>
                   <span style={{ fontSize:"0.72rem", fontWeight:700,
@@ -458,7 +453,7 @@ export default function Dashboard() {
                       `linear-gradient(90deg,${gold},${goldLight})`,
                     transition:"width 0.8s" }} />
                 </div>
-                <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.2)", marginTop:6 }}>
+                <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.2)", margin:"6px 0 0" }}>
                   {hideBalance ? "•••" : fmtRp(totalSpent)}
                 </p>
               </div>
@@ -468,7 +463,7 @@ export default function Dashboard() {
             {categoryStats.length > 0 && (
               <div style={cardStyle}>
                 <p style={{ color:"rgba(255,255,255,0.3)", fontSize:"0.6rem",
-                  letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:14 }}>Budget per Kategori</p>
+                  letterSpacing:"0.2em", textTransform:"uppercase", margin:"0 0 14px" }}>Budget per Kategori</p>
 
                 <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:16 }}>
                   {categoryStats.map(c => {
