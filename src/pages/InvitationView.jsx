@@ -494,7 +494,7 @@ export default function InvitationView() {
     Promise.all([
       supabase.from("settings").select("*").eq("id",1).single(),
       supabase.from("rsvp").select("*").order("id",{ascending:false}),
-    ]).then(([sRes, wRes]) => {
+    ]).then(async ([sRes, wRes]) => {
       if (!sRes.error && sRes.data) setSettings(sRes.data);
       if (!wRes.error && wRes.data) setWishes(wRes.data);
       const nRes = await notesRes;
