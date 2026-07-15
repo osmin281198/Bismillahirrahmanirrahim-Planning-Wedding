@@ -476,6 +476,8 @@ export default function InvitationView() {
   const [wishes, setWishes]               = useState([]);
   const [wishSubmitted, setWishSubmitted] = useState(false);
   const [copied, setCopied]               = useState("");
+  const [gallery, setGallery]             = useState([]);
+  const [lightbox, setLightbox]           = useState(null);
 
   const countdown = useCountdown(settings.wedding_date);
   const guestName = slug?.replace(/-/g," ")?.replace(/\b\w/g,l=>l.toUpperCase()) || "Tamu Undangan";
@@ -488,12 +490,15 @@ export default function InvitationView() {
   }, []);
 
   useEffect(() => {
+    const notesRes = supabase.from("notes").select("photo_url,content,author,type").neq("photo_url","").order("created_at",{ascending:false});
     Promise.all([
       supabase.from("settings").select("*").eq("id",1).single(),
       supabase.from("rsvp").select("*").order("id",{ascending:false}),
     ]).then(([sRes, wRes]) => {
       if (!sRes.error && sRes.data) setSettings(sRes.data);
       if (!wRes.error && wRes.data) setWishes(wRes.data);
+      const nRes = await notesRes;
+      if (!nRes.error && nRes.data) setGallery(nRes.data);
     });
   }, []);
 
@@ -883,6 +888,75 @@ export default function InvitationView() {
           </div>
         </Section>
       </section>
+
+
+      {/* GALERI FOTO */}
+      {gallery.length > 0 && (
+        <section style={{ padding:"20px 20px 40px", background:C.cream }}>
+          <FloralHeader light />
+          <Section>
+            <div style={{ textAlign:"center", marginBottom:20 }}>
+              <p style={{ color:C.gold, fontSize:"0.6rem", letterSpacing:"0.25em",
+                textTransform:"uppercase", marginBottom:6 }}>Galeri</p>
+              <h2 style={{ ...serif, fontSize:"2rem", fontWeight:600, color:C.green1 }}>
+                Momen Berharga
+              </h2>
+              <GoldDivider my={12} />
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+              {gallery.map((g, i) => (
+                <div key={i} onClick={() => setLightbox(g)}
+                  style={{ cursor:"pointer", borderRadius:14, overflow:"hidden",
+                    position:"relative", aspectRatio:"1",
+                    boxShadow:"0 4px 16px rgba(45,80,22,0.2)" }}>
+                  <img src={g.photo_url} alt={g.author||"Foto"}
+                    style={{ width:"100%", height:"100%", objectFit:"cover",
+                      display:"block", transition:"transform 0.3s" }} />
+                  <div style={{ position:"absolute", inset:0,
+                    background:"linear-gradient(to top,rgba(45,80,22,0.7) 0%,transparent 50%)" }} />
+                  {g.author && (
+                    <p style={{ position:"absolute", bottom:8, left:10, right:10,
+                      color:"white", fontSize:"0.65rem", fontWeight:600, margin:0,
+                      overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                      {g.author}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Section>
+          <FloralFooter light />
+        </section>
+      )}
+
+      {/* LIGHTBOX */}
+      {lightbox && (
+        <div onClick={() => setLightbox(null)}
+          style={{ position:"fixed", inset:0, zIndex:100,
+            background:"rgba(0,0,0,0.92)", backdropFilter:"blur(8px)",
+            display:"flex", flexDirection:"column", alignItems:"center",
+            justifyContent:"center", padding:20 }}>
+          <img src={lightbox.photo_url} alt={lightbox.author||"Foto"}
+            style={{ maxWidth:"100%", maxHeight:"70vh", objectFit:"contain",
+              borderRadius:16, boxShadow:"0 20px 60px rgba(0,0,0,0.5)" }} />
+          {lightbox.content && (
+            <div style={{ marginTop:16, textAlign:"center", maxWidth:340 }}>
+              <p style={{ color:"rgba(255,255,255,0.8)", fontSize:"0.85rem",
+                fontStyle:"italic", lineHeight:1.7 }}>"{lightbox.content}"</p>
+              {lightbox.author && (
+                <p style={{ color:"#C4A45A", fontSize:"0.75rem",
+                  fontWeight:600, marginTop:6 }}>— {lightbox.author}</p>
+              )}
+            </div>
+          )}
+          <button onClick={() => setLightbox(null)}
+            style={{ marginTop:20, padding:"10px 24px", borderRadius:99,
+              background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.2)",
+              color:"white", fontSize:"0.82rem", cursor:"pointer" }}>
+            ✕ Tutup
+          </button>
+        </div>
+      )}
 
       {/* WEDDING GIFT */}
       <section style={{ padding:"20px 20px 40px", background:C.cream }}>

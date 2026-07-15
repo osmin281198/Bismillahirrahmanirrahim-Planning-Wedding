@@ -9,6 +9,7 @@ const ALL_NAV = [
   { to:"/planning",  icon:"◉", label:"Planning",   roles:["admin"] },
   { to:"/guests",    icon:"◎", label:"Tamu",       roles:["admin","family"] },
   { to:"/wishes",    icon:"◇", label:"RSVP",       roles:["admin","family"] },
+  { to:"/notes",     icon:"✎", label:"Catatan",    roles:["admin"] },
   { to:"/settings",  icon:"◆", label:"Pengaturan", roles:["admin"] },
 ];
 

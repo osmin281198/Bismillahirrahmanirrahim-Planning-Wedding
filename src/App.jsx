@@ -7,6 +7,7 @@ import Guests         from "./pages/Guests";
 import InvitationView from "./pages/InvitationView";
 import Wishes         from "./pages/Wishes";
 import Settings       from "./pages/Settings";
+import Notes          from "./pages/Notes";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <Route path="/guests"    element={<ProtectedRoute><Guests /></ProtectedRoute>} />
         <Route path="/wishes"    element={<ProtectedRoute><Wishes /></ProtectedRoute>} />
         <Route path="/settings"  element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/notes"     element={<ProtectedRoute><Notes /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );
