@@ -159,7 +159,6 @@ const FallingPetals = () => {
 // ── Header Ornamen ────────────────────────────────────────
 const FloralHeader = ({ light=false }) => (
   <div style={{ position:"relative", width:"100%", height:80, marginBottom:-20 }}>
-    {/* Cabang kiri */}
     <div style={{ position:"absolute", left:0, bottom:0,
       animation:"leafSway 4s ease-in-out infinite" }}>
       <LeafSVG size={35} color={light ? C.green3 : C.green4} />
@@ -168,11 +167,9 @@ const FloralHeader = ({ light=false }) => (
       animation:"leafSway2 5s ease-in-out infinite" }}>
       <LeafSVG size={25} color={light ? C.green2 : C.green3} />
     </div>
-    {/* Bunga tengah */}
     <div style={{ position:"absolute", left:"50%", transform:"translateX(-50%)", top:0 }}>
       <FlowerSVG size={50} color={light ? C.green2 : C.green3} opacity={0.8} />
     </div>
-    {/* Cabang kanan */}
     <div style={{ position:"absolute", right:30, bottom:10,
       animation:"leafSway 5s 1s ease-in-out infinite" }}>
       <LeafSVG size={25} color={light ? C.green2 : C.green3} flip />
@@ -333,7 +330,6 @@ function OpeningAnimation({ visible, groom, bride }) {
       background:`linear-gradient(160deg, ${C.green1} 0%, ${C.green2} 60%, ${C.green3} 100%)`,
       animation:"overlayIn 0.4s ease both", overflow:"hidden",
     }}>
-      {/* Kelopak burst */}
       {petals.map((p,i) => (
         <div key={i} style={{ position:"absolute", top:p.top, left:p.left,
           "--tx":p.tx, "--ty":p.ty, animation:`burstPetal 2s ${p.delay} ease-out both` }}>
@@ -343,7 +339,6 @@ function OpeningAnimation({ visible, groom, bride }) {
         </div>
       ))}
 
-      {/* Ornamen bunga di pojok */}
       <div style={{ position:"absolute", top:0, left:0, opacity:0.3, animation:"leafSway 3s ease-in-out infinite" }}>
         <FlowerSVG size={100} color={C.green4} opacity={1} />
       </div>
@@ -357,7 +352,6 @@ function OpeningAnimation({ visible, groom, bride }) {
         <FlowerSVG size={120} color={C.green4} opacity={1} />
       </div>
 
-      {/* Cincin */}
       <div style={{ position:"absolute", top:"8%", left:"5%", fontSize:"1.8rem",
         filter:`drop-shadow(0 0 12px ${C.gold})`,
         animation:"ringFloat 2s ease-in-out infinite" }}>💍</div>
@@ -365,12 +359,10 @@ function OpeningAnimation({ visible, groom, bride }) {
         filter:`drop-shadow(0 0 12px ${C.gold})`,
         animation:"ringFloat2 2s 0.3s ease-in-out infinite" }}>💍</div>
 
-      {/* Cahaya */}
       <div style={{ position:"absolute", width:280, height:280, borderRadius:"50%",
         background:`radial-gradient(circle,rgba(196,164,90,0.2) 0%,transparent 70%)`,
         animation:"glowPulse 1.5s ease-in-out infinite" }} />
 
-      {/* Foto boneka */}
       <div style={{ position:"relative", zIndex:10, marginBottom:20,
         animation:"bonekaIn 0.8s ease both, bonekaFloat 2s 0.8s ease-in-out infinite",
         filter:`drop-shadow(0 12px 30px rgba(0,0,0,0.4))` }}>
@@ -381,7 +373,6 @@ function OpeningAnimation({ visible, groom, bride }) {
           onError={e => e.target.style.display="none"} />
       </div>
 
-      {/* Teks */}
       <div style={{ textAlign:"center", zIndex:10,
         animation:"textReveal 2.8s 0.5s ease both" }}>
         <p style={{ fontFamily:"'Playfair Display',serif", fontSize:"0.65rem",
@@ -397,7 +388,6 @@ function OpeningAnimation({ visible, groom, bride }) {
           textTransform:"uppercase", marginTop:8 }}>✦ Membuka Undangan ✦</p>
       </div>
 
-      {/* Partikel */}
       {[...Array(12)].map((_,i) => (
         <div key={i} style={{ position:"absolute",
           width:4+(i%3)*2, height:4+(i%3)*2, borderRadius:"50%",
@@ -490,7 +480,14 @@ export default function InvitationView() {
   }, []);
 
   useEffect(() => {
-    const notesRes = supabase.from("notes").select("photo_url,content,author,type").neq("photo_url","").order("created_at",{ascending:false});
+    // ✅ Hanya ambil catatan yang punya foto DAN sudah dicentang masuk galeri
+    const notesRes = supabase
+      .from("notes")
+      .select("photo_url,content,author,type,in_gallery")
+      .neq("photo_url","")
+      .eq("in_gallery", true)
+      .order("created_at",{ascending:false});
+
     Promise.all([
       supabase.from("settings").select("*").eq("id",1).single(),
       supabase.from("rsvp").select("*").order("id",{ascending:false}),
@@ -557,7 +554,6 @@ export default function InvitationView() {
     borderRadius:20, boxShadow:"0 8px 32px rgba(45,80,22,0.1)",
   };
 
-  // ── COVER ──────────────────────────────────────────────
   if (!opened) {
     return (
       <>
@@ -570,7 +566,6 @@ export default function InvitationView() {
 
           <FallingPetals />
 
-          {/* Ornamen atas */}
           <div style={{ position:"relative", zIndex:2, width:"100%", animation:"fadeDown 1s ease both" }}>
             <p style={{ ...arabic, fontSize:"1.6rem", color:C.green4, lineHeight:1.8 }}>
               بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ
@@ -582,9 +577,7 @@ export default function InvitationView() {
             <FloralHeader />
           </div>
 
-          {/* Konten tengah */}
           <div style={{ position:"relative", zIndex:2, animation:"fadeDown 1s 0.2s ease both" }}>
-            {/* Foto boneka */}
             <div style={{ marginBottom:16, display:"flex", justifyContent:"center" }}>
               <div style={{ position:"relative", display:"inline-block" }}>
                 <div style={{ position:"absolute", inset:-3, borderRadius:22,
@@ -608,7 +601,6 @@ export default function InvitationView() {
               {settings.bride?.split(" ")[0] || "Nurlaila"}
             </h1>
 
-            {/* Kepada */}
             <div style={{ ...glassCard, padding:"16px 24px", marginBottom:20, maxWidth:320, margin:"0 auto 20px" }}>
               <p style={{ color:C.textMid, fontSize:"0.65rem", letterSpacing:"0.2em",
                 textTransform:"uppercase", marginBottom:6 }}>Kepada Yth.</p>
@@ -629,7 +621,6 @@ export default function InvitationView() {
             </button>
           </div>
 
-          {/* Footer cover */}
           <div style={{ position:"relative", zIndex:2, width:"100%" }}>
             <FloralFooter />
             <p style={{ color:C.green4, fontSize:"0.82rem", opacity:0.8, marginTop:8 }}>
@@ -646,13 +637,11 @@ export default function InvitationView() {
     );
   }
 
-  // ── HALAMAN UTAMA ──────────────────────────────────────
   return (
     <div style={{ fontFamily:"'Inter',sans-serif", background:C.cream, overflowX:"hidden" }}
       className="pb-20">
       <FloatingMusic />
 
-      {/* HERO */}
       <section id="hero" style={{
         minHeight:"100vh", display:"flex", flexDirection:"column",
         alignItems:"center", justifyContent:"center", textAlign:"center",
@@ -684,7 +673,6 @@ export default function InvitationView() {
             {formatDate(settings.wedding_date)}
           </p>
 
-          {/* Countdown */}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, maxWidth:320, margin:"0 auto" }}>
             {[
               { val:countdown.days,    label:"Hari" },
@@ -713,7 +701,6 @@ export default function InvitationView() {
         </div>
       </section>
 
-      {/* PEMBUKA */}
       <section style={{ padding:"0 24px 40px", background:C.cream }}>
         <FloralHeader light />
         <Section>
@@ -730,7 +717,6 @@ export default function InvitationView() {
         <FloralFooter light />
       </section>
 
-      {/* MEMPELAI */}
       <section id="mempelai" style={{ padding:"20px 20px 40px",
         background:`linear-gradient(180deg,${C.cream2} 0%,${C.cream} 100%)` }}>
         <Section>
@@ -743,7 +729,6 @@ export default function InvitationView() {
             <GoldDivider my={12} />
           </div>
 
-          {/* Bride */}
           <div style={{ ...glassCard, padding:"28px 20px", textAlign:"center", marginBottom:12 }}>
             <div style={{ width:80, height:80, borderRadius:"50%", margin:"0 auto 14px",
               background:gradLight, display:"flex", alignItems:"center",
@@ -776,7 +761,6 @@ export default function InvitationView() {
             <FlowerSVG size={32} color={C.gold} opacity={0.8} />
           </div>
 
-          {/* Groom */}
           <div style={{ ...glassCard, padding:"28px 20px", textAlign:"center" }}>
             <div style={{ width:80, height:80, borderRadius:"50%", margin:"0 auto 14px",
               background:gradLight, display:"flex", alignItems:"center",
@@ -802,7 +786,6 @@ export default function InvitationView() {
         </Section>
       </section>
 
-      {/* ACARA */}
       <section id="acara" style={{ padding:"20px 20px 40px", background:C.cream }}>
         <div style={{ position:"relative" }}>
           <FloralHeader light />
@@ -856,7 +839,6 @@ export default function InvitationView() {
         <FloralFooter light />
       </section>
 
-      {/* LOKASI */}
       <section id="lokasi" style={{ padding:"20px 20px 40px",
         background:`linear-gradient(180deg,${C.cream2} 0%,${C.cream} 100%)` }}>
         <Section>
@@ -889,8 +871,6 @@ export default function InvitationView() {
         </Section>
       </section>
 
-
-      {/* GALERI FOTO */}
       {gallery.length > 0 && (
         <section style={{ padding:"20px 20px 40px", background:C.cream }}>
           <FloralHeader light />
@@ -929,7 +909,6 @@ export default function InvitationView() {
         </section>
       )}
 
-      {/* LIGHTBOX */}
       {lightbox && (
         <div onClick={() => setLightbox(null)}
           style={{ position:"fixed", inset:0, zIndex:100,
@@ -958,7 +937,6 @@ export default function InvitationView() {
         </div>
       )}
 
-      {/* WEDDING GIFT */}
       <section style={{ padding:"20px 20px 40px", background:C.cream }}>
         <FloralHeader light />
         <Section>
@@ -995,7 +973,6 @@ export default function InvitationView() {
         <FloralFooter light />
       </section>
 
-      {/* RSVP & UCAPAN */}
       <section id="ucapan" style={{ padding:"20px 20px 40px",
         background:`linear-gradient(180deg,${C.cream2} 0%,${C.cream} 100%)` }}>
         <Section>
@@ -1008,7 +985,6 @@ export default function InvitationView() {
             <GoldDivider my={12} />
           </div>
 
-          {/* Stats */}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,minmax(0,1fr))",
             gap:10, marginBottom:20 }}>
             {[
@@ -1023,7 +999,6 @@ export default function InvitationView() {
             ))}
           </div>
 
-          {/* Form */}
           <div style={{ ...glassCard, padding:"20px", marginBottom:16 }}>
             <input style={{ ...inputStyle, marginBottom:10 }}
               placeholder="Nama Anda" value={rsvpName} onChange={e=>setRsvpName(e.target.value)} />
@@ -1050,7 +1025,6 @@ export default function InvitationView() {
             )}
           </div>
 
-          {/* Daftar ucapan */}
           <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             {wishes.map(w => (
               <div key={w.id} style={{ ...glassCard, padding:"14px 16px" }}>
@@ -1076,7 +1050,6 @@ export default function InvitationView() {
         </Section>
       </section>
 
-      {/* PENUTUP */}
       <section style={{ padding:"0 20px 80px", background:C.cream }}>
         <FloralHeader light />
         <Section>
@@ -1107,7 +1080,6 @@ export default function InvitationView() {
         <FloralFooter light />
       </section>
 
-      {/* BOTTOM NAV */}
       <nav style={{
         position:"fixed", bottom:0, left:0, right:0, zIndex:50,
         background:"rgba(250,247,240,0.95)", backdropFilter:"blur(12px)",
