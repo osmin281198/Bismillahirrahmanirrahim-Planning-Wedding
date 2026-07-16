@@ -464,12 +464,12 @@ export default function InvitationView() {
   }, []);
 
   useEffect(() => {
-    // ✅ Hanya ambil catatan yang punya foto DAN sudah dicentang masuk galeri
+    
     const notesRes = supabase
       .from("notes")
-      .select("photo_url,content,author,type,in_gallery")
+      .select("photo_url,content,author,type")
       .neq("photo_url","")
-      .eq("in_gallery", true)
+      
       .order("created_at",{ascending:false});
 
     Promise.all([
@@ -1098,4 +1098,4 @@ export default function InvitationView() {
       </nav>
     </div>
   );
-}
+}// GALLERY CHECK
