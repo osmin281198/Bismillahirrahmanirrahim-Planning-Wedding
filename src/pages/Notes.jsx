@@ -27,6 +27,7 @@ export default function Notes() {
   const [author, setAuthor]       = useState("");
   const [type, setType]           = useState("motivasi");
   const [photoUrl, setPhotoUrl]   = useState("");
+  const [inGallery, setInGallery] = useState(true); // ✅ default masuk galeri
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving]       = useState(false);
   const [filter, setFilter]       = useState("semua");
@@ -38,8 +39,12 @@ export default function Notes() {
   const [editAuthor, setEditAuthor]     = useState("");
   const [editType, setEditType]         = useState("motivasi");
   const [editPhoto, setEditPhoto]       = useState("");
+  const [editInGallery, setEditInGallery] = useState(true); // ✅
   const [editUploading, setEditUploading] = useState(false);
   const [editSaving, setEditSaving]     = useState(false);
+
+  // ✅ Toggle cepat per-kartu
+  const [togglingId, setTogglingId] = useState(null);
 
   const fileRef     = useRef();
   const editFileRef = useRef();
@@ -78,12 +83,13 @@ export default function Notes() {
     setSaving(true);
     const note = {
       id: Date.now(), content: content.trim(), author: author.trim(),
-      type, photo_url: photoUrl, created_at: new Date().toISOString(),
+      type, photo_url: photoUrl, in_gallery: inGallery, // ✅
+      created_at: new Date().toISOString(),
     };
     const { error } = await supabase.from("notes").insert(note);
     if (!error) {
       setNotes([note, ...notes]);
-      setContent(""); setAuthor(""); setPhotoUrl(""); setType("motivasi");
+      setContent(""); setAuthor(""); setPhotoUrl(""); setType("motivasi"); setInGallery(true);
       if (fileRef.current) fileRef.current.value = "";
     }
     setSaving(false);
@@ -102,6 +108,7 @@ export default function Notes() {
     setEditAuthor(note.author||"");
     setEditType(note.type||"motivasi");
     setEditPhoto(note.photo_url||"");
+    setEditInGallery(note.in_gallery !== false);
   };
 
   // ✅ Simpan edit
@@ -113,6 +120,7 @@ export default function Notes() {
       author:  editAuthor.trim(),
       type:    editType,
       photo_url: editPhoto,
+      in_gallery: editInGallery, // ✅
     };
     const { error } = await supabase.from("notes").update(updates).eq("id", editId);
     if (!error) {
@@ -122,10 +130,24 @@ export default function Notes() {
     setEditSaving(false);
   };
 
+  // ✅ Toggle cepat langsung dari kartu
+  const handleToggleGallery = async (note) => {
+    const nextValue = !(note.in_gallery !== false);
+    setTogglingId(note.id);
+    const { error } = await supabase.from("notes").update({ in_gallery: nextValue }).eq("id", note.id);
+    if (!error) {
+      setNotes(notes.map(n => n.id === note.id ? { ...n, in_gallery: nextValue } : n));
+    }
+    setTogglingId(null);
+  };
+
   const getTypeInfo = (t) => TYPES.find(x => x.value === t) || TYPES[0];
 
-  const filtered = filter === "semua" ? notes : notes.filter(n => n.type === filter);
+  const filtered = filter === "semua" ? notes
+    : filter === "galeri" ? notes.filter(n => n.in_gallery !== false)
+    : notes.filter(n => n.type === filter);
   const withPhoto = notes.filter(n => n.photo_url).length;
+  const inGalleryCount = notes.filter(n => n.in_gallery !== false).length; // ✅
 
   const inp = {
     width:"100%", padding:"12px 14px", borderRadius:12,
@@ -133,6 +155,20 @@ export default function Notes() {
     color:"white", fontSize:"0.88rem", outline:"none", boxSizing:"border-box",
     fontFamily:"'Inter',sans-serif",
   };
+
+  // ✅ Style checkbox galeri (dipakai di form tambah & modal edit)
+  const galleryCheckbox = (checked, onChange) => (
+    <label style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer",
+      padding:"10px 12px", borderRadius:10,
+      background: checked ? "rgba(196,164,90,0.08)" : "rgba(255,255,255,0.03)",
+      border:`1px solid ${checked ? "rgba(196,164,90,0.3)" : "rgba(255,255,255,0.08)"}` }}>
+      <input type="checkbox" checked={checked} onChange={e=>onChange(e.target.checked)}
+        style={{ width:16, height:16, accentColor:gold, cursor:"pointer" }} />
+      <span style={{ fontSize:"0.8rem", color: checked ? gold : "rgba(255,255,255,0.4)" }}>
+        🖼️ Tampilkan di Galeri Undangan
+      </span>
+    </label>
+  );
 
   return (
     <div style={{ display:"flex", minHeight:"100vh", background:"#0F172A",
@@ -143,8 +179,7 @@ export default function Notes() {
       {editId && (
         <div style={{ position:"fixed", inset:0, zIndex:100,
           background:"rgba(0,0,0,0.7)", backdropFilter:"blur(6px)",
-          display:"flex", alignItems:"flex-end", justifyContent:"center",
-          padding:"0 0 0 0" }}
+          display:"flex", alignItems:"flex-end", justifyContent:"center" }}
           onClick={e => { if(e.target===e.currentTarget) setEditId(null); }}>
           <div style={{ width:"100%", maxWidth:520, background:"#1E293B",
             borderRadius:"24px 24px 0 0", padding:"24px 20px 40px",
@@ -158,7 +193,6 @@ export default function Notes() {
             <p style={{ color:gold, fontSize:"0.65rem", letterSpacing:"0.2em",
               textTransform:"uppercase", margin:"0 0 16px" }}>✎ Edit Catatan</p>
 
-            {/* Tipe */}
             <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:12 }}>
               {TYPES.map(t => (
                 <button key={t.value} onClick={() => setEditType(t.value)}
@@ -177,8 +211,7 @@ export default function Notes() {
             <input value={editAuthor} onChange={e=>setEditAuthor(e.target.value)}
               style={{ ...inp, marginBottom:10 }} placeholder="Nama penulis (opsional)" />
 
-            {/* ✅ Upload/ganti foto */}
-            <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:16 }}>
+            <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:12 }}>
               <label style={{ flex:1, padding:"10px 14px", borderRadius:10, cursor:"pointer",
                 background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)",
                 color:"rgba(255,255,255,0.45)", fontSize:"0.82rem",
@@ -208,6 +241,11 @@ export default function Notes() {
               )}
             </div>
 
+            {/* ✅ Checklist galeri di modal edit */}
+            <div style={{ marginBottom:16 }}>
+              {galleryCheckbox(editInGallery, setEditInGallery)}
+            </div>
+
             <div style={{ display:"flex", gap:8 }}>
               <button onClick={() => setEditId(null)}
                 style={{ flex:1, padding:"12px", borderRadius:12, border:"1px solid rgba(255,255,255,0.1)",
@@ -229,7 +267,6 @@ export default function Notes() {
       <main style={{ flex:1, minWidth:0, width:0,
         padding:"68px 14px 32px", overflowX:"hidden", boxSizing:"border-box" }}>
 
-        {/* Header */}
         <div style={{ marginBottom:20 }}>
           <p style={{ color:gold, fontSize:"0.6rem", letterSpacing:"0.3em",
             textTransform:"uppercase", margin:"0 0 4px" }}>Perjalanan Cinta</p>
@@ -237,23 +274,22 @@ export default function Notes() {
             fontWeight:600, color:"white", margin:0 }}>Catatan & Galeri</h1>
         </div>
 
-        {/* Stats */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr",
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr",
           gap:8, marginBottom:16 }}>
           {[
             { label:"Total", val:notes.length,  color:gold },
             { label:"Ada Foto", val:withPhoto,  color:"#4ADE80" },
+            { label:"Di Galeri", val:inGalleryCount, color:"#60A5FA" }, // ✅
             { label:"Kategori", val:TYPES.length, color:"#A78BFA" },
           ].map(s => (
-            <div key={s.label} style={{ padding:"12px 8px", borderRadius:14, textAlign:"center",
+            <div key={s.label} style={{ padding:"12px 6px", borderRadius:14, textAlign:"center",
               background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)" }}>
-              <p style={{ fontSize:"1.4rem", fontWeight:700, color:s.color, margin:0 }}>{s.val}</p>
-              <p style={{ fontSize:"0.6rem", color:"rgba(255,255,255,0.3)", marginTop:3 }}>{s.label}</p>
+              <p style={{ fontSize:"1.3rem", fontWeight:700, color:s.color, margin:0 }}>{s.val}</p>
+              <p style={{ fontSize:"0.56rem", color:"rgba(255,255,255,0.3)", marginTop:3 }}>{s.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Form Tambah */}
         <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)",
           borderRadius:18, padding:"18px", marginBottom:16 }}>
           <p style={{ color:gold, fontSize:"0.65rem", letterSpacing:"0.2em",
@@ -277,7 +313,7 @@ export default function Notes() {
           <input placeholder="Nama penulis (opsional)" value={author}
             onChange={e=>setAuthor(e.target.value)} style={{ ...inp, marginBottom:10 }} />
 
-          <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:14 }}>
+          <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:12 }}>
             <label style={{ flex:1, padding:"10px 14px", borderRadius:10, cursor:"pointer",
               background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)",
               color:"rgba(255,255,255,0.4)", fontSize:"0.82rem",
@@ -307,6 +343,11 @@ export default function Notes() {
             )}
           </div>
 
+          {/* ✅ Checklist galeri di form tambah */}
+          <div style={{ marginBottom:14 }}>
+            {galleryCheckbox(inGallery, setInGallery)}
+          </div>
+
           <button onClick={handleSave} disabled={saving || !content.trim()}
             style={{ width:"100%", padding:"13px", borderRadius:12, border:"none",
               background:saving||!content.trim() ? "rgba(196,164,90,0.3)"
@@ -317,7 +358,6 @@ export default function Notes() {
           </button>
         </div>
 
-        {/* Filter */}
         <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
           <button onClick={() => setFilter("semua")}
             style={{ padding:"7px 14px", borderRadius:99, fontSize:"0.72rem",
@@ -325,6 +365,14 @@ export default function Notes() {
               background:filter==="semua" ? "rgba(196,164,90,0.12)" : "rgba(255,255,255,0.03)",
               color:filter==="semua" ? gold : "rgba(255,255,255,0.35)", cursor:"pointer" }}>
             Semua ({notes.length})
+          </button>
+          {/* ✅ Filter khusus galeri */}
+          <button onClick={() => setFilter("galeri")}
+            style={{ padding:"7px 14px", borderRadius:99, fontSize:"0.72rem",
+              border:`1px solid ${filter==="galeri" ? "#60A5FA" : "rgba(255,255,255,0.08)"}`,
+              background:filter==="galeri" ? "#60A5FA18" : "rgba(255,255,255,0.03)",
+              color:filter==="galeri" ? "#60A5FA" : "rgba(255,255,255,0.35)", cursor:"pointer" }}>
+            🖼️ Di Galeri ({inGalleryCount})
           </button>
           {TYPES.map(t => (
             <button key={t.value} onClick={() => setFilter(t.value)}
@@ -337,7 +385,6 @@ export default function Notes() {
           ))}
         </div>
 
-        {/* Notes List */}
         {loading ? (
           <div style={{ textAlign:"center", padding:"48px", color:"rgba(255,255,255,0.3)" }}>
             <div style={{ width:28, height:28, borderRadius:"50%", border:`2px solid ${gold}`,
@@ -355,6 +402,7 @@ export default function Notes() {
             {filtered.map((note, i) => {
               const t = getTypeInfo(note.type);
               const isOpen = expanded === note.id;
+              const isInGallery = note.in_gallery !== false; // ✅ default true
               return (
                 <div key={note.id}
                   style={{ background:"rgba(255,255,255,0.03)",
@@ -370,7 +418,7 @@ export default function Notes() {
                           transition:"height 0.4s ease" }} />
                       <div style={{ position:"absolute", inset:0,
                         background:"linear-gradient(to bottom,transparent 40%,rgba(15,23,42,0.8))" }} />
-                      <div style={{ position:"absolute", top:10, left:12 }}>
+                      <div style={{ position:"absolute", top:10, left:12, display:"flex", gap:6 }}>
                         <span style={{ fontSize:"0.65rem", padding:"3px 10px", borderRadius:99,
                           background:`${t.color}25`, border:`1px solid ${t.color}40`,
                           color:t.color }}>{t.label}</span>
@@ -379,13 +427,34 @@ export default function Notes() {
                   )}
 
                   <div style={{ padding:"14px 16px" }}>
-                    {!note.photo_url && (
-                      <div style={{ marginBottom:8 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between",
+                      alignItems:"flex-start", marginBottom:8, gap:8 }}>
+                      {!note.photo_url ? (
                         <span style={{ fontSize:"0.65rem", padding:"3px 10px", borderRadius:99,
                           background:`${t.color}18`, border:`1px solid ${t.color}30`,
                           color:t.color }}>{t.label}</span>
-                      </div>
-                    )}
+                      ) : <span />}
+
+                      {/* ✅ Checkbox toggle cepat masuk galeri */}
+                      <label style={{ display:"flex", alignItems:"center", gap:5, cursor:"pointer",
+                        padding:"3px 8px", borderRadius:99, flexShrink:0,
+                        background: isInGallery ? "rgba(96,165,250,0.1)" : "rgba(255,255,255,0.04)",
+                        border:`1px solid ${isInGallery ? "rgba(96,165,250,0.35)" : "rgba(255,255,255,0.08)"}` }}>
+                        {togglingId === note.id ? (
+                          <div style={{ width:11, height:11, borderRadius:"50%",
+                            border:"2px solid #60A5FA", borderTopColor:"transparent",
+                            animation:"spin 0.8s linear infinite" }} />
+                        ) : (
+                          <input type="checkbox" checked={isInGallery}
+                            onChange={() => handleToggleGallery(note)}
+                            style={{ width:12, height:12, accentColor:"#60A5FA", cursor:"pointer" }} />
+                        )}
+                        <span style={{ fontSize:"0.62rem",
+                          color: isInGallery ? "#60A5FA" : "rgba(255,255,255,0.35)" }}>
+                          Galeri
+                        </span>
+                      </label>
+                    </div>
 
                     <p style={{ color:"rgba(255,255,255,0.85)", fontSize:"0.88rem",
                       lineHeight:1.75, fontStyle:"italic", margin:"0 0 10px",
@@ -417,7 +486,6 @@ export default function Notes() {
                             {isOpen ? "Tutup" : "Baca"}
                           </button>
                         )}
-                        {/* ✅ Tombol Edit */}
                         <button onClick={() => openEdit(note)}
                           style={{ padding:"5px 10px", borderRadius:8, border:"none",
                             background:"rgba(196,164,90,0.1)",
