@@ -466,11 +466,11 @@ export default function InvitationView() {
   useEffect(() => {
     
     const notesRes = supabase
-      .from("notes")
-      .select("photo_url,content,author,type")
-      .neq("photo_url","")
-      
-      .order("created_at",{ascending:false});
+  .from("notes")
+  .select("photo_url,content,author,type")
+  .neq("photo_url","").eq("in_gallery",true)
+
+  .order("created_at",{ascending:false});
 
     Promise.all([
       supabase.from("settings").select("*").eq("id",1).single(),
