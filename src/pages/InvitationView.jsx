@@ -7,18 +7,18 @@ const BONEKA_URL = "https://myakgpkcqschdyfunlso.supabase.co/storage/v1/object/p
 
 // ── Warna Tema Floral ─────────────────────────────────────
 const C = {
-  green1:  "#2D5016", // hijau tua
-  green2:  "#4A7C59", // hijau medium
-  green3:  "#7BAE7F", // hijau muda
-  green4:  "#C8E6C9", // hijau sangat muda
-  cream:   "#FAF7F0", // krem
-  cream2:  "#F5EDD9", // krem gelap
-  gold:    "#C4A45A", // emas
-  gold2:   "#E8CC8A", // emas muda
-  brown:   "#8B6914", // coklat emas
+  green1:  "#2D5016",
+  green2:  "#4A7C59",
+  green3:  "#7BAE7F",
+  green4:  "#C8E6C9",
+  cream:   "#FAF7F0",
+  cream2:  "#F5EDD9",
+  gold:    "#C4A45A",
+  gold2:   "#E8CC8A",
+  brown:   "#8B6914",
   white:   "#FFFFFF",
-  text:    "#2D3A1E", // teks gelap hijau
-  textMid: "#4A5E35", // teks medium
+  text:    "#2D3A1E",
+  textMid: "#4A5E35",
 };
 
 const gradMain   = `linear-gradient(160deg, ${C.green1} 0%, ${C.green2} 50%, ${C.green3} 100%)`;
@@ -104,7 +104,6 @@ const STYLES = `
 }
 `;
 
-// ── SVG Ornamen Bunga ─────────────────────────────────────
 const FlowerSVG = ({ size=60, color=C.green3, opacity=0.6 }) => (
   <svg width={size} height={size} viewBox="0 0 100 100" style={{ opacity }}>
     {[0,45,90,135,180,225,270,315].map((angle, i) => (
@@ -128,7 +127,6 @@ const LeafSVG = ({ size=40, color=C.green2, flip=false }) => (
   </svg>
 );
 
-// ── Kelopak Bunga Jatuh ───────────────────────────────────
 const FallingPetals = () => {
   const petals = [
     { left:"10%", delay:"0s",   dur:"6s",  color:C.green3 },
@@ -156,7 +154,6 @@ const FallingPetals = () => {
   );
 };
 
-// ── Header Ornamen ────────────────────────────────────────
 const FloralHeader = ({ light=false }) => (
   <div style={{ position:"relative", width:"100%", height:80, marginBottom:-20 }}>
     <div style={{ position:"absolute", left:0, bottom:0,
@@ -197,7 +194,6 @@ const FloralFooter = ({ light=false }) => (
   </div>
 );
 
-// ── Gold Divider ──────────────────────────────────────────
 const GoldDivider = ({ my=20 }) => (
   <div style={{ display:"flex", alignItems:"center", gap:10, margin:`${my}px 0` }}>
     <div style={{ flex:1, height:1, background:`linear-gradient(90deg,transparent,${C.gold},transparent)` }} />
@@ -206,7 +202,6 @@ const GoldDivider = ({ my=20 }) => (
   </div>
 );
 
-// ── Ayat Quran ────────────────────────────────────────────
 const QuranCard = () => (
   <div style={{
     background:`linear-gradient(135deg,rgba(196,164,90,0.08),rgba(196,164,90,0.03))`,
@@ -234,7 +229,6 @@ const QuranCard = () => (
   </div>
 );
 
-// ── Floating Music ────────────────────────────────────────
 function FloatingMusic() {
   const audioRef              = useRef(null);
   const [playing, setPlaying] = useState(false);
@@ -309,7 +303,6 @@ function FloatingMusic() {
   );
 }
 
-// ── Animasi Pembuka ───────────────────────────────────────
 function OpeningAnimation({ visible, groom, bride }) {
   if (!visible) return null;
   const petals = [
@@ -338,7 +331,6 @@ function OpeningAnimation({ visible, groom, bride }) {
           </svg>
         </div>
       ))}
-
       <div style={{ position:"absolute", top:0, left:0, opacity:0.3, animation:"leafSway 3s ease-in-out infinite" }}>
         <FlowerSVG size={100} color={C.green4} opacity={1} />
       </div>
@@ -351,18 +343,15 @@ function OpeningAnimation({ visible, groom, bride }) {
       <div style={{ position:"absolute", bottom:0, right:0, opacity:0.2, transform:"rotate(180deg)" }}>
         <FlowerSVG size={120} color={C.green4} opacity={1} />
       </div>
-
       <div style={{ position:"absolute", top:"8%", left:"5%", fontSize:"1.8rem",
         filter:`drop-shadow(0 0 12px ${C.gold})`,
         animation:"ringFloat 2s ease-in-out infinite" }}>💍</div>
       <div style={{ position:"absolute", top:"8%", right:"5%", fontSize:"1.8rem",
         filter:`drop-shadow(0 0 12px ${C.gold})`,
         animation:"ringFloat2 2s 0.3s ease-in-out infinite" }}>💍</div>
-
       <div style={{ position:"absolute", width:280, height:280, borderRadius:"50%",
         background:`radial-gradient(circle,rgba(196,164,90,0.2) 0%,transparent 70%)`,
         animation:"glowPulse 1.5s ease-in-out infinite" }} />
-
       <div style={{ position:"relative", zIndex:10, marginBottom:20,
         animation:"bonekaIn 0.8s ease both, bonekaFloat 2s 0.8s ease-in-out infinite",
         filter:`drop-shadow(0 12px 30px rgba(0,0,0,0.4))` }}>
@@ -372,7 +361,6 @@ function OpeningAnimation({ visible, groom, bride }) {
             boxShadow:`0 0 30px rgba(196,164,90,0.3)`, display:"block" }}
           onError={e => e.target.style.display="none"} />
       </div>
-
       <div style={{ textAlign:"center", zIndex:10,
         animation:"textReveal 2.8s 0.5s ease both" }}>
         <p style={{ fontFamily:"'Playfair Display',serif", fontSize:"0.65rem",
@@ -387,7 +375,6 @@ function OpeningAnimation({ visible, groom, bride }) {
         <p style={{ color:C.gold, fontSize:"0.68rem", letterSpacing:"0.3em",
           textTransform:"uppercase", marginTop:8 }}>✦ Membuka Undangan ✦</p>
       </div>
-
       {[...Array(12)].map((_,i) => (
         <div key={i} style={{ position:"absolute",
           width:4+(i%3)*2, height:4+(i%3)*2, borderRadius:"50%",
@@ -399,7 +386,6 @@ function OpeningAnimation({ visible, groom, bride }) {
   );
 }
 
-// ── Countdown ─────────────────────────────────────────────
 function useCountdown(targetDate) {
   const [time, setTime] = useState({ days:0, hours:0, minutes:0, seconds:0 });
   useEffect(() => {
@@ -421,7 +407,6 @@ function useCountdown(targetDate) {
   return time;
 }
 
-// ── Section Observer ──────────────────────────────────────
 function useInView(ref) {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -449,7 +434,6 @@ function Section({ children, style={} }) {
   );
 }
 
-// ── MAIN COMPONENT ────────────────────────────────────────
 export default function InvitationView() {
   const { slug } = useParams();
   const [settings, setSettings] = useState({
