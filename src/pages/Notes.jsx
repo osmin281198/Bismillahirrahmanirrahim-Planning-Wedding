@@ -68,12 +68,26 @@ export default function Notes() {
     const file = e.target.files[0];
     if (!file) return;
     isEdit ? setEditUploading(true) : setUploading(true);
-    const ext  = file.name.split(".").pop();
-    const path = `note-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("wedding-photos").upload(path, file, { upsert:true });
-    if (!error) {
-      const { data } = supabase.storage.from("wedding-photos").getPublicUrl(path);
-      isEdit ? setEditPhoto(data.publicUrl) : setPhotoUrl(data.publicUrl);
+    try {
+      const ext  = file.name.split(".").pop();
+      const path = `note-${Date.now()}.${ext}`;
+      const { data: upData, error: upErr } = await supabase.storage
+        .from("wedding-photos")
+        .upload(path, file, { upsert:true, cacheControl:"3600" });
+      if (upErr) {
+        console.error("Upload error:", upErr.message);
+        alert("Gagal upload: " + upErr.message);
+      } else {
+        const { data: urlData } = supabase.storage
+          .from("wedding-photos")
+          .getPublicUrl(path);
+        console.log("Upload OK:", urlData.publicUrl);
+        if (isEdit) setEditPhoto(urlData.publicUrl);
+        else setPhotoUrl(urlData.publicUrl);
+      }
+    } catch(err) {
+      console.error("Upload exception:", err);
+      alert("Error: " + err.message);
     }
     isEdit ? setEditUploading(false) : setUploading(false);
   };

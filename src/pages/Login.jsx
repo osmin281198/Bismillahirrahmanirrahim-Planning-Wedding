@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { getRole } from "../lib/roles";
+import { getPermissions, firstAllowedPath } from "../lib/roles";
 
 const STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap');
@@ -27,11 +27,11 @@ export default function Login() {
     el.textContent = STYLES;
     document.head.appendChild(el);
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        const role = getRole(session.user.email);
-        if (role === "family") navigate("/guests");
-        else if (role === "admin") navigate("/dashboard");
+        const perm = await getPermissions(session.user.email);
+        const path = perm ? firstAllowedPath(perm.pages) : null;
+        if (path) navigate(path);
       }
     });
 
@@ -48,9 +48,9 @@ export default function Login() {
     setError(""); setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) { setError("Email atau password salah."); setLoading(false); return; }
-    const role = getRole(data.user.email);
-    if (role === "family") navigate("/guests");
-    else if (role === "admin") navigate("/dashboard");
+    const perm = await getPermissions(data.user.email);
+    const path = perm ? firstAllowedPath(perm.pages) : null;
+    if (path) navigate(path);
     else { await supabase.auth.signOut(); setError("Akun tidak memiliki akses."); setLoading(false); }
   };
 
@@ -60,18 +60,15 @@ export default function Login() {
     <div style={{ minHeight:"100vh", display:"flex", fontFamily:"'Inter',sans-serif",
       background:"linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#0F2744 100%)" }}>
 
-      {/* Kiri — Foto & Branding */}
       <div className="hidden md:flex" style={{
         width:"45%", flexDirection:"column", alignItems:"center", justifyContent:"center",
         padding:"48px 40px", position:"relative", overflow:"hidden",
         borderRight:"1px solid rgba(196,164,90,0.15)",
       }}>
-        {/* Background pattern */}
         <div style={{ position:"absolute", inset:0, opacity:0.04,
           backgroundImage:"radial-gradient(circle,white 1px,transparent 1px)",
           backgroundSize:"28px 28px" }} />
 
-        {/* Foto */}
         <div style={{ position:"relative", marginBottom:32, animation:"fadeUp 0.8s ease both" }}>
           {photoUrl ? (
             <div style={{ position:"relative" }}>
@@ -89,7 +86,7 @@ export default function Login() {
           ) : (
             <div style={{ width:200, height:200, borderRadius:"50%",
               background:"rgba(196,164,90,0.1)", border:"2px dashed rgba(196,164,90,0.3)",
-              display:"flex", alignItems:"center", justifyContent:"center", fontSize:"4rem" }}>💑</div>
+              display:"flex", alignItems:"center", justifyContent:"center", fontSize:"4rem" }}> 💑</div>
           )}
         </div>
 
@@ -117,11 +114,9 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Kanan — Form */}
       <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 32px" }}>
         <div style={{ width:"100%", maxWidth:380, animation:"fadeUp 0.8s 0.1s ease both" }}>
 
-          {/* Mobile branding */}
           <div className="md:hidden" style={{ textAlign:"center", marginBottom:40 }}>
             <p style={{ color:"rgba(196,164,90,0.7)", fontSize:"0.6rem",
               letterSpacing:"0.3em", textTransform:"uppercase", marginBottom:8 }}>Wedding Planner</p>
