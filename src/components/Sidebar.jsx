@@ -1,16 +1,18 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { getRole } from "../lib/roles";
+import { getPermissions } from "../lib/roles";
 
 const ALL_NAV = [
-  { to:"/dashboard", icon:"✦", label:"Dashboard",  roles:["admin"] },
-  { to:"/rab",       icon:"◈", label:"Anggaran",   roles:["admin"] },
-  { to:"/planning",  icon:"◉", label:"Planning",   roles:["admin"] },
-  { to:"/guests",    icon:"◎", label:"Tamu",       roles:["admin","family"] },
-  { to:"/wishes",    icon:"◇", label:"RSVP",       roles:["admin","family"] },
-  { to:"/notes",     icon:"✎", label:"Catatan",    roles:["admin"] },
-  { to:"/settings",  icon:"◆", label:"Pengaturan", roles:["admin"] },
+  { to:"/dashboard", icon:"✦", label:"Dashboard",   page:"dashboard" },
+  { to:"/rab",       icon:"◈", label:"Anggaran",    page:"rab" },
+  { to:"/planning",  icon:"◉", label:"Planning",    page:"planning" },
+  { to:"/guests",    icon:"◎", label:"Tamu",        page:"guests" },
+  { to:"/wishes",    icon:"◇", label:"RSVP",        page:"wishes" },
+  { to:"/notes",     icon:"✎", label:"Catatan",     page:"notes" },
+  { to:"/kas",       icon:"💰", label:"Kas",         page:"kas" },
+  { to:"/settings",  icon:"◆", label:"Pengaturan",  page:"settings" },
+  { to:"/users",     icon:"🔐", label:"Kelola User", page:"users" },
 ];
 
 export default function Sidebar() {
@@ -18,17 +20,19 @@ export default function Sidebar() {
   const navigate  = useNavigate();
   const [open, setOpen]             = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [role, setRole]             = useState(null);
+  const [roleLabel, setRoleLabel]   = useState(null);
+  const [pages, setPages]           = useState([]);
   const [userEmail, setUserEmail]   = useState("");
   const [groom, setGroom]           = useState("");
   const [bride, setBride]           = useState("");
   const [photoUrl, setPhotoUrl]     = useState("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         setUserEmail(session.user.email);
-        setRole(getRole(session.user.email));
+        const perm = await getPermissions(session.user.email);
+        if (perm) { setRoleLabel(perm.role); setPages(perm.pages); }
       }
     });
     supabase.from("settings").select("groom, bride, photo_url").eq("id",1).single()
@@ -41,7 +45,7 @@ export default function Sidebar() {
       });
   }, []);
 
-  const navItems = ALL_NAV.filter(item => role && item.roles.includes(role));
+  const navItems = ALL_NAV.filter(item => pages.includes(item.page));
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -49,7 +53,6 @@ export default function Sidebar() {
     navigate("/");
   };
 
-  // ── Warna tema dark navy + gold (konsisten) ──────────────
   const bg   = "linear-gradient(180deg, #0F172A 0%, #1E293B 100%)";
   const gold = "#C4A45A";
   const goldLight = "#E8CC8A";
@@ -82,51 +85,57 @@ export default function Sidebar() {
     </nav>
   );
 
-  const UserInfo = () => (
-    <div style={{
-      padding:"14px 16px", borderRadius:14, marginBottom:10,
-      background:"rgba(196,164,90,0.08)", border:`1px solid rgba(196,164,90,0.15)`,
-    }}>
-      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-        {/* ✅ Foto profil dari settings, fallback emoji */}
-        <div style={{
-          width:40, height:40, borderRadius:"50%", flexShrink:0,
-          overflow:"hidden", border:`2px solid rgba(196,164,90,0.4)`,
-          background:`linear-gradient(135deg,${gold},${goldLight})`,
-          display:"flex", alignItems:"center", justifyContent:"center",
-        }}>
-          {photoUrl ? (
-            <img src={photoUrl} alt="Foto"
-              style={{ width:"100%", height:"100%", objectFit:"cover" }}
-              onError={e => { e.target.style.display="none"; }} />
-          ) : (
-            <span style={{ fontSize:"1.1rem" }}>
-              {role === "admin" ? "👰" : "👨‍👩‍👧"}
-            </span>
-          )}
+  const roleDisplay = () => {
+    if (roleLabel === "super") return { emoji:"👑", text:"Admin Utama" };
+    if (roleLabel === "family") return { emoji:"👨‍👩‍👧", text:"Keluarga" };
+    return { emoji:"💍", text: roleLabel ? roleLabel : "Pengantin" };
+  };
+
+  const UserInfo = () => {
+    const rd = roleDisplay();
+    return (
+      <div style={{
+        padding:"14px 16px", borderRadius:14, marginBottom:10,
+        background:"rgba(196,164,90,0.08)", border:`1px solid rgba(196,164,90,0.15)`,
+      }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{
+            width:40, height:40, borderRadius:"50%", flexShrink:0,
+            overflow:"hidden", border:`2px solid rgba(196,164,90,0.4)`,
+            background:`linear-gradient(135deg,${gold},${goldLight})`,
+            display:"flex", alignItems:"center", justifyContent:"center",
+          }}>
+            {photoUrl ? (
+              <img src={photoUrl} alt="Foto"
+                style={{ width:"100%", height:"100%", objectFit:"cover" }}
+                onError={e => { e.target.style.display="none"; }} />
+            ) : (
+              <span style={{ fontSize:"1.1rem" }}>{rd.emoji}</span>
+            )}
+          </div>
+          <div style={{ minWidth:0 }}>
+            <p style={{ fontSize:"0.68rem", color:gold, fontWeight:600,
+              letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:2 }}>
+              {rd.emoji} {rd.text}
+            </p>
+            <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.35)",
+              overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+              {userEmail}
+            </p>
+          </div>
         </div>
-        <div style={{ minWidth:0 }}>
-          <p style={{ fontSize:"0.68rem", color:gold, fontWeight:600,
-            letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:2 }}>
-            {role === "admin" ? "💍 Pengantin" : "👨‍👩‍👧 Keluarga"}
-          </p>
-          <p style={{ fontSize:"0.65rem", color:"rgba(255,255,255,0.35)",
-            overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-            {userEmail}
-          </p>
-        </div>
+        {groom && bride && (
+          <div style={{ marginTop:10, paddingTop:10,
+            borderTop:`1px solid rgba(196,164,90,0.15)`, textAlign:"center" }}>
+            <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1rem",
+              color:"rgba(255,255,255,0.8)", fontWeight:500 }}>
+              {groom.split(" ")[0]} &amp; {bride.split(" ")[0]}
+            </p>
+          </div>
+        )}
       </div>
-      {groom && bride && (
-        <div style={{ marginTop:10, paddingTop:10,
-          borderTop:`1px solid rgba(196,164,90,0.15)`, textAlign:"center" }}>
-          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:"1rem",
-            color:"rgba(255,255,255,0.8)", fontWeight:500 }}>
-            {groom.split(" ")[0]} &amp; {bride.split(" ")[0]}
-          </p>
-        </div>
-      )}
-    </div>
-  );
+    );
+  };
 
   const LogoutBtn = () => (
     <button onClick={handleLogout} disabled={loggingOut}
@@ -156,7 +165,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* MOBILE TOP NAV */}
       <div className="md:hidden" style={{
         position:"fixed", top:0, left:0, right:0, zIndex:50,
         display:"flex", alignItems:"center", justifyContent:"space-between",
@@ -176,7 +184,6 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* MOBILE DRAWER */}
       {open && (
         <div className="md:hidden" style={{
           position:"fixed", inset:0, zIndex:40,
@@ -202,7 +209,6 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* DESKTOP SIDEBAR */}
       <aside className="hidden md:flex" style={{
         width:260, minHeight:"100vh", padding:"28px 18px",
         background:bg, flexDirection:"column", flexShrink:0,
