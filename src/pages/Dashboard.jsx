@@ -285,30 +285,32 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* ✅ Tombol — tag <a> untuk lihat undangan, div untuk sembunyikan */}
+            {/* Tombol aksi */}
             <div style={{ padding:"0 16px 16px", display:"flex", gap:8 }}>
-              <a
-                href={`/invitation/${guestSlug}`}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = window.location.origin + "/invitation/" + guestSlug;
+                }}
                 style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center",
                   gap:6, padding:"10px 14px", borderRadius:10, cursor:"pointer",
                   background:`linear-gradient(135deg,${gold},${goldLight})`,
                   boxShadow:`0 4px 14px rgba(196,164,90,0.35)`,
                   color:"#0F172A", fontSize:"0.78rem", fontWeight:700,
-                  textDecoration:"none", userSelect:"none" }}>
+                  border:"none", userSelect:"none" }}>
                 👁 Lihat Undangan
-              </a>
-              <div
-                onClick={() => setHideBalance(h => !h)}
+              </button>
+              <button
+                type="button"
+                onClick={() => setHideBalance(prev => !prev)}
                 style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center",
                   gap:6, padding:"10px 14px", borderRadius:10, cursor:"pointer",
-                  border:`1px solid rgba(196,164,90,0.25)`,
+                  border:"1px solid rgba(196,164,90,0.25)",
                   background:"rgba(196,164,90,0.1)",
                   color:"rgba(196,164,90,0.9)", fontSize:"0.78rem", fontWeight:600,
                   userSelect:"none" }}>
                 {hideBalance ? "👁 Tampilkan" : "🙈 Sembunyikan"}
-              </div>
+              </button>
             </div>
           </div>
         </div>
