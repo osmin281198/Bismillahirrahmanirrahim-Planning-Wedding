@@ -88,7 +88,7 @@ export default function Sidebar() {
   const roleDisplay = () => {
     if (roleLabel === "super") return { emoji:"💍", text:"Pengantin" };
     if (roleLabel === "family") return { emoji:"👨‍👩‍👧", text:"Keluarga" };
-    return { emoji:"💍", text: roleLabel ? roleLabel : "Pengantin" };
+    return { emoji:"💍", text:"Pengantin" };
   };
 
   const UserInfo = () => {
