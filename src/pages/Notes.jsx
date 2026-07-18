@@ -73,10 +73,10 @@ export default function Notes() {
       const path = `note-${Date.now()}.${ext}`;
       const { data: upData, error: upErr } = await supabase.storage
         .from("wedding-photos")
-        .upload(path, file, { upsert:true, cacheControl:"3600" });
+        .upload(path, file, { upsert:false, cacheControl:"3600" });
       if (upErr) {
-        console.error("Upload error:", upErr.message);
-        alert("Gagal upload: " + upErr.message);
+        console.error("Upload error FULL:", upErr);
+        alert("DETAIL LENGKAP:\n" + JSON.stringify(upErr, Object.getOwnPropertyNames(upErr), 2));
       } else {
         const { data: urlData } = supabase.storage
           .from("wedding-photos")

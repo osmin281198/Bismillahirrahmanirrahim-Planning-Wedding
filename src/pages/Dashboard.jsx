@@ -251,7 +251,7 @@ export default function Dashboard() {
           <div style={{ position:"relative" }}>
             <div style={{ position:"absolute", inset:0, opacity:0.04,
               backgroundImage:"radial-gradient(circle,white 1px,transparent 1px)",
-              backgroundSize:"20px 20px" }} />
+              backgroundSize:"20px 20px", pointerEvents:"none" }} />
             <div style={{ position:"relative", display:"flex", alignItems:"center",
               gap:14, padding:"18px 16px" }}>
               {heroPic ? (
